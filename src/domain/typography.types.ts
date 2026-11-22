@@ -1,0 +1,28 @@
+import type { FontWeight, TypographyStyle } from './value.types';
+
+export type TypographyVariant =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'h5'
+  | 'h6'
+  | 'subtitle1'
+  | 'subtitle2'
+  | 'body1'
+  | 'body2'
+  | 'button'
+  | 'caption'
+  | 'overline';
+
+export interface GoogleFontSettings {
+  family: string;
+  weights: FontWeight[];
+  fallback: string[];
+}
+
+export interface TypographySettings {
+  font?: GoogleFontSettings;
+  fontSize?: number;
+  variants?: Partial<Record<TypographyVariant, TypographyStyle>>;
+}
