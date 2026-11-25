@@ -86,10 +86,17 @@ export function validateThemeProject(value: unknown): ProjectValidationResult {
   validateColorSchemes(value.colorSchemes, errors);
 
   if (value.foundations !== undefined) {
-    if (!isRecord(value.foundations) || !hasOnlyKeys(value.foundations, ['shape', 'spacing', 'typography', 'interactions']) || !isSparseJsonValue(value.foundations)) {
+    if (!isRecord(value.foundations) || !hasOnlyKeys(value.foundations, ['shape', 'spacing', 'typography', 'interactions', 'shadows']) || !isSparseJsonValue(value.foundations)) {
       errors.push('foundations contains an unsupported field or value.');
     } else if (!isOptionalNumber(value.foundations.spacing)) {
       errors.push('foundations.spacing must be a finite number.');
+    } else if (
+      value.foundations.shadows !== undefined &&
+      (!isRecord(value.foundations.shadows) ||
+        !hasOnlyKeys(value.foundations.shadows, ['global', 'button', 'card', 'input']) ||
+        !Object.values(value.foundations.shadows).every((entry) => isOptionalNumber(entry)))
+    ) {
+      errors.push('foundations.shadows must contain only numeric elevations.');
     }
   }
 

@@ -53,6 +53,7 @@ function resetSection(project: ThemeProject, section: EditorSection, mode: 'ligh
       delete foundations.shape;
       delete foundations.spacing;
       delete foundations.interactions;
+      delete foundations.shadows;
     }
 
     return {
@@ -177,6 +178,30 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
           ...state.project.foundations,
           shape: { ...state.project.foundations?.shape, borderRadius: action.value },
         },
+      });
+    case 'set-card-border-radius':
+      if (state.project.foundations?.shape?.cardBorderRadius === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        foundations: {
+          ...state.project.foundations,
+          shape: { ...state.project.foundations?.shape, cardBorderRadius: action.value },
+        },
+      });
+    case 'set-shadow-elevation': {
+      if (state.project.foundations?.shadows?.[action.target] === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        foundations: {
+          ...state.project.foundations,
+          shadows: { ...state.project.foundations?.shadows, [action.target]: action.value },
+        },
+      });
+    }
+    case 'set-shadows':
+      return commitProject(state, {
+        ...state.project,
+        foundations: { ...state.project.foundations, shadows: { ...action.shadows } },
       });
     case 'set-spacing':
       if (state.project.foundations?.spacing === action.value) return state;

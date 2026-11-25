@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
-import { Box, Divider, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, Divider, InputBase, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
 import type { PaletteSettings } from '../../domain/palette.types';
-import { useEditorState } from '../../state/editor-hooks';
-import type { PreviewMode } from '../../state/editor-state.types';
+import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
+import type {
+  PreviewMode,
+  SemanticPaletteRole,
+  SurfacePaletteRole,
+} from '../../state/editor-state.types';
 import { PillTab, SearchBox, shellBorder } from './primitives';
 import { ResetProjectDialog } from './reset-project-dialog';
 import { useProjectReset } from './use-project-reset';
@@ -21,9 +25,10 @@ import { TypographyPanel } from './TypographyPanel';
 //
 // The panels read the existing editor state so they show the current
 // project's values, with the same fallback values the old shell's
-// inspectors use. Tab selection is local UI state only, and the panel
-// inputs do not dispatch yet (editing arrives in a later phase); the one
-// exception is the preset row, which Phase 4 wired to the reset flow.
+// inspectors use. Tab selection is local UI state only. Phase 5 wired
+// the panels: every control dispatches the same editor actions the old
+// shell's inspectors use, so edits are undoable like all other edits.
+// The preset row was wired earlier, in Phase 4 (see below).
 
 const paletteDefaults = {
   light: {
@@ -61,6 +66,12 @@ type PaletteDefaultKey = keyof (typeof paletteDefaults)['light'];
 interface ColorRowData {
   label: string;
   value: string;
+  // Which reducer action edits this row, mirroring the old shell's
+  // PaletteInspector: semantic roles go through set-semantic-color,
+  // everything else (text, backgrounds, divider) through
+  // set-surface-color.
+  kind: 'semantic' | 'surface';
+  role: SemanticPaletteRole | SurfacePaletteRole;
 }
 
 interface ColorSectionData {
@@ -80,28 +91,28 @@ function buildColorSections(
     {
       title: 'Text',
       rows: [
-        { label: 'Primary text', value: pick(palette?.text?.primary, 'text.primary') },
-        { label: 'Secondary text', value: pick(palette?.text?.secondary, 'text.secondary') },
-        { label: 'Disabled text', value: pick(palette?.text?.disabled, 'text.disabled') },
+        { label: 'Primary text', value: pick(palette?.text?.primary, 'text.primary'), kind: 'surface', role: 'text.primary' },
+        { label: 'Secondary text', value: pick(palette?.text?.secondary, 'text.secondary'), kind: 'surface', role: 'text.secondary' },
+        { label: 'Disabled text', value: pick(palette?.text?.disabled, 'text.disabled'), kind: 'surface', role: 'text.disabled' },
       ],
     },
     {
       title: 'Semantic colors',
       rows: [
-        { label: 'Primary', value: pick(palette?.primary?.main, 'primary') },
-        { label: 'Secondary', value: pick(palette?.secondary?.main, 'secondary') },
-        { label: 'Error', value: pick(palette?.error?.main, 'error') },
-        { label: 'Warning', value: pick(palette?.warning?.main, 'warning') },
-        { label: 'Info', value: pick(palette?.info?.main, 'info') },
-        { label: 'Success', value: pick(palette?.success?.main, 'success') },
+        { label: 'Primary', value: pick(palette?.primary?.main, 'primary'), kind: 'semantic', role: 'primary' },
+        { label: 'Secondary', value: pick(palette?.secondary?.main, 'secondary'), kind: 'semantic', role: 'secondary' },
+        { label: 'Error', value: pick(palette?.error?.main, 'error'), kind: 'semantic', role: 'error' },
+        { label: 'Warning', value: pick(palette?.warning?.main, 'warning'), kind: 'semantic', role: 'warning' },
+        { label: 'Info', value: pick(palette?.info?.main, 'info'), kind: 'semantic', role: 'info' },
+        { label: 'Success', value: pick(palette?.success?.main, 'success'), kind: 'semantic', role: 'success' },
       ],
     },
     {
       title: 'Surfaces',
       rows: [
-        { label: 'Page background', value: pick(palette?.background?.default, 'background.default') },
-        { label: 'Surface', value: pick(palette?.background?.paper, 'background.paper') },
-        { label: 'Divider', value: pick(palette?.divider, 'divider') },
+        { label: 'Page background', value: pick(palette?.background?.default, 'background.default'), kind: 'surface', role: 'background.default' },
+        { label: 'Surface', value: pick(palette?.background?.paper, 'background.paper'), kind: 'surface', role: 'background.paper' },
+        { label: 'Divider', value: pick(palette?.divider, 'divider'), kind: 'surface', role: 'divider' },
       ],
     },
   ];
@@ -290,14 +301,19 @@ function TokenTabList({
 }
 
 function ModeSegmented({ activeMode }: { activeMode: PreviewMode }) {
+  const dispatch = useEditorDispatch();
   const segment = (mode: PreviewMode, label: string) => (
     <Box
+      aria-pressed={activeMode === mode}
+      onClick={() => dispatch({ type: 'set-active-mode', mode })}
+      role="button"
       sx={{
         alignItems: 'center',
         bgcolor: activeMode === mode ? 'background.paper' : 'transparent',
         borderRadius: '6px',
         boxShadow: activeMode === mode ? '0 1px 2px rgba(0, 0, 0, 0.08)' : 'none',
         color: activeMode === mode ? 'text.primary' : 'text.secondary',
+        cursor: 'pointer',
         display: 'flex',
         fontSize: 14,
         height: 25,
@@ -326,12 +342,41 @@ function ModeSegmented({ activeMode }: { activeMode: PreviewMode }) {
   );
 }
 
-function ColorRow({ label, value }: ColorRowData) {
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+// Editable hex row (Phase 5), mirroring the old shell's ColorControl
+// behavior: the hex shows as text in the frame's 78x32 box and clicking
+// it turns the box into an input holding a local draft. A valid
+// six-digit hex commits lowercased on blur (Enter blurs), and an invalid
+// or partial draft reverts to the current value instead of dispatching.
+// The parent keys each row by its committed value, so a commit or an
+// undo remounts the row with a fresh draft, again like the old shell.
+function ColorRow({ kind, label, role, value }: ColorRowData) {
+  const { activeMode } = useEditorState();
+  const dispatch = useEditorDispatch();
+  const [draft, setDraft] = useState(value);
+  const [editing, setEditing] = useState(false);
+  const valid = HEX_COLOR.test(draft);
+
+  const commit = () => {
+    setEditing(false);
+    if (!valid) {
+      setDraft(value);
+      return;
+    }
+    const color = draft.toLowerCase();
+    if (kind === 'semantic') {
+      dispatch({ type: 'set-semantic-color', mode: activeMode, role: role as SemanticPaletteRole, color });
+    } else {
+      dispatch({ type: 'set-surface-color', mode: activeMode, role: role as SurfacePaletteRole, color });
+    }
+  };
+
   return (
     <Box sx={{ alignItems: 'center', display: 'flex', height: 32 }}>
       <Box
         sx={{
-          bgcolor: value,
+          bgcolor: editing && valid ? draft : value,
           border: shellBorder,
           borderRadius: '6px',
           flexShrink: 0,
@@ -341,10 +386,15 @@ function ColorRow({ label, value }: ColorRowData) {
       />
       <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1.5 }}>{label}</Typography>
       <Box
+        onClick={() => {
+          setDraft(value);
+          setEditing(true);
+        }}
         sx={{
           alignItems: 'center',
           border: shellBorder,
           borderRadius: '6px',
+          cursor: 'text',
           display: 'flex',
           flexShrink: 0,
           height: 32,
@@ -353,24 +403,56 @@ function ColorRow({ label, value }: ColorRowData) {
           width: 78,
         }}
       >
-        <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{value}</Typography>
+        {editing ? (
+          <InputBase
+            autoFocus
+            error={!valid}
+            inputProps={{
+              'aria-label': `${label} hex value`,
+              style: { textAlign: 'center' },
+            }}
+            onBlur={commit}
+            onChange={(event) => setDraft(event.target.value)}
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+            sx={{ fontSize: 14, lineHeight: '20px', width: '100%' }}
+            value={draft}
+          />
+        ) : (
+          <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{value}</Typography>
+        )}
       </Box>
     </Box>
   );
 }
 
+// Sections collapse and expand locally (view state only, never in the
+// project or the reducer); all three start expanded.
 function ColorSection({ rows, title }: ColorSectionData) {
+  const [expanded, setExpanded] = useState(true);
   return (
     <Stack spacing={1.5}>
-      <Box sx={{ alignItems: 'center', display: 'flex' }}>
+      <Box
+        aria-expanded={expanded}
+        onClick={() => setExpanded((previous) => !previous)}
+        role="button"
+        sx={{ alignItems: 'center', cursor: 'pointer', display: 'flex' }}
+      >
         <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
           {title}
         </Typography>
-        <CaretDownIcon size={16} style={{ marginLeft: 'auto' }} />
+        <CaretDownIcon
+          size={16}
+          style={{
+            marginLeft: 'auto',
+            transform: expanded ? undefined : 'rotate(-90deg)',
+          }}
+        />
       </Box>
-      {rows.map((row) => (
-        <ColorRow key={row.label} {...row} />
-      ))}
+      {expanded &&
+        rows.map((row) => (
+          <ColorRow key={`${row.kind}-${row.role}-${row.value}`} {...row} />
+        ))}
     </Stack>
   );
 }
@@ -378,8 +460,26 @@ function ColorSection({ rows, title }: ColorSectionData) {
 export function TokenPanel() {
   const { activeMode, project } = useEditorState();
   const [activeTab, setActiveTab] = useState<TokenTab>('Color');
+  const [query, setQuery] = useState('');
   const palette = project.colorSchemes[activeMode].palette;
-  const sections = buildColorSections(palette, activeMode);
+
+  // The panel search filters the Color tab's rows by token name and hex
+  // value (the design spec); sections left with no matching row drop out
+  // while a query is active. Other tabs ignore the query.
+  const normalizedQuery = query.trim().toLowerCase();
+  const sections = buildColorSections(palette, activeMode)
+    .map((section) => ({
+      ...section,
+      rows:
+        normalizedQuery === ''
+          ? section.rows
+          : section.rows.filter(
+              (row) =>
+                row.label.toLowerCase().includes(normalizedQuery) ||
+                row.value.toLowerCase().includes(normalizedQuery),
+            ),
+    }))
+    .filter((section) => section.rows.length > 0);
 
   return (
     <Box
@@ -397,7 +497,7 @@ export function TokenPanel() {
       <PresetRow />
       <TokenTabList activeTab={activeTab} onSelect={setActiveTab} />
       <Box sx={{ flex: 1, overflowY: 'auto', px: 1, pb: 2 }}>
-        <SearchBox />
+        <SearchBox onChange={setQuery} value={query} />
         {activeTab === 'Color' && (
           <>
             <Box sx={{ mt: 1.5 }}>

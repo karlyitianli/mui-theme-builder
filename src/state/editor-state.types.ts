@@ -1,4 +1,5 @@
 import type { ThemeProject } from '../domain/project';
+import type { ShadowSettings } from '../domain/foundation-defaults';
 import type { ButtonSettings } from '../domain/components/button.types';
 import type { SelectSettings } from '../domain/components/select.types';
 import type { TextFieldSettings } from '../domain/components/text-field.types';
@@ -50,7 +51,10 @@ export type EditorAction =
   | { type: 'set-google-font'; font: GoogleFontSettings }
   | { type: 'set-typography-variant'; variant: TypographyVariant; patch: TypographyStyle }
   | { type: 'set-border-radius'; value: number }
+  | { type: 'set-card-border-radius'; value: number }
   | { type: 'set-spacing'; value: number }
+  | { type: 'set-shadow-elevation'; target: keyof ShadowSettings; value: number }
+  | { type: 'set-shadows'; shadows: Required<ShadowSettings> }
   | { type: 'set-button-settings'; settings: ButtonSettings }
   | { type: 'set-text-field-settings'; settings: TextFieldSettings }
   | { type: 'set-select-settings'; settings: SelectSettings }

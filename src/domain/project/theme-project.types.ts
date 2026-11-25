@@ -1,6 +1,7 @@
 import type { ButtonSettings } from '../components/button.types';
 import type { SelectSettings } from '../components/select.types';
 import type { TextFieldSettings } from '../components/text-field.types';
+import type { ShadowSettings } from '../foundation-defaults';
 import type { PaletteSettings } from '../palette.types';
 import type { TypographySettings } from '../typography.types';
 import type { CssLengthValue } from '../value.types';
@@ -20,9 +21,10 @@ export interface ThemeProjectV1 {
     dark: { palette?: PaletteSettings };
   };
   foundations?: {
-    shape?: { borderRadius?: CssLengthValue };
+    shape?: { borderRadius?: CssLengthValue; cardBorderRadius?: CssLengthValue };
     spacing?: number;
     typography?: TypographySettings;
+    shadows?: ShadowSettings;
     interactions?: {
       disableRipple?: boolean;
     };

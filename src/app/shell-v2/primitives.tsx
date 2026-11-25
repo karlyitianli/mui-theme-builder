@@ -95,7 +95,33 @@ export function SectionLabel({ children }: { children: string }) {
   );
 }
 
-export function Stepper({ value }: { value: string }) {
+interface StepperProps {
+  value: string;
+  // When both handlers are given, the minus and plus signs become real
+  // buttons (Phase 5 wiring); without them the stepper is display only,
+  // exactly as the Phase 2 panels rendered it.
+  onDecrement?: () => void;
+  onIncrement?: () => void;
+  label?: string;
+}
+
+export function Stepper({ label, onDecrement, onIncrement, value }: StepperProps) {
+  const editable = onDecrement !== undefined && onIncrement !== undefined;
+  const signSx = {
+    alignItems: 'center',
+    bgcolor: 'transparent',
+    border: 0,
+    color: 'text.secondary',
+    display: 'flex',
+    fontFamily: 'inherit',
+    fontSize: 14,
+    height: '100%',
+    justifyContent: 'center',
+    lineHeight: '20px',
+    p: 0,
+    width: 28,
+  } as const;
+
   return (
     <Box
       sx={{
@@ -110,12 +136,24 @@ export function Stepper({ value }: { value: string }) {
         width: 98,
       }}
     >
-      <Typography
-        color="text.secondary"
-        sx={{ fontSize: 14, lineHeight: '20px', textAlign: 'center', width: 28 }}
-      >
-        {'\u2212'}
-      </Typography>
+      {editable ? (
+        <Box
+          aria-label={`Decrease ${label ?? 'value'}`}
+          component="button"
+          onClick={onDecrement}
+          sx={{ ...signSx, cursor: 'pointer' }}
+          type="button"
+        >
+          {'\u2212'}
+        </Box>
+      ) : (
+        <Typography
+          color="text.secondary"
+          sx={{ fontSize: 14, lineHeight: '20px', textAlign: 'center', width: 28 }}
+        >
+          {'\u2212'}
+        </Typography>
+      )}
       <Typography
         sx={{
           fontSize: 13,
@@ -127,12 +165,24 @@ export function Stepper({ value }: { value: string }) {
       >
         {value}
       </Typography>
-      <Typography
-        color="text.secondary"
-        sx={{ fontSize: 14, lineHeight: '20px', textAlign: 'center', width: 28 }}
-      >
-        +
-      </Typography>
+      {editable ? (
+        <Box
+          aria-label={`Increase ${label ?? 'value'}`}
+          component="button"
+          onClick={onIncrement}
+          sx={{ ...signSx, cursor: 'pointer' }}
+          type="button"
+        >
+          +
+        </Box>
+      ) : (
+        <Typography
+          color="text.secondary"
+          sx={{ fontSize: 14, lineHeight: '20px', textAlign: 'center', width: 28 }}
+        >
+          +
+        </Typography>
+      )}
     </Box>
   );
 }
@@ -140,16 +190,18 @@ export function Stepper({ value }: { value: string }) {
 interface StepperRowProps {
   label: string;
   value: string;
+  onDecrement?: () => void;
+  onIncrement?: () => void;
 }
 
 // Label on the left in the 12px semibold secondary section style, stepper
 // pinned to the right edge, as in the frames' global value rows.
-export function StepperRow({ label, value }: StepperRowProps) {
+export function StepperRow({ label, onDecrement, onIncrement, value }: StepperRowProps) {
   return (
     <Box sx={{ alignItems: 'center', display: 'flex', height: 30 }}>
       <SectionLabel>{label}</SectionLabel>
       <Box sx={{ ml: 'auto' }}>
-        <Stepper value={value} />
+        <Stepper label={label} onDecrement={onDecrement} onIncrement={onIncrement} value={value} />
       </Box>
     </Box>
   );
@@ -157,12 +209,12 @@ export function StepperRow({ label, value }: StepperRowProps) {
 
 // Same row with the label in the 14px regular style the frames use for the
 // per-component override rows (Button, Card, Input).
-export function ComponentStepperRow({ label, value }: StepperRowProps) {
+export function ComponentStepperRow({ label, onDecrement, onIncrement, value }: StepperRowProps) {
   return (
     <Box sx={{ alignItems: 'center', display: 'flex', height: 30 }}>
       <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{label}</Typography>
       <Box sx={{ ml: 'auto' }}>
-        <Stepper value={value} />
+        <Stepper label={label} onDecrement={onDecrement} onIncrement={onIncrement} value={value} />
       </Box>
     </Box>
   );
@@ -172,23 +224,31 @@ interface PresetPillsProps {
   activeIndex: number;
   gap?: number;
   options: string[];
+  // When given, the pills become buttons that report their index
+  // (Phase 5 wiring); without it they render as the static Phase 2 pills.
+  onSelect?: (index: number) => void;
 }
 
-export function PresetPills({ activeIndex, gap = 12, options }: PresetPillsProps) {
+export function PresetPills({ activeIndex, gap = 12, onSelect, options }: PresetPillsProps) {
   return (
     <Box sx={{ display: 'flex', gap: `${gap}px` }}>
       {options.map((option, index) => {
         const active = index === activeIndex;
         return (
           <Box
+            component={onSelect ? 'button' : 'div'}
             key={option}
+            onClick={onSelect ? () => onSelect(index) : undefined}
+            type={onSelect ? 'button' : undefined}
             sx={{
               alignItems: 'center',
               bgcolor: active ? 'primary.main' : 'background.paper',
               border: active ? '1px solid transparent' : '1px solid #e5e5e5',
               borderRadius: 999,
               color: active ? 'primary.contrastText' : 'text.primary',
+              cursor: onSelect ? 'pointer' : undefined,
               display: 'flex',
+              fontFamily: 'inherit',
               fontSize: 13,
               fontWeight: 500,
               height: 28,
