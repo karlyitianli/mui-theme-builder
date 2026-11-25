@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
-import { Box, Typography } from '@mui/material';
+import { Box, InputBase, Typography } from '@mui/material';
 
 // Shared chrome pieces for the v2 shell, matching Figma frame 358:10:
 // pill tabs (Inter 14/20, 12px horizontal and 4px vertical padding, 6px gap,
@@ -36,7 +36,14 @@ export function PillTab({ active = false, label, onClick }: PillTabProps) {
   );
 }
 
-export function SearchBox() {
+interface SearchBoxProps {
+  onChange?: (value: string) => void;
+  value?: string;
+}
+
+// Without an onChange the box is the static Phase 1 placeholder. With one
+// it is a real controlled search input (Phase 3 preview filtering).
+export function SearchBox({ onChange, value }: SearchBoxProps) {
   return (
     <Box
       sx={{
@@ -50,9 +57,19 @@ export function SearchBox() {
       }}
     >
       <MagnifyingGlassIcon color="var(--mui-palette-text-secondary)" size={14} />
-      <Typography color="text.secondary" sx={{ fontSize: 14, lineHeight: '20px' }}>
-        Search
-      </Typography>
+      {onChange ? (
+        <InputBase
+          inputProps={{ 'aria-label': 'Search' }}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="Search"
+          sx={{ flex: 1, fontSize: 14, lineHeight: '20px' }}
+          value={value ?? ''}
+        />
+      ) : (
+        <Typography color="text.secondary" sx={{ fontSize: 14, lineHeight: '20px' }}>
+          Search
+        </Typography>
+      )}
     </Box>
   );
 }
