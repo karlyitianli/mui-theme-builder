@@ -4,12 +4,14 @@ import { ArrowUUpLeftIcon } from '@phosphor-icons/react/dist/csr/ArrowUUpLeft';
 import { ArrowUUpRightIcon } from '@phosphor-icons/react/dist/csr/ArrowUUpRight';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { ExportIcon } from '@phosphor-icons/react/dist/csr/Export';
+import { MoonIcon } from '@phosphor-icons/react/dist/csr/Moon';
 import { SunIcon } from '@phosphor-icons/react/dist/csr/Sun';
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
 
+import { GeneratedCodeDrawer } from '../../generator/GeneratedCodeDrawer';
 import { PreviewBoundary } from '../../preview/PreviewBoundary';
 import { PreviewProvider } from '../../preview/PreviewProvider';
-import { useEditorState } from '../../state/editor-hooks';
+import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
 import {
   filterPreviewComponents,
   groupPreviewComponents,
@@ -17,21 +19,29 @@ import {
   type PreviewComponentEntry,
 } from './component-registry';
 import { PillTab, SearchBox, shellBorder } from './primitives';
+import { ResetProjectDialog } from './reset-project-dialog';
+import { useProjectReset } from './use-project-reset';
 
 // Right side of the v2 shell, from Figma frame 358:10: top bar, preview
 // tabs (Components, Templates), search, and the component cards.
 //
-// The top bar buttons are still inert (Phase 4 wires them). Phase 3 made
-// the preview area real: the Components tab renders the component
-// registry (component-registry.tsx) as pure preview cards grouped under
-// collapsible category headers, the search box filters the registry by
-// name, and the Templates tab shows four stub cards. Each card body
-// renders the real MUI component inside the existing PreviewProvider, so
-// it reflects the current project and active mode from the same editor
-// state as the original shell.
+// Phase 4 wired the top bar: the light/dark switch dispatches
+// set-active-mode, Undo and Redo dispatch the reducer's history actions,
+// Reset goes through the shared reset flow (use-project-reset.ts), and
+// Export opens the existing GeneratedCodeDrawer over the current project.
+// Phase 3 made the preview area real: the Components tab renders the
+// component registry (component-registry.tsx) as pure preview cards
+// grouped under collapsible category headers, the search box filters the
+// registry by name, and the Templates tab shows four stub cards. Each
+// card body renders the real MUI component inside the existing
+// PreviewProvider, so it reflects the current project and active mode
+// from the same editor state as the original shell.
 
 function ShellTopBar() {
-  const { future, past } = useEditorState();
+  const { activeMode, future, past, project } = useEditorState();
+  const dispatch = useEditorDispatch();
+  const { cancelReset, confirmOpen, confirmReset, requestReset } = useProjectReset();
+  const [codeOpen, setCodeOpen] = useState(false);
 
   return (
     <Box
@@ -46,12 +56,23 @@ function ShellTopBar() {
       }}
     >
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-        {/* Light/dark switch, shown in its light position. */}
+        {/* Light/dark switch: dispatches set-active-mode with the other
+            mode; the knob and icon follow the active mode. */}
         <Box
+          aria-checked={activeMode === 'dark'}
+          aria-label="Toggle preview mode"
+          onClick={() =>
+            dispatch({
+              type: 'set-active-mode',
+              mode: activeMode === 'light' ? 'dark' : 'light',
+            })
+          }
+          role="switch"
           sx={{
             bgcolor: 'secondary.main',
             border: shellBorder,
             borderRadius: 999,
+            cursor: 'pointer',
             flexShrink: 0,
             height: 24,
             position: 'relative',
@@ -67,23 +88,36 @@ function ShellTopBar() {
               display: 'flex',
               height: 20,
               justifyContent: 'center',
-              left: 2,
+              left: activeMode === 'light' ? 2 : 22,
               position: 'absolute',
               top: 1,
+              transition: 'left 150ms ease',
               width: 20,
             }}
           >
-            <SunIcon size={12} />
+            {activeMode === 'light' ? <SunIcon size={12} /> : <MoonIcon size={12} />}
           </Box>
         </Box>
 
         <Box sx={{ bgcolor: 'divider', height: 32, width: '1px' }} />
 
         <Stack direction="row">
-          <IconButton aria-label="Undo" disabled={past.length === 0} size="small" sx={{ height: 36, width: 36 }}>
+          <IconButton
+            aria-label="Undo"
+            disabled={past.length === 0}
+            onClick={() => dispatch({ type: 'undo' })}
+            size="small"
+            sx={{ height: 36, width: 36 }}
+          >
             <ArrowUUpLeftIcon size={16} />
           </IconButton>
-          <IconButton aria-label="Redo" disabled={future.length === 0} size="small" sx={{ height: 36, width: 36 }}>
+          <IconButton
+            aria-label="Redo"
+            disabled={future.length === 0}
+            onClick={() => dispatch({ type: 'redo' })}
+            size="small"
+            sx={{ height: 36, width: 36 }}
+          >
             <ArrowUUpRightIcon size={16} />
           </IconButton>
         </Stack>
@@ -92,6 +126,7 @@ function ShellTopBar() {
 
         <Button
           color="inherit"
+          onClick={requestReset}
           startIcon={<ArrowClockwiseIcon size={14} />}
           sx={{ color: 'text.secondary', height: 32, minHeight: 32 }}
         >
@@ -100,12 +135,20 @@ function ShellTopBar() {
       </Stack>
 
       <Button
+        onClick={() => setCodeOpen(true)}
         startIcon={<ExportIcon size={14} />}
         sx={{ height: 32, marginLeft: 'auto', minHeight: 32 }}
         variant="contained"
       >
         Export
       </Button>
+
+      <ResetProjectDialog
+        onCancel={cancelReset}
+        onConfirm={confirmReset}
+        open={confirmOpen}
+      />
+      <GeneratedCodeDrawer onClose={() => setCodeOpen(false)} open={codeOpen} project={project} />
     </Box>
   );
 }

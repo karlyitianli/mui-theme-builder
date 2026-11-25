@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
 import type { PaletteSettings } from '../../domain/palette.types';
 import { useEditorState } from '../../state/editor-hooks';
 import type { PreviewMode } from '../../state/editor-state.types';
 import { PillTab, SearchBox, shellBorder } from './primitives';
+import { ResetProjectDialog } from './reset-project-dialog';
+import { useProjectReset } from './use-project-reset';
 import { RadiusPanel } from './RadiusPanel';
 import { ShadowsPanel } from './ShadowsPanel';
 import { SpacingPanel } from './SpacingPanel';
@@ -18,8 +20,9 @@ import { TypographyPanel } from './TypographyPanel';
 //
 // The panels read the existing editor state so they show the current
 // project's values, with the same fallback values the old shell's
-// inspectors use. Tab selection is local UI state only: no control here
-// dispatches changes yet; editing arrives in a later phase.
+// inspectors use. Tab selection is local UI state only, and the panel
+// inputs do not dispatch yet (editing arrives in a later phase); the one
+// exception is the preset row, which Phase 4 wired to the reset flow.
 
 const paletteDefaults = {
   light: {
@@ -107,36 +110,65 @@ const presetDots = ['#171717', '#f5f5f5', '#f5f5f5', '#e5e5e5'];
 const tokenTabs = ['Color', 'Typography', 'Spacing', 'Radius', 'Shadows'] as const;
 type TokenTab = (typeof tokenTabs)[number];
 
+// The preset selector is a real control (Phase 4): it opens a menu whose
+// only entry today is the current preset, Default. Choosing it loads the
+// default project through the shared reset flow (use-project-reset.ts),
+// including the dirty confirm when there are edits to lose.
 function PresetRow() {
+  const { cancelReset, confirmOpen, confirmReset, requestReset } = useProjectReset();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const chooseDefault = () => {
+    setAnchorEl(null);
+    requestReset();
+  };
+
   return (
-    <Box
-      sx={{
-        alignItems: 'center',
-        borderBottom: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        flexShrink: 0,
-        height: 56,
-        px: 1.5,
-      }}
-    >
-      <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
-        {presetDots.map((color, index) => (
-          <Box
-            key={index}
-            sx={{
-              bgcolor: color,
-              border: '1px solid #e5e5e5',
-              borderRadius: '50%',
-              height: 12,
-              width: 12,
-            }}
-          />
-        ))}
-      </Stack>
-      <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1 }}>Default</Typography>
-      <CaretDownIcon size={16} style={{ marginLeft: 'auto' }} />
-    </Box>
+    <>
+      <Box
+        aria-haspopup="menu"
+        aria-label="Theme preset: Default"
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        role="button"
+        sx={{
+          alignItems: 'center',
+          borderBottom: 1,
+          borderColor: 'divider',
+          cursor: 'pointer',
+          display: 'flex',
+          flexShrink: 0,
+          height: 56,
+          px: 1.5,
+        }}
+      >
+        <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
+          {presetDots.map((color, index) => (
+            <Box
+              key={index}
+              sx={{
+                bgcolor: color,
+                border: '1px solid #e5e5e5',
+                borderRadius: '50%',
+                height: 12,
+                width: 12,
+              }}
+            />
+          ))}
+        </Stack>
+        <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1 }}>Default</Typography>
+        <CaretDownIcon size={16} style={{ marginLeft: 'auto' }} />
+      </Box>
+      <Menu anchorEl={anchorEl} onClose={() => setAnchorEl(null)} open={anchorEl !== null}>
+        <MenuItem onClick={chooseDefault} selected>
+          Default
+        </MenuItem>
+      </Menu>
+      <ResetProjectDialog
+        onCancel={cancelReset}
+        onConfirm={confirmReset}
+        open={confirmOpen}
+      />
+    </>
   );
 }
 
