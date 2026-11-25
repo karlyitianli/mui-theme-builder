@@ -1,5 +1,5 @@
 import { useReducer } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { ThemeProject } from '../../domain/project';
@@ -191,5 +191,81 @@ describe('TokenPanel wiring (Phase 5)', () => {
     });
     fireEvent.click(screen.getByLabelText('Increase Global elevation'));
     expect(probeProject().foundations?.shadows?.global).toBe(5);
+  });
+});
+
+// Semantic tokens expose Main, Light, and Dark rows. An unpinned Light
+// or Dark row shows the value MUI derives from main (the same runtime
+// theme the preview renders with) with an Auto marker; editing it pins
+// the value, and the pinned row's reset control unpins it again.
+describe('TokenPanel semantic color variants', () => {
+  afterEach(() => cleanup());
+
+  function rowElement(label: string): HTMLElement {
+    const row = screen.getByText(label).parentElement;
+    if (!row) throw new Error(`row for ${label} not found`);
+    return row;
+  }
+
+  // Like editHex, but scoped to one row: several rows can share a hex
+  // text once derived values are on screen.
+  function editRowHex(label: string, nextValue: string) {
+    fireEvent.click(within(rowElement(label)).getByText(/^#[0-9a-f]{6}$/));
+    const input = screen.getByLabelText(`${label} hex value`);
+    fireEvent.change(input, { target: { value: nextValue } });
+    fireEvent.blur(input);
+  }
+
+  it('shows Main, Light, and Dark rows per token, with derived values marked Auto', () => {
+    renderPanel();
+    expect(screen.getByText('Primary light')).toBeInTheDocument();
+    expect(screen.getByText('Primary dark')).toBeInTheDocument();
+    // MUI's derivation from the default primary main #171717.
+    expect(within(rowElement('Primary light')).getByText('#454545')).toBeInTheDocument();
+    expect(within(rowElement('Primary dark')).getByText('#101010')).toBeInTheDocument();
+    // Six tokens times two variants, all unpinned on a fresh project.
+    expect(screen.getAllByText('Auto')).toHaveLength(12);
+    expect(screen.queryByLabelText('Reset Primary light to auto')).not.toBeInTheDocument();
+  });
+
+  it('editing a Light row pins the value and swaps the Auto marker for a reset control', () => {
+    renderPanel();
+    editRowHex('Primary light', '#123456');
+    expect(probeProject().colorSchemes.light.palette?.primary).toEqual({
+      main: '#171717',
+      light: '#123456',
+    });
+    expect(within(rowElement('Primary light')).getByText('#123456')).toBeInTheDocument();
+    expect(screen.getByLabelText('Reset Primary light to auto')).toBeInTheDocument();
+    expect(screen.getAllByText('Auto')).toHaveLength(11);
+  });
+
+  it('resetting a pinned variant restores the derived value and the Auto marker', () => {
+    renderPanel();
+    editRowHex('Primary light', '#123456');
+    fireEvent.click(screen.getByLabelText('Reset Primary light to auto'));
+    const primary = probeProject().colorSchemes.light.palette?.primary;
+    expect(primary?.light).toBeUndefined();
+    expect(primary?.main).toBe('#171717');
+    expect(within(rowElement('Primary light')).getByText('#454545')).toBeInTheDocument();
+    expect(screen.getAllByText('Auto')).toHaveLength(12);
+    expect(screen.queryByLabelText('Reset Primary light to auto')).not.toBeInTheDocument();
+  });
+
+  it('editing Main re-derives the unpinned Light and Dark rows', () => {
+    renderPanel();
+    editHex('#171717', 'Primary', '#6750a4');
+    expect(probeProject().colorSchemes.light.palette?.primary).toEqual({ main: '#6750a4' });
+    expect(within(rowElement('Primary light')).getByText('#8573b6')).toBeInTheDocument();
+    expect(within(rowElement('Primary dark')).getByText('#483872')).toBeInTheDocument();
+    expect(screen.getAllByText('Auto')).toHaveLength(12);
+  });
+
+  it('the Dark scheme shows its own derived rows', () => {
+    renderPanel();
+    fireEvent.click(screen.getByText('Dark'));
+    expect(screen.getAllByText('Auto')).toHaveLength(12);
+    // The light scheme's derived primary light is gone with the scheme.
+    expect(within(rowElement('Primary light')).queryByText('#454545')).not.toBeInTheDocument();
   });
 });

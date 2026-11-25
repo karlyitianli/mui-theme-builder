@@ -45,3 +45,126 @@ describe('editorReducer (characterization)', () => {
     expect(next.past).toHaveLength(1);
   });
 });
+
+describe('editorReducer semantic color variants', () => {
+  it('setting a main color without a variant keeps the main-only behavior', () => {
+    const state = createInitialEditorState();
+    const next = editorReducer(state, {
+      type: 'set-semantic-color',
+      mode: 'light',
+      role: 'primary',
+      color: '#6750a4',
+    });
+    expect(next.project.colorSchemes.light.palette?.primary).toEqual({ main: '#6750a4' });
+    expect(next.past).toHaveLength(1);
+  });
+
+  it('pinning a light variant on an unstored role seeds main with the effective default', () => {
+    const state = createInitialEditorState();
+    const next = editorReducer(state, {
+      type: 'set-semantic-color',
+      mode: 'light',
+      role: 'primary',
+      variant: 'light',
+      color: '#aabbcc',
+    });
+    expect(next.project.colorSchemes.light.palette?.primary).toEqual({
+      main: '#171717',
+      light: '#aabbcc',
+    });
+    expect(next.past).toHaveLength(1);
+  });
+
+  it('pinning a variant on a role the baseline omits seeds the MUI default main', () => {
+    const state = createInitialEditorState();
+    const next = editorReducer(state, {
+      type: 'set-semantic-color',
+      mode: 'light',
+      role: 'warning',
+      variant: 'dark',
+      color: '#112233',
+    });
+    expect(next.project.colorSchemes.light.palette?.warning).toEqual({
+      main: '#ed6c02',
+      dark: '#112233',
+    });
+  });
+
+  it('pinning a variant preserves a stored main and leaves the other scheme untouched', () => {
+    const state = createInitialEditorState();
+    const withMain = editorReducer(state, {
+      type: 'set-semantic-color',
+      mode: 'dark',
+      role: 'primary',
+      color: '#d0bcff',
+    });
+    const pinned = editorReducer(withMain, {
+      type: 'set-semantic-color',
+      mode: 'dark',
+      role: 'primary',
+      variant: 'dark',
+      color: '#111111',
+    });
+    expect(pinned.project.colorSchemes.dark.palette?.primary).toEqual({
+      main: '#d0bcff',
+      dark: '#111111',
+    });
+    expect(pinned.project.colorSchemes.light.palette?.primary).toBeUndefined();
+  });
+
+  it('clearing a pinned variant removes only that variant, as one undoable step', () => {
+    const state = createInitialEditorState();
+    const pinned = editorReducer(state, {
+      type: 'set-semantic-color',
+      mode: 'light',
+      role: 'primary',
+      variant: 'light',
+      color: '#aabbcc',
+    });
+    const cleared = editorReducer(pinned, {
+      type: 'clear-semantic-color-variant',
+      mode: 'light',
+      role: 'primary',
+      variant: 'light',
+    });
+    expect(cleared.project.colorSchemes.light.palette?.primary).toEqual({ main: '#171717' });
+    expect(cleared.past).toHaveLength(2);
+    const undone = editorReducer(cleared, { type: 'undo' });
+    expect(undone.project.colorSchemes.light.palette?.primary).toEqual({
+      main: '#171717',
+      light: '#aabbcc',
+    });
+  });
+
+  it('clearing an unpinned variant is a no-op', () => {
+    const state = createInitialEditorState();
+    const next = editorReducer(state, {
+      type: 'clear-semantic-color-variant',
+      mode: 'light',
+      role: 'primary',
+      variant: 'light',
+    });
+    expect(next).toBe(state);
+  });
+
+  it('pinning a variant to its already stored value is a no-op, and undo unpins a fresh pin', () => {
+    const state = createInitialEditorState();
+    const pinned = editorReducer(state, {
+      type: 'set-semantic-color',
+      mode: 'light',
+      role: 'primary',
+      variant: 'dark',
+      color: '#445566',
+    });
+    const repinned = editorReducer(pinned, {
+      type: 'set-semantic-color',
+      mode: 'light',
+      role: 'primary',
+      variant: 'dark',
+      color: '#445566',
+    });
+    expect(repinned).toBe(pinned);
+    const undone = editorReducer(pinned, { type: 'undo' });
+    expect(undone.project.colorSchemes.light.palette?.primary).toBeUndefined();
+  });
+});

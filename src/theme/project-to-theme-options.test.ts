@@ -1,9 +1,13 @@
+import { createTheme, rgbToHex } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
 
+import type { ThemeProject } from '../domain/project';
 import {
   customizedProjectFixture,
   defaultProjectFixture,
 } from '../fixtures/theme-project.fixtures';
+import { createRuntimeTheme, resolveSemanticColors } from './create-runtime-theme';
+import { semanticColorMainDefault } from './palette-adapter';
 import { projectToThemeOptions } from './project-to-theme-options';
 
 // Characterization tests for the project to MUI theme options mapping.
@@ -35,5 +39,75 @@ describe('projectToThemeOptions (characterization)', () => {
       | undefined;
     expect(button?.defaultProps).toMatchObject({ disableElevation: true, variant: 'contained' });
     expect(button?.styleOverrides?.root).toMatchObject({ textTransform: 'none', fontWeight: 600 });
+  });
+});
+
+describe('semantic color variants (main, light, dark)', () => {
+  it('leaves light and dark out of the options for an unpinned token', () => {
+    const options = projectToThemeOptions(customizedProjectFixture);
+    const light = options.colorSchemes?.light as {
+      palette?: { primary?: Record<string, unknown> };
+    };
+    // Only the stored main plus the baseline contrastText: no light or
+    // dark keys, so the consumer's createTheme derives them from main.
+    expect(light.palette?.primary).toEqual({ main: '#6750a4', contrastText: '#fafafa' });
+  });
+
+  it('derives an unpinned token\u2019s light and dark from its custom main at theme build', () => {
+    const theme = createRuntimeTheme(customizedProjectFixture);
+    const lightOracle = createTheme({ palette: { primary: { main: '#6750a4' } } });
+    expect(theme.colorSchemes.light!.palette.primary.light).toBe(lightOracle.palette.primary.light);
+    expect(theme.colorSchemes.light!.palette.primary.dark).toBe(lightOracle.palette.primary.dark);
+    const darkOracle = createTheme({ palette: { primary: { main: '#d0bcff' } } });
+    expect(theme.colorSchemes.dark!.palette.primary.light).toBe(darkOracle.palette.primary.light);
+    expect(theme.colorSchemes.dark!.palette.primary.dark).toBe(darkOracle.palette.primary.dark);
+  });
+
+  it('carries pinned light and dark values into the options and the runtime theme unchanged', () => {
+    const project: ThemeProject = {
+      ...customizedProjectFixture,
+      colorSchemes: {
+        light: {
+          palette: { primary: { main: '#6750a4', light: '#111111', dark: '#222222' } },
+        },
+        dark: { palette: {} },
+      },
+    };
+    const options = projectToThemeOptions(project);
+    const light = options.colorSchemes?.light as {
+      palette?: { primary?: { light?: string; dark?: string } };
+    };
+    expect(light.palette?.primary?.light).toBe('#111111');
+    expect(light.palette?.primary?.dark).toBe('#222222');
+    const theme = createRuntimeTheme(project);
+    expect(theme.colorSchemes.light!.palette.primary.light).toBe('#111111');
+    expect(theme.colorSchemes.light!.palette.primary.dark).toBe('#222222');
+  });
+
+  it('resolveSemanticColors reports the derivation as hex, matching MUI\u2019s own values', () => {
+    const resolved = resolveSemanticColors(defaultProjectFixture, 'light');
+    const oracle = createTheme({ palette: { primary: { main: '#171717' } } });
+    expect(resolved.primary.main).toBe('#171717');
+    expect(resolved.primary.light).toBe(rgbToHex(oracle.palette.primary.light));
+    expect(resolved.primary.dark).toBe(rgbToHex(oracle.palette.primary.dark));
+    expect(resolved.primary.light).toBe('#454545');
+    expect(resolved.primary.dark).toBe('#101010');
+  });
+
+  it('resolveSemanticColors follows a main edit to the new derivation', () => {
+    const resolved = resolveSemanticColors(customizedProjectFixture, 'light');
+    expect(resolved.primary.main).toBe('#6750a4');
+    expect(resolved.primary.light).toBe('#8573b6');
+    expect(resolved.primary.dark).toBe('#483872');
+  });
+
+  it('semanticColorMainDefault matches the mains a fresh project resolves to', () => {
+    const roles = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
+    for (const mode of ['light', 'dark'] as const) {
+      const resolved = resolveSemanticColors(defaultProjectFixture, mode);
+      for (const role of roles) {
+        expect(semanticColorMainDefault(mode, role)).toBe(resolved[role].main);
+      }
+    }
   });
 });

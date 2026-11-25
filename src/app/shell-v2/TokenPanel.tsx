@@ -1,15 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
+import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
-import { Box, Divider, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, Divider, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
 import type { PaletteSettings } from '../../domain/palette.types';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
 import type {
   PreviewMode,
+  SemanticColorVariant,
   SemanticPaletteRole,
   SurfacePaletteRole,
 } from '../../state/editor-state.types';
+import {
+  resolveSemanticColors,
+  type ResolvedSemanticColor,
+} from '../../theme/create-runtime-theme';
 import { PillTab, SearchBox } from './primitives';
 import { shellBorderForMode } from './shell-border';
 import { ColorPicker } from './ColorPicker';
@@ -74,6 +80,13 @@ interface ColorRowData {
   // set-surface-color.
   kind: 'semantic' | 'surface';
   role: SemanticPaletteRole | SurfacePaletteRole;
+  // Semantic rows only: which variant of the token this row edits.
+  variant?: SemanticColorVariant;
+  // Semantic light and dark rows only: true while the variant is not
+  // stored in the project, so the row shows the value MUI derives from
+  // main (with an Auto marker) instead of a pinned value (which gets a
+  // reset-to-auto control instead).
+  auto?: boolean;
 }
 
 interface ColorSectionData {
@@ -84,10 +97,45 @@ interface ColorSectionData {
 function buildColorSections(
   palette: PaletteSettings | undefined,
   mode: PreviewMode,
+  resolved: Record<SemanticPaletteRole, ResolvedSemanticColor>,
 ): ColorSectionData[] {
   const defaults = paletteDefaults[mode];
   const pick = (override: string | undefined, key: PaletteDefaultKey) =>
     override ?? defaults[key];
+
+  // Each semantic token gets a Main row plus Light and Dark rows. A
+  // variant the project stores shows the stored value as a pinned row;
+  // an unstored variant shows the value the runtime theme derives from
+  // main, marked auto. Editing an auto row pins the edited value, and a
+  // pinned row's reset control unpins it back to the derived value.
+  const semanticRows = (role: SemanticPaletteRole, name: string): ColorRowData[] => {
+    const stored = palette?.[role];
+    return [
+      {
+        label: name,
+        value: pick(stored?.main, role),
+        kind: 'semantic',
+        role,
+        variant: 'main',
+      },
+      {
+        label: `${name} light`,
+        value: stored?.light ?? resolved[role].light,
+        kind: 'semantic',
+        role,
+        variant: 'light',
+        auto: stored?.light === undefined,
+      },
+      {
+        label: `${name} dark`,
+        value: stored?.dark ?? resolved[role].dark,
+        kind: 'semantic',
+        role,
+        variant: 'dark',
+        auto: stored?.dark === undefined,
+      },
+    ];
+  };
 
   return [
     {
@@ -101,12 +149,12 @@ function buildColorSections(
     {
       title: 'Semantic colors',
       rows: [
-        { label: 'Primary', value: pick(palette?.primary?.main, 'primary'), kind: 'semantic', role: 'primary' },
-        { label: 'Secondary', value: pick(palette?.secondary?.main, 'secondary'), kind: 'semantic', role: 'secondary' },
-        { label: 'Error', value: pick(palette?.error?.main, 'error'), kind: 'semantic', role: 'error' },
-        { label: 'Warning', value: pick(palette?.warning?.main, 'warning'), kind: 'semantic', role: 'warning' },
-        { label: 'Info', value: pick(palette?.info?.main, 'info'), kind: 'semantic', role: 'info' },
-        { label: 'Success', value: pick(palette?.success?.main, 'success'), kind: 'semantic', role: 'success' },
+        ...semanticRows('primary', 'Primary'),
+        ...semanticRows('secondary', 'Secondary'),
+        ...semanticRows('error', 'Error'),
+        ...semanticRows('warning', 'Warning'),
+        ...semanticRows('info', 'Info'),
+        ...semanticRows('success', 'Success'),
       ],
     },
     {
@@ -362,6 +410,12 @@ function ModeSegmented({
 // is one undoable edit like every other edit. Which row's picker is
 // open lives in TokenPanel, so only one picker is ever open and
 // clicking another row's hex box moves it there.
+//
+// Semantic light and dark rows are variant rows: while the variant is
+// unpinned the row shows MUI's derived value with an Auto marker, and
+// committing the picker pins the edited value; a pinned variant row
+// trades the marker for a reset control that unpins it (one undoable
+// clear-semantic-color-variant edit).
 interface ColorRowProps extends ColorRowData {
   onClosePicker: () => void;
   onOpenPicker: (anchor: HTMLElement) => void;
@@ -370,6 +424,7 @@ interface ColorRowProps extends ColorRowData {
 }
 
 function ColorRow({
+  auto,
   kind,
   label,
   onClosePicker,
@@ -378,17 +433,37 @@ function ColorRow({
   pickerOpen,
   role,
   value,
+  variant,
 }: ColorRowProps) {
   const { activeMode } = useEditorState();
   const dispatch = useEditorDispatch();
 
   const commit = (color: string) => {
     if (kind === 'semantic') {
-      dispatch({ type: 'set-semantic-color', mode: activeMode, role: role as SemanticPaletteRole, color });
+      dispatch({
+        type: 'set-semantic-color',
+        mode: activeMode,
+        role: role as SemanticPaletteRole,
+        variant: variant ?? 'main',
+        color,
+      });
     } else {
       dispatch({ type: 'set-surface-color', mode: activeMode, role: role as SurfacePaletteRole, color });
     }
   };
+
+  const clearVariant = () => {
+    if (variant !== 'light' && variant !== 'dark') return;
+    dispatch({
+      type: 'clear-semantic-color-variant',
+      mode: activeMode,
+      role: role as SemanticPaletteRole,
+      variant,
+    });
+  };
+
+  const pinnedVariant =
+    kind === 'semantic' && (variant === 'light' || variant === 'dark') && !auto;
 
   return (
     <Box sx={{ alignItems: 'center', display: 'flex', height: 32 }}>
@@ -403,22 +478,39 @@ function ColorRow({
         }}
       />
       <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1.5 }}>{label}</Typography>
-      <Box
-        onClick={(event) => onOpenPicker(event.currentTarget)}
-        sx={{
-          alignItems: 'center',
-          border: shellBorderForMode(activeMode),
-          borderRadius: '6px',
-          cursor: 'pointer',
-          display: 'flex',
-          flexShrink: 0,
-          height: 32,
-          justifyContent: 'center',
-          ml: 'auto',
-          width: 78,
-        }}
-      >
-        <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{value}</Typography>
+      {auto && (
+        <Typography sx={{ color: 'text.secondary', fontSize: 12, lineHeight: '20px', ml: 1 }}>
+          Auto
+        </Typography>
+      )}
+      <Box sx={{ alignItems: 'center', display: 'flex', flexShrink: 0, gap: 0.5, ml: 'auto' }}>
+        {pinnedVariant && (
+          <IconButton
+            aria-label={`Reset ${label} to auto`}
+            onClick={clearVariant}
+            size="small"
+            sx={{ color: 'text.secondary', p: 0.5 }}
+            title={`Reset ${label} to auto`}
+          >
+            <ArrowCounterClockwiseIcon size={16} />
+          </IconButton>
+        )}
+        <Box
+          onClick={(event) => onOpenPicker(event.currentTarget)}
+          sx={{
+            alignItems: 'center',
+            border: shellBorderForMode(activeMode),
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'flex',
+            flexShrink: 0,
+            height: 32,
+            justifyContent: 'center',
+            width: 78,
+          }}
+        >
+          <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{value}</Typography>
+        </Box>
       </Box>
       {pickerOpen && pickerAnchor && (
         <ColorPicker
@@ -436,8 +528,8 @@ function ColorRow({
 
 // Sections collapse and expand locally (view state only, never in the
 // project or the reducer); all three start expanded. Rows are keyed by
-// kind and role, not by value, so a row (and the hex box a picker is
-// anchored to) survives the commits the picker makes.
+// kind, role, and variant, not by value, so a row (and the hex box a
+// picker is anchored to) survives the commits the picker makes.
 interface ColorSectionProps extends ColorSectionData {
   onClosePicker: () => void;
   onOpenPicker: (rowKey: string, anchor: HTMLElement) => void;
@@ -475,7 +567,7 @@ function ColorSection({
       </Box>
       {expanded &&
         rows.map((row) => {
-          const rowKey = `${row.kind}-${row.role}`;
+          const rowKey = `${row.kind}-${row.role}-${row.variant ?? 'main'}`;
           return (
             <ColorRow
               key={rowKey}
@@ -523,11 +615,19 @@ export function TokenPanel() {
     closePicker();
   };
 
+  // The derived light and dark values the auto rows show, resolved from
+  // the same runtime theme the preview renders with, so they track main
+  // edits exactly. Rebuilt when the project or the scheme changes.
+  const resolvedSemantic = useMemo(
+    () => resolveSemanticColors(project, activeMode),
+    [project, activeMode],
+  );
+
   // The panel search filters the Color tab's rows by token name and hex
   // value (the design spec); sections left with no matching row drop out
   // while a query is active. Other tabs ignore the query.
   const normalizedQuery = query.trim().toLowerCase();
-  const sections = buildColorSections(palette, activeMode)
+  const sections = buildColorSections(palette, activeMode, resolvedSemantic)
     .map((section) => ({
       ...section,
       rows:

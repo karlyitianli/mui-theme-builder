@@ -32,15 +32,31 @@ describe('PreviewArea (Phase 3)', () => {
   // cleanup, so unmount explicitly to keep each render isolated.
   afterEach(() => cleanup());
 
-  it('renders the three registry cards under the Inputs category, with no Edit buttons', () => {
+  it('renders the registry cards under the Inputs category, with no Edit buttons', () => {
     renderPreviewArea();
     expect(screen.getByText('Inputs')).toBeInTheDocument();
+    // Every Inputs card header, in the registry's alphabetical order.
+    for (const name of [
+      'Autocomplete',
+      'Button Group',
+      'Checkbox',
+      'Floating Action Button',
+      'Radio Group',
+      'Rating',
+      'Select',
+      'Slider',
+      'Switch',
+      'Text Field',
+      'Toggle Button',
+      'Transfer List',
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
     // The Button card header plus its three variant buttons.
     expect(screen.getAllByText('Button')).toHaveLength(4);
     expect(screen.getAllByRole('button', { name: 'Button' })).toHaveLength(3);
-    expect(screen.getByText('TextField')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Placeholder')).toBeInTheDocument();
-    expect(screen.getByText('Select')).toBeInTheDocument();
+    // The Autocomplete and Text Field cards both carry the placeholder.
+    expect(screen.getAllByPlaceholderText('Placeholder')).toHaveLength(2);
     expect(screen.getByText('Option 1')).toBeInTheDocument();
     // Cards are pure preview: no Edit buttons anywhere.
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
@@ -51,7 +67,7 @@ describe('PreviewArea (Phase 3)', () => {
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'text' },
     });
-    expect(screen.getByText('TextField')).toBeInTheDocument();
+    expect(screen.getByText('Text Field')).toBeInTheDocument();
     expect(screen.queryByText('Select')).not.toBeInTheDocument();
     expect(screen.queryAllByRole('button', { name: 'Button' })).toHaveLength(0);
   });
@@ -62,15 +78,15 @@ describe('PreviewArea (Phase 3)', () => {
       target: { value: 'zzzz-not-a-component' },
     });
     expect(screen.getByText('No components match')).toBeInTheDocument();
-    expect(screen.queryByText('TextField')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
   });
 
   it('collapses and expands a category section from its header', () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Inputs'));
-    expect(screen.queryByText('TextField')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Inputs'));
-    expect(screen.getByText('TextField')).toBeInTheDocument();
+    expect(screen.getByText('Text Field')).toBeInTheDocument();
   });
 
   it('shows the four template stubs on the Templates tab', () => {
@@ -80,7 +96,7 @@ describe('PreviewArea (Phase 3)', () => {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
     expect(screen.getAllByText('Not built yet')).toHaveLength(4);
-    expect(screen.queryByText('TextField')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
   });
 });
 

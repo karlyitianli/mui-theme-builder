@@ -68,7 +68,7 @@ describe('Preview cards (insulation split)', () => {
     const state: EditorState = { ...createInitialEditorState(), project: cardProject };
     renderPreviewArea(state);
 
-    const title = screen.getByText('TextField');
+    const title = screen.getByText('Text Field');
     const card = title.closest('.MuiCard-root');
     expect(card).not.toBeNull();
 
@@ -92,7 +92,7 @@ describe('Preview cards (insulation split)', () => {
     const state: EditorState = { ...createInitialEditorState(), project: cardProject };
     renderPreviewArea(state);
 
-    const card = screen.getByText('TextField').closest('.MuiCard-root');
+    const card = screen.getByText('Text Field').closest('.MuiCard-root');
     expect(card).not.toBeNull();
 
     // Internal padding is a fixed 16px; at the project's 4px spacing
@@ -118,7 +118,7 @@ describe('Preview cards (insulation split)', () => {
     };
     renderPreviewArea(state);
 
-    const card = screen.getByText('TextField').closest('.MuiCard-root');
+    const card = screen.getByText('Text Field').closest('.MuiCard-root');
     expect(card).not.toBeNull();
     expect(rulesFor(card as Element)).toMatch(
       /border:1px solid rgba\(255,\s*255,\s*255,\s*0\.16\)/,
@@ -129,7 +129,7 @@ describe('Preview cards (insulation split)', () => {
     const state: EditorState = { ...createInitialEditorState(), project: cardProject };
     renderPreviewArea(state);
 
-    const card = screen.getByText('TextField').closest('.MuiCard-root');
+    const card = screen.getByText('Text Field').closest('.MuiCard-root');
     expect(card).not.toBeNull();
     expect(rulesFor(card as Element)).toMatch(/border:1px solid rgba\(0,\s*0,\s*0,\s*0\.1\)/);
   });

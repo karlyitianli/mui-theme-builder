@@ -1,5 +1,13 @@
 import type { ColorValue } from './value.types';
 
+export type SemanticColorRole =
+  | 'primary'
+  | 'secondary'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'success';
+
 export interface PaletteColorSettings {
   main: ColorValue;
   light?: ColorValue;

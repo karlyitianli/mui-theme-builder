@@ -64,7 +64,11 @@ describe('v2 top bar (Phase 4)', () => {
   afterEach(() => cleanup());
   beforeEach(() => downloadThemeMock.mockClear());
 
-  it('the light/dark toggle switches the active mode and the Color panel reflects it', () => {
+  // This test renders the whole shell (panel plus all preview cards)
+  // and flips the mode twice; with the full Inputs registry (13 themed
+  // cards) that legitimately exceeds the default 5s timeout under
+  // parallel suite load, so it gets a larger budget.
+  it('the light/dark toggle switches the active mode and the Color panel reflects it', { timeout: 20000 }, () => {
     renderWithShell(
       <>
         <TokenPanel />

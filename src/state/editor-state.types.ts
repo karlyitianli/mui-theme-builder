@@ -23,6 +23,7 @@ export type SemanticPaletteRole =
   | 'warning'
   | 'info'
   | 'success';
+export type SemanticColorVariant = 'main' | 'light' | 'dark';
 export type SurfacePaletteRole =
   | 'background.default'
   | 'background.paper'
@@ -45,7 +46,19 @@ export type EditorAction =
   | { type: 'set-active-mode'; mode: PreviewMode }
   | { type: 'set-active-section'; section: EditorSection }
   | { type: 'rename-project'; name: string }
-  | { type: 'set-semantic-color'; mode: PreviewMode; role: SemanticPaletteRole; color: string }
+  | {
+      type: 'set-semantic-color';
+      mode: PreviewMode;
+      role: SemanticPaletteRole;
+      color: string;
+      variant?: SemanticColorVariant;
+    }
+  | {
+      type: 'clear-semantic-color-variant';
+      mode: PreviewMode;
+      role: SemanticPaletteRole;
+      variant: 'light' | 'dark';
+    }
   | { type: 'set-surface-color'; mode: PreviewMode; role: SurfacePaletteRole; color: string }
   | { type: 'set-base-font-size'; value: number }
   | { type: 'set-google-font'; font: GoogleFontSettings }

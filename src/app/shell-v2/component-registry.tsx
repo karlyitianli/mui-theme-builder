@@ -9,7 +9,20 @@ import {
   Typography,
 } from '@mui/material';
 
-// Phase 3 component registry for the v2 shell preview area.
+import {
+  AutocompleteDemo,
+  ButtonGroupDemo,
+  CheckboxDemo,
+  FabDemo,
+  RadioGroupDemo,
+  RatingDemo,
+  SliderDemo,
+  SwitchDemo,
+  ToggleButtonDemo,
+  TransferListDemo,
+} from './component-demos';
+
+// Component registry for the v2 shell preview area.
 //
 // Each entry is one preview card: an id, the component name shown in the
 // card header, its MUI category (used for the collapsible section
@@ -17,10 +30,17 @@ import {
 // real MUI components; PreviewArea wraps each card in the preview theme,
 // so the examples always reflect the current project.
 //
-// The registry starts with Button, TextField, and Select, the three
-// components the theme adapters already support. Cards are pure preview:
-// per-component overrides are parked (Karl, Nov 25, 2026), so there is no
-// edit affordance on a card.
+// The Inputs category carries the full MUI Inputs list (Karl, Nov 25,
+// 2026, guided by https://mui.com/material-ui/all-components/), in
+// alphabetical order by MUI's display names. One exception: Number
+// Field is omitted because the installed @mui/material (9.3.1) does not
+// export a NumberField component anywhere (checked the package's type
+// definitions, its export subpaths, and the runtime export), and no
+// other installed package provides one; it joins the list when the MUI
+// version does. Cards are pure preview: per-component overrides are
+// parked (Karl, Nov 25, 2026), so there is no edit affordance on a
+// card, and all interaction state is local to each card's demo
+// component (in component-demos.tsx).
 
 export interface PreviewComponentEntry {
   category: string;
@@ -37,6 +57,12 @@ export interface PreviewComponentGroup {
 export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
   {
     category: 'Inputs',
+    id: 'autocomplete',
+    name: 'Autocomplete',
+    render: () => <AutocompleteDemo />,
+  },
+  {
+    category: 'Inputs',
     id: 'button',
     name: 'Button',
     render: () => (
@@ -49,16 +75,33 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
   },
   {
     category: 'Inputs',
-    id: 'text-field',
-    name: 'TextField',
-    render: () => (
-      <>
-        <Typography sx={{ mb: 1 }} variant="body1">
-          Label
-        </Typography>
-        <TextField fullWidth helperText="Helper text" placeholder="Placeholder" />
-      </>
-    ),
+    id: 'button-group',
+    name: 'Button Group',
+    render: () => <ButtonGroupDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'checkbox',
+    name: 'Checkbox',
+    render: () => <CheckboxDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'floating-action-button',
+    name: 'Floating Action Button',
+    render: () => <FabDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'radio-group',
+    name: 'Radio Group',
+    render: () => <RadioGroupDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'rating',
+    name: 'Rating',
+    render: () => <RatingDemo />,
   },
   {
     category: 'Inputs',
@@ -77,6 +120,43 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
         </FormControl>
       </>
     ),
+  },
+  {
+    category: 'Inputs',
+    id: 'slider',
+    name: 'Slider',
+    render: () => <SliderDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'switch',
+    name: 'Switch',
+    render: () => <SwitchDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'text-field',
+    name: 'Text Field',
+    render: () => (
+      <>
+        <Typography sx={{ mb: 1 }} variant="body1">
+          Label
+        </Typography>
+        <TextField fullWidth helperText="Helper text" placeholder="Placeholder" />
+      </>
+    ),
+  },
+  {
+    category: 'Inputs',
+    id: 'toggle-button',
+    name: 'Toggle Button',
+    render: () => <ToggleButtonDemo />,
+  },
+  {
+    category: 'Inputs',
+    id: 'transfer-list',
+    name: 'Transfer List',
+    render: () => <TransferListDemo />,
   },
 ];
 

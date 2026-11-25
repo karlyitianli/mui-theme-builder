@@ -1,4 +1,6 @@
 import { createDefaultProject, type ThemeProject } from '../domain/project';
+import type { PaletteColorSettings } from '../domain/palette.types';
+import { semanticColorMainDefault } from '../theme/palette-adapter';
 import type { EditorAction, EditorSection, EditorState } from './editor-state.types';
 
 const HISTORY_LIMIT = 50;
@@ -86,7 +88,17 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     }
     case 'set-semantic-color': {
       const scheme = state.project.colorSchemes[action.mode];
-      if (scheme.palette?.[action.role]?.main === action.color) return state;
+      const variant = action.variant ?? 'main';
+      const current = scheme.palette?.[action.role];
+      if (current?.[variant] === action.color) return state;
+      // PaletteColorSettings requires a main, so pinning a variant on a
+      // role the project has never stored seeds main with the role's
+      // current effective main (the baseline or MUI default the theme
+      // build would have used), leaving the visible main unchanged.
+      const nextSettings: PaletteColorSettings = {
+        ...(current ?? { main: semanticColorMainDefault(action.mode, action.role) }),
+      };
+      nextSettings[variant] = action.color;
       return commitProject(state, {
         ...state.project,
         colorSchemes: {
@@ -95,7 +107,27 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
             ...scheme,
             palette: {
               ...scheme.palette,
-              [action.role]: { ...scheme.palette?.[action.role], main: action.color },
+              [action.role]: nextSettings,
+            },
+          },
+        },
+      });
+    }
+    case 'clear-semantic-color-variant': {
+      const scheme = state.project.colorSchemes[action.mode];
+      const current = scheme.palette?.[action.role];
+      if (current === undefined || current[action.variant] === undefined) return state;
+      const nextSettings: PaletteColorSettings = { ...current };
+      delete nextSettings[action.variant];
+      return commitProject(state, {
+        ...state.project,
+        colorSchemes: {
+          ...state.project.colorSchemes,
+          [action.mode]: {
+            ...scheme,
+            palette: {
+              ...scheme.palette,
+              [action.role]: nextSettings,
             },
           },
         },
