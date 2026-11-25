@@ -2,12 +2,13 @@ import type { MouseEvent } from 'react';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
 import { Box, InputBase, Typography } from '@mui/material';
 
+import type { PreviewMode } from '../../state/editor-state.types';
+import { shellBorderForMode } from './shell-border';
+
 // Shared chrome pieces for the v2 shell, matching Figma frame 358:10:
 // pill tabs (Inter 14/20, 12px horizontal and 4px vertical padding, 6px gap,
 // active differs from inactive only in background and text color) and the
-// 32px search box with a 1px rgba(0,0,0,0.1) border and 6px radius.
-
-export const shellBorder = '1px solid rgba(0, 0, 0, 0.1)';
+// 32px search box with a 1px shell border (shell-border.ts) and 6px radius.
 
 interface PillTabProps {
   active?: boolean;
@@ -40,18 +41,19 @@ export function PillTab({ active = false, label, onClick }: PillTabProps) {
 }
 
 interface SearchBoxProps {
+  mode: PreviewMode;
   onChange?: (value: string) => void;
   value?: string;
 }
 
 // Without an onChange the box is the static Phase 1 placeholder. With one
 // it is a real controlled search input (Phase 3 preview filtering).
-export function SearchBox({ onChange, value }: SearchBoxProps) {
+export function SearchBox({ mode, onChange, value }: SearchBoxProps) {
   return (
     <Box
       sx={{
         alignItems: 'center',
-        border: shellBorder,
+        border: shellBorderForMode(mode),
         borderRadius: '6px',
         display: 'flex',
         gap: 1,

@@ -67,6 +67,11 @@ export function GeneratedCodeDrawer({
         <Stack direction="row" spacing={1} sx={{ px: 3, py: 2 }}>
           <Button onClick={copy} startIcon={<CopyIcon />} variant="outlined">Copy</Button>
           {tab === 'theme' && <Button onClick={() => downloadTheme(project)} startIcon={<DownloadSimpleIcon />} variant="contained">Download theme.tsx</Button>}
+          {tab === 'theme' && (
+            <Typography color="text.secondary" sx={{ alignSelf: 'center' }} variant="caption">
+              Requires @phosphor-icons/react for the dropdown icon: npm install @phosphor-icons/react
+            </Typography>
+          )}
         </Stack>
         {message && <Alert severity={message.startsWith('Copied') ? 'success' : 'warning'} sx={{ mx: 3, mb: 1 }}>{message}</Alert>}
         <Box

@@ -5,7 +5,7 @@ import type { TypographyVariant } from '../../domain/typography.types';
 import type { CssLengthValue, FontWeight } from '../../domain/value.types';
 import { findGoogleFont, googleFontCatalog } from '../../fonts/catalog';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
-import { ComponentStepperRow, PresetPills, SectionLabel, StepperRow } from './primitives';
+import { ComponentStepperRow, SectionLabel, StepperRow } from './primitives';
 
 // Typography tab panel, from Figma frame 294:152: font family dropdown,
 // base font size and letter spacing steppers, then a specimen row for each
@@ -152,15 +152,25 @@ function VariantEditor({ row }: { row: VariantRowData }) {
         onIncrement={() => patch({ fontSize: clamp(fontSize + 0.5, 8, 128) })}
         value={formatPx(row.fontSize)}
       />
-      <Box sx={{ alignItems: 'center', display: 'flex' }}>
+      <Box sx={{ alignItems: 'center', display: 'flex', height: 30 }}>
         <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>Font weight</Typography>
         <Box sx={{ ml: 'auto' }}>
-          <PresetPills
-            activeIndex={weightOptions.indexOf(String(row.fontWeight))}
-            gap={6}
-            onSelect={(index) => patch({ fontWeight: Number(weightOptions[index]) as FontWeight })}
-            options={weightOptions}
-          />
+          <Select
+            inputProps={{ 'aria-label': 'Font weight' }}
+            onChange={(event) => patch({ fontWeight: Number(event.target.value) as FontWeight })}
+            size="small"
+            sx={{ fontSize: 14, fontWeight: 500, height: 30, width: 98 }}
+            value={String(row.fontWeight)}
+          >
+            {(weightOptions.includes(String(row.fontWeight))
+              ? weightOptions
+              : [...weightOptions, String(row.fontWeight)].sort((a, b) => Number(a) - Number(b))
+            ).map((weight) => (
+              <MenuItem key={weight} value={weight}>
+                {weight}
+              </MenuItem>
+            ))}
+          </Select>
         </Box>
       </Box>
       <ComponentStepperRow

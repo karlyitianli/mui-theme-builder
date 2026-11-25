@@ -18,7 +18,8 @@ import {
   PREVIEW_COMPONENTS,
   type PreviewComponentEntry,
 } from './component-registry';
-import { PillTab, SearchBox, shellBorder } from './primitives';
+import { PillTab, SearchBox } from './primitives';
+import { shellBorderForMode } from './shell-border';
 import { ResetProjectDialog } from './reset-project-dialog';
 import { useProjectReset } from './use-project-reset';
 
@@ -70,7 +71,7 @@ function ShellTopBar() {
           role="switch"
           sx={{
             bgcolor: 'secondary.main',
-            border: shellBorder,
+            border: shellBorderForMode(activeMode),
             borderRadius: 999,
             cursor: 'pointer',
             flexShrink: 0,
@@ -178,11 +179,13 @@ interface CardShellProps {
 // radius, header row with the name only. Cards are pure preview, so there
 // is deliberately no edit button (overrides are parked, Nov 25, 2026).
 function CardShell({ children, title }: CardShellProps) {
+  const { activeMode } = useEditorState();
+
   return (
     <Box
       sx={{
         bgcolor: 'background.paper',
-        border: shellBorder,
+        border: shellBorderForMode(activeMode),
         borderRadius: '12px',
         p: 2,
       }}
@@ -255,6 +258,7 @@ function CategorySection({ category, collapsed, entries, onToggle }: CategorySec
 }
 
 function ComponentsView() {
+  const { activeMode } = useEditorState();
   const [query, setQuery] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<ReadonlySet<string>>(
     new Set(),
@@ -277,7 +281,7 @@ function ComponentsView() {
 
   return (
     <>
-      <SearchBox onChange={setQuery} value={query} />
+      <SearchBox mode={activeMode} onChange={setQuery} value={query} />
       {filtered.length === 0 ? (
         <Typography
           color="text.secondary"

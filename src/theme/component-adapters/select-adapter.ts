@@ -8,7 +8,10 @@ export function selectSettingsToMui(settings?: SelectSettings): ThemeOptions['co
 
   return {
     MuiSelect: {
-      defaultProps: settings.defaultProps,
+      // Omit the key entirely when unset: mergeThemeComponents deep-merges
+      // per key, and an explicit undefined here would erase the foundation
+      // block's MuiSelect defaultProps (the Phosphor caret IconComponent).
+      ...(settings.defaultProps === undefined ? {} : { defaultProps: settings.defaultProps }),
       styleOverrides: {
         root: {
           ...(style?.border?.radius === undefined ? {} : { borderRadius: style.border.radius }),

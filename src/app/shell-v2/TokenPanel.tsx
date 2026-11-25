@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
-import { Box, Divider, InputBase, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, Divider, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
 import type { PaletteSettings } from '../../domain/palette.types';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
@@ -10,7 +10,9 @@ import type {
   SemanticPaletteRole,
   SurfacePaletteRole,
 } from '../../state/editor-state.types';
-import { PillTab, SearchBox, shellBorder } from './primitives';
+import { PillTab, SearchBox } from './primitives';
+import { shellBorderForMode } from './shell-border';
+import { ColorPicker } from './ColorPicker';
 import { ResetProjectDialog } from './reset-project-dialog';
 import { useProjectReset } from './use-project-reset';
 import { RadiusPanel } from './RadiusPanel';
@@ -300,12 +302,21 @@ function TokenTabList({
   );
 }
 
-function ModeSegmented({ activeMode }: { activeMode: PreviewMode }) {
+function ModeSegmented({
+  activeMode,
+  onModeChange,
+}: {
+  activeMode: PreviewMode;
+  onModeChange?: () => void;
+}) {
   const dispatch = useEditorDispatch();
   const segment = (mode: PreviewMode, label: string) => (
     <Box
       aria-pressed={activeMode === mode}
-      onClick={() => dispatch({ type: 'set-active-mode', mode })}
+      onClick={() => {
+        dispatch({ type: 'set-active-mode', mode });
+        onModeChange?.();
+      }}
       role="button"
       sx={{
         alignItems: 'center',
@@ -342,29 +353,36 @@ function ModeSegmented({ activeMode }: { activeMode: PreviewMode }) {
   );
 }
 
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+// A color row: swatch and label on the left, the frame's 78x32 hex box
+// on the right. Clicking the hex box opens the ColorPicker popover for
+// this row (see ColorPicker.tsx); the picker owns the draft and commits
+// through the same actions the old shell's PaletteInspector uses,
+// semantic roles through set-semantic-color and everything else (text,
+// backgrounds, divider) through set-surface-color, so a committed pick
+// is one undoable edit like every other edit. Which row's picker is
+// open lives in TokenPanel, so only one picker is ever open and
+// clicking another row's hex box moves it there.
+interface ColorRowProps extends ColorRowData {
+  onClosePicker: () => void;
+  onOpenPicker: (anchor: HTMLElement) => void;
+  pickerAnchor: HTMLElement | null;
+  pickerOpen: boolean;
+}
 
-// Editable hex row (Phase 5), mirroring the old shell's ColorControl
-// behavior: the hex shows as text in the frame's 78x32 box and clicking
-// it turns the box into an input holding a local draft. A valid
-// six-digit hex commits lowercased on blur (Enter blurs), and an invalid
-// or partial draft reverts to the current value instead of dispatching.
-// The parent keys each row by its committed value, so a commit or an
-// undo remounts the row with a fresh draft, again like the old shell.
-function ColorRow({ kind, label, role, value }: ColorRowData) {
+function ColorRow({
+  kind,
+  label,
+  onClosePicker,
+  onOpenPicker,
+  pickerAnchor,
+  pickerOpen,
+  role,
+  value,
+}: ColorRowProps) {
   const { activeMode } = useEditorState();
   const dispatch = useEditorDispatch();
-  const [draft, setDraft] = useState(value);
-  const [editing, setEditing] = useState(false);
-  const valid = HEX_COLOR.test(draft);
 
-  const commit = () => {
-    setEditing(false);
-    if (!valid) {
-      setDraft(value);
-      return;
-    }
-    const color = draft.toLowerCase();
+  const commit = (color: string) => {
     if (kind === 'semantic') {
       dispatch({ type: 'set-semantic-color', mode: activeMode, role: role as SemanticPaletteRole, color });
     } else {
@@ -376,8 +394,8 @@ function ColorRow({ kind, label, role, value }: ColorRowData) {
     <Box sx={{ alignItems: 'center', display: 'flex', height: 32 }}>
       <Box
         sx={{
-          bgcolor: editing && valid ? draft : value,
-          border: shellBorder,
+          bgcolor: value,
+          border: shellBorderForMode(activeMode),
           borderRadius: '6px',
           flexShrink: 0,
           height: 24,
@@ -386,15 +404,12 @@ function ColorRow({ kind, label, role, value }: ColorRowData) {
       />
       <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1.5 }}>{label}</Typography>
       <Box
-        onClick={() => {
-          setDraft(value);
-          setEditing(true);
-        }}
+        onClick={(event) => onOpenPicker(event.currentTarget)}
         sx={{
           alignItems: 'center',
-          border: shellBorder,
+          border: shellBorderForMode(activeMode),
           borderRadius: '6px',
-          cursor: 'text',
+          cursor: 'pointer',
           display: 'flex',
           flexShrink: 0,
           height: 32,
@@ -403,32 +418,41 @@ function ColorRow({ kind, label, role, value }: ColorRowData) {
           width: 78,
         }}
       >
-        {editing ? (
-          <InputBase
-            autoFocus
-            error={!valid}
-            inputProps={{
-              'aria-label': `${label} hex value`,
-              style: { textAlign: 'center' },
-            }}
-            onBlur={commit}
-            onChange={(event) => setDraft(event.target.value)}
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-            sx={{ fontSize: 14, lineHeight: '20px', width: '100%' }}
-            value={draft}
-          />
-        ) : (
-          <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{value}</Typography>
-        )}
+        <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{value}</Typography>
       </Box>
+      {pickerOpen && pickerAnchor && (
+        <ColorPicker
+          anchorEl={pickerAnchor}
+          label={label}
+          mode={activeMode}
+          onClose={onClosePicker}
+          onCommit={commit}
+          value={value}
+        />
+      )}
     </Box>
   );
 }
 
 // Sections collapse and expand locally (view state only, never in the
-// project or the reducer); all three start expanded.
-function ColorSection({ rows, title }: ColorSectionData) {
+// project or the reducer); all three start expanded. Rows are keyed by
+// kind and role, not by value, so a row (and the hex box a picker is
+// anchored to) survives the commits the picker makes.
+interface ColorSectionProps extends ColorSectionData {
+  onClosePicker: () => void;
+  onOpenPicker: (rowKey: string, anchor: HTMLElement) => void;
+  pickerAnchor: HTMLElement | null;
+  pickerRowKey: string | null;
+}
+
+function ColorSection({
+  onClosePicker,
+  onOpenPicker,
+  pickerAnchor,
+  pickerRowKey,
+  rows,
+  title,
+}: ColorSectionProps) {
   const [expanded, setExpanded] = useState(true);
   return (
     <Stack spacing={1.5}>
@@ -450,9 +474,19 @@ function ColorSection({ rows, title }: ColorSectionData) {
         />
       </Box>
       {expanded &&
-        rows.map((row) => (
-          <ColorRow key={`${row.kind}-${row.role}-${row.value}`} {...row} />
-        ))}
+        rows.map((row) => {
+          const rowKey = `${row.kind}-${row.role}`;
+          return (
+            <ColorRow
+              key={rowKey}
+              {...row}
+              onClosePicker={onClosePicker}
+              onOpenPicker={(anchor) => onOpenPicker(rowKey, anchor)}
+              pickerAnchor={pickerRowKey === rowKey ? pickerAnchor : null}
+              pickerOpen={pickerRowKey === rowKey}
+            />
+          );
+        })}
     </Stack>
   );
 }
@@ -461,7 +495,33 @@ export function TokenPanel() {
   const { activeMode, project } = useEditorState();
   const [activeTab, setActiveTab] = useState<TokenTab>('Color');
   const [query, setQuery] = useState('');
+  const [pickerRowKey, setPickerRowKey] = useState<string | null>(null);
+  const [pickerAnchor, setPickerAnchor] = useState<HTMLElement | null>(null);
   const palette = project.colorSchemes[activeMode].palette;
+
+  const openPicker = (rowKey: string, anchor: HTMLElement) => {
+    setPickerRowKey(rowKey);
+    setPickerAnchor(anchor);
+  };
+
+  const closePicker = () => {
+    setPickerRowKey(null);
+    setPickerAnchor(null);
+  };
+
+  // The picker shows one row's color in one scheme, so the interactions
+  // that change what the rows show (switching tab or scheme, filtering
+  // with a search) close it instead of leaving it anchored to a row
+  // that moved or now shows another color.
+  const handleSelectTab = (tab: TokenTab) => {
+    setActiveTab(tab);
+    closePicker();
+  };
+
+  const handleQuery = (value: string) => {
+    setQuery(value);
+    closePicker();
+  };
 
   // The panel search filters the Color tab's rows by token name and hex
   // value (the design spec); sections left with no matching row drop out
@@ -495,17 +555,24 @@ export function TokenPanel() {
       }}
     >
       <PresetRow />
-      <TokenTabList activeTab={activeTab} onSelect={setActiveTab} />
+      <TokenTabList activeTab={activeTab} onSelect={handleSelectTab} />
       <Box sx={{ flex: 1, overflowY: 'auto', px: 1, pb: 2 }}>
-        <SearchBox onChange={setQuery} value={query} />
+        <SearchBox mode={activeMode} onChange={handleQuery} value={query} />
         {activeTab === 'Color' && (
           <>
             <Box sx={{ mt: 1.5 }}>
-              <ModeSegmented activeMode={activeMode} />
+              <ModeSegmented activeMode={activeMode} onModeChange={closePicker} />
             </Box>
             <Stack divider={<Divider />} spacing={1.5} sx={{ mt: 1.5 }}>
               {sections.map((section) => (
-                <ColorSection key={section.title} {...section} />
+                <ColorSection
+                  key={section.title}
+                  {...section}
+                  onClosePicker={closePicker}
+                  onOpenPicker={openPicker}
+                  pickerAnchor={pickerAnchor}
+                  pickerRowKey={pickerRowKey}
+                />
               ))}
             </Stack>
           </>

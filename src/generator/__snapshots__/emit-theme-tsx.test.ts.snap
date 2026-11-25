@@ -6,6 +6,15 @@ exports[`emitThemeTsx (characterization) > pins the output for a customized proj
  * Target: MUI 9.3.1.
  */
 import { createTheme } from '@mui/material/styles';
+import { CaretDown } from '@phosphor-icons/react';
+import { createElement, type ComponentProps } from 'react';
+
+// Select and Autocomplete dropdown icon: the Phosphor caret-down at 18px.
+// The wrapper forwards every prop because MUI Select passes its own
+// positioning classes to the icon component.
+function DropdownIcon(props: Omit<ComponentProps<typeof CaretDown>, 'size'>) {
+  return createElement(CaretDown, { ...props, size: 18 });
+}
 
 export const theme = createTheme({
   cssVariables: {
@@ -223,6 +232,9 @@ export const theme = createTheme({
           padding: '8px 36px 8px 12px',
         },
       },
+      defaultProps: {
+        IconComponent: DropdownIcon,
+      },
     },
     MuiPaper: {
       defaultProps: {
@@ -280,6 +292,7 @@ export const theme = createTheme({
       defaultProps: {
         fullWidth: true,
         size: 'small',
+        popupIcon: createElement(DropdownIcon),
       },
     },
     MuiCard: {
@@ -303,6 +316,15 @@ exports[`emitThemeTsx (characterization) > pins the output for the default proje
  * Target: MUI 9.3.1.
  */
 import { createTheme } from '@mui/material/styles';
+import { CaretDown } from '@phosphor-icons/react';
+import { createElement, type ComponentProps } from 'react';
+
+// Select and Autocomplete dropdown icon: the Phosphor caret-down at 18px.
+// The wrapper forwards every prop because MUI Select passes its own
+// positioning classes to the icon component.
+function DropdownIcon(props: Omit<ComponentProps<typeof CaretDown>, 'size'>) {
+  return createElement(CaretDown, { ...props, size: 18 });
+}
 
 export const theme = createTheme({
   cssVariables: {
@@ -519,6 +541,9 @@ export const theme = createTheme({
           padding: '8px 36px 8px 12px',
         },
       },
+      defaultProps: {
+        IconComponent: DropdownIcon,
+      },
     },
     MuiPaper: {
       defaultProps: {
@@ -576,6 +601,7 @@ export const theme = createTheme({
       defaultProps: {
         fullWidth: true,
         size: 'small',
+        popupIcon: createElement(DropdownIcon),
       },
     },
     MuiCard: {

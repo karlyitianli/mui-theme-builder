@@ -46,6 +46,9 @@ function probeMode(): string {
   return parsed.activeMode;
 }
 
+// Clicking a row's hex box opens its color picker; the picker's HEX
+// field carries the same `${label} hex value` label the Phase 5 inline
+// input had, and blurring it commits, so the helper's shape is unchanged.
 function editHex(hexText: string, label: string, nextValue: string) {
   fireEvent.click(screen.getByText(hexText));
   const input = screen.getByLabelText(`${label} hex value`);
@@ -56,7 +59,7 @@ function editHex(hexText: string, label: string, nextValue: string) {
 describe('TokenPanel wiring (Phase 5)', () => {
   afterEach(() => cleanup());
 
-  it('typing a valid hex in the Color panel updates the project and the row', () => {
+  it('typing a valid hex in the Color picker updates the project and the row', () => {
     renderPanel();
     editHex('#171717', 'Primary', '#123456');
     expect(probeProject().colorSchemes.light.palette?.primary?.main).toBe('#123456');
@@ -68,6 +71,8 @@ describe('TokenPanel wiring (Phase 5)', () => {
     editHex('#dc2626', 'Error', '#12');
     expect(probeProject().colorSchemes.light.palette?.error).toBeUndefined();
     expect(screen.getByText('#dc2626')).toBeInTheDocument();
+    // The picker's field falls back to the row's current color too.
+    expect((screen.getByLabelText('Error hex value') as HTMLInputElement).value).toBe('#dc2626');
   });
 
   it('text colors edit through the surface action', () => {
@@ -130,7 +135,8 @@ describe('TokenPanel wiring (Phase 5)', () => {
     expect(probeProject().foundations?.typography?.variants?.h1?.fontSize).toBe(32.5);
     fireEvent.click(screen.getByLabelText('Increase Letter spacing'));
     expect(probeProject().foundations?.typography?.variants?.h1?.letterSpacing).toBe(0.1);
-    fireEvent.click(screen.getByText('600'));
+    fireEvent.mouseDown(screen.getByLabelText('Font weight'));
+    fireEvent.click(screen.getByRole('option', { name: '600' }));
     expect(probeProject().foundations?.typography?.variants?.h1?.fontWeight).toBe(600);
   });
 

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { defaultProjectFixture } from '../fixtures/theme-project.fixtures';
 import { createInitialEditorState, editorReducer } from '../state/editor-reducer';
+import { DropdownIcon } from './dropdown-icon';
+import { dropdownIconElement } from './dropdown-icon-element';
 import { projectToThemeOptions } from './project-to-theme-options';
 
 // Phase 5: foundations.shadows and foundations.shape.cardBorderRadius
@@ -49,5 +51,57 @@ describe('projectToThemeOptions foundation shadows and card radius (Phase 5)', (
     const options = projectToThemeOptions(state.project);
     const card = options.components?.MuiCard as { defaultProps?: { elevation?: number } };
     expect(card.defaultProps?.elevation).toBe(5);
+  });
+});
+
+// Karl's dropdown default (Nov 25, 2026): Select and Autocomplete use the
+// Phosphor caret-down, set once in the foundation components block so the
+// preview, the shell's own selects, and the exporter all inherit it.
+describe('projectToThemeOptions dropdown icon default', () => {
+  it('maps the Phosphor caret into MuiSelect and MuiAutocomplete defaultProps', () => {
+    const options = projectToThemeOptions(defaultProjectFixture);
+    const select = options.components?.MuiSelect as {
+      defaultProps?: { IconComponent?: unknown };
+    };
+    const autocomplete = options.components?.MuiAutocomplete as {
+      defaultProps?: { popupIcon?: unknown; fullWidth?: boolean };
+    };
+    expect(select.defaultProps?.IconComponent).toBe(DropdownIcon);
+    expect(autocomplete.defaultProps?.popupIcon).toBe(dropdownIconElement);
+    // The external-label defaults that share the Autocomplete block survive.
+    expect(autocomplete.defaultProps?.fullWidth).toBe(true);
+  });
+
+  it('keeps the caret when the project has Select settings without defaultProps', () => {
+    const project = {
+      ...defaultProjectFixture,
+      components: {
+        ...defaultProjectFixture.components,
+        select: { style: { iconColor: '#123456' } },
+      },
+    };
+    const options = projectToThemeOptions(project);
+    const select = options.components?.MuiSelect as {
+      defaultProps?: { IconComponent?: unknown };
+      styleOverrides?: { icon?: { color?: string } };
+    };
+    expect(select.defaultProps?.IconComponent).toBe(DropdownIcon);
+    expect(select.styleOverrides?.icon?.color).toBe('#123456');
+  });
+
+  it('merges Select settings defaultProps alongside the caret', () => {
+    const project = {
+      ...defaultProjectFixture,
+      components: {
+        ...defaultProjectFixture.components,
+        select: { defaultProps: { fullWidth: true } },
+      },
+    };
+    const options = projectToThemeOptions(project);
+    const select = options.components?.MuiSelect as {
+      defaultProps?: { IconComponent?: unknown; fullWidth?: boolean };
+    };
+    expect(select.defaultProps?.IconComponent).toBe(DropdownIcon);
+    expect(select.defaultProps?.fullWidth).toBe(true);
   });
 });

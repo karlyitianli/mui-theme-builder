@@ -6,6 +6,8 @@ import {
   resolveShadows,
 } from '../domain/foundation-defaults';
 import { externalLabelComponents } from './external-label-components';
+import { DropdownIcon } from './dropdown-icon';
+import { dropdownIconElement } from './dropdown-icon-element';
 import { buttonSettingsToMui } from './component-adapters/button-adapter';
 import { selectSettingsToMui } from './component-adapters/select-adapter';
 import { textFieldSettingsToMui } from './component-adapters/text-field-adapter';
@@ -27,6 +29,11 @@ export function projectToThemeOptions(project: ThemeProject): ThemeOptions {
   // input elevation of 0 pins the outlined input's box shadow to none.
   // Explicit component settings merge after this block, so a Button or
   // TextField setting the user made still wins over the foundation value.
+  // The block also carries Karl's dropdown default: Select and
+  // Autocomplete use the Phosphor caret-down (dropdown-icon.tsx). The
+  // Select adapter's defaultProps merge per key after this block, so the
+  // caret survives unless a project's Select settings ever name their own
+  // IconComponent (the typed settings model has no such field today).
   const shadows = resolveShadows(foundations?.shadows);
   const cardBorderRadius = foundations?.shape?.cardBorderRadius ?? DEFAULT_CARD_BORDER_RADIUS;
   const foundationComponents: ThemeOptions['components'] = {
@@ -36,6 +43,8 @@ export function projectToThemeOptions(project: ThemeProject): ThemeOptions {
       styleOverrides: { root: { borderRadius: cardBorderRadius } },
     },
     MuiButton: { defaultProps: { disableElevation: shadows.button === 0 } },
+    MuiSelect: { defaultProps: { IconComponent: DropdownIcon } },
+    MuiAutocomplete: { defaultProps: { popupIcon: dropdownIconElement } },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
