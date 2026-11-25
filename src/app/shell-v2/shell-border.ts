@@ -7,7 +7,7 @@ import type { PreviewMode } from '../../state/editor-state.types';
 // that stays visible next to the preview controls. The theme's
 // divider color is not an option (the dark divider, #262626, is
 // nearly as invisible as the black border). This lives in its own
-// module, like shell-switch.ts and color-utils.ts, because
+// module, like color-utils.ts, because
 // primitives.tsx exports components and the react-refresh lint rule
 // only allows constant exports alongside them.
 export function shellBorderForMode(mode: PreviewMode): string {
