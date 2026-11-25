@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/csr/MagnifyingGlass';
 import { Box, InputBase, Typography } from '@mui/material';
 
@@ -11,7 +12,9 @@ export const shellBorder = '1px solid rgba(0, 0, 0, 0.1)';
 interface PillTabProps {
   active?: boolean;
   label: string;
-  onClick?: () => void;
+  // Handlers receive the click event so callers can inspect the clicked
+  // element (the token tab row uses its rect to scroll it into view).
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
 }
 
 export function PillTab({ active = false, label, onClick }: PillTabProps) {

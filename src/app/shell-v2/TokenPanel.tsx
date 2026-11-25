@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { Box, Divider, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
@@ -179,12 +180,63 @@ function TokenTabList({
   activeTab: TokenTab;
   onSelect: (tab: TokenTab) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(false);
+
+  // Each fade shows only while tabs are hidden on its side of the row:
+  // the left fade appears once the row has scrolled away from the start,
+  // the right fade disappears once the row reaches the end. Recomputed
+  // on scroll and whenever the row's box changes size.
+  const updateFades = useCallback(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    setShowLeftFade(scroller.scrollLeft > 0);
+    setShowRightFade(scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth);
+  }, []);
+
+  useEffect(() => {
+    updateFades();
+    const scroller = scrollRef.current;
+    if (!scroller || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(updateFades);
+    observer.observe(scroller);
+    return () => observer.disconnect();
+  }, [updateFades]);
+
+  // Clicking a tab clipped at either edge scrolls the row just enough to
+  // bring it fully into view, the same on both sides; a fully visible tab
+  // does not move the row. The delta comes from the tab's and the
+  // scroller's own bounding rects and is applied to the scroller only,
+  // never through scrollIntoView, so the panel and the page stay put.
+  // Activation happens exactly as before, scrolled or not.
+  const handleSelect = (tab: TokenTab, event: ReactMouseEvent<HTMLElement>) => {
+    const scroller = scrollRef.current;
+    if (scroller) {
+      const tabRect = event.currentTarget.getBoundingClientRect();
+      const scrollerRect = scroller.getBoundingClientRect();
+      let delta = 0;
+      if (tabRect.left < scrollerRect.left) {
+        delta = tabRect.left - scrollerRect.left;
+      } else if (tabRect.right > scrollerRect.right) {
+        delta = tabRect.right - scrollerRect.right;
+      }
+      if (delta !== 0) {
+        scroller.scrollBy({ behavior: 'smooth', left: delta });
+      }
+    }
+    onSelect(tab);
+  };
+
   return (
     <Box sx={{ flexShrink: 0, height: 52, overflow: 'hidden', position: 'relative' }}>
       {/* The tab row overflows the 320px panel; it scrolls horizontally
-          (scrollbar hidden) so every tab stays reachable, and the frame's
-          right-edge fade sits above it. */}
+          (scrollbar hidden) so every tab stays reachable, and a gradient
+          fade sits above each edge that still has tabs hidden behind it. */}
       <Box
+        data-testid="token-tab-scroller"
+        onScroll={updateFades}
+        ref={scrollRef}
         sx={{
           height: '100%',
           overflowX: 'auto',
@@ -198,22 +250,41 @@ function TokenTabList({
               active={tab === activeTab}
               key={tab}
               label={tab}
-              onClick={() => onSelect(tab)}
+              onClick={(event) => handleSelect(tab, event)}
             />
           ))}
         </Stack>
       </Box>
-      <Box
-        sx={{
-          background: 'linear-gradient(to right, transparent, var(--mui-palette-background-paper))',
-          bottom: 12,
-          pointerEvents: 'none',
-          position: 'absolute',
-          right: 0,
-          top: 12,
-          width: 84,
-        }}
-      />
+      {showLeftFade && (
+        <Box
+          data-testid="token-tab-fade-left"
+          sx={{
+            background:
+              'linear-gradient(to left, transparent, var(--mui-palette-background-paper))',
+            bottom: 12,
+            left: 0,
+            pointerEvents: 'none',
+            position: 'absolute',
+            top: 12,
+            width: 84,
+          }}
+        />
+      )}
+      {showRightFade && (
+        <Box
+          data-testid="token-tab-fade-right"
+          sx={{
+            background:
+              'linear-gradient(to right, transparent, var(--mui-palette-background-paper))',
+            bottom: 12,
+            pointerEvents: 'none',
+            position: 'absolute',
+            right: 0,
+            top: 12,
+            width: 84,
+          }}
+        />
+      )}
     </Box>
   );
 }
