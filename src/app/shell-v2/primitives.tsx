@@ -61,7 +61,7 @@ export function SearchBox({ mode, onChange, value }: SearchBoxProps) {
         px: 1.5,
       }}
     >
-      <MagnifyingGlassIcon color="var(--mui-palette-text-secondary)" size={14} />
+      <MagnifyingGlassIcon color="var(--shell-palette-text-secondary)" size={14} />
       {onChange ? (
         <InputBase
           inputProps={{ 'aria-label': 'Search' }}
@@ -82,9 +82,11 @@ export function SearchBox({ mode, onChange, value }: SearchBoxProps) {
 // Shared pieces for the Phase 2 token panels, matching the v2 frames for
 // the Typography, Spacing, Radius, and Shadows tabs (nodes 294:152,
 // 294:298, 294:444, 294:590): 12px semibold secondary section labels, the
-// 98x30 minus/value/plus stepper with a 1px #e5e5e5 border and 6px radius,
-// and the 28px preset pills (white with a #e5e5e5 border when inactive,
-// #171717 with white text when active).
+// 98x30 minus/value/plus stepper with a 1px shell border (shell-border.ts)
+// and 6px radius, and the 28px preset pills (paper background with the
+// shell border when inactive, #171717 with white text when active). Like
+// SearchBox above, these take the mode as a prop so their borders follow
+// the scheme-aware shared border instead of a fixed light-mode gray.
 
 export function SectionLabel({ children }: { children: string }) {
   return (
@@ -98,6 +100,7 @@ export function SectionLabel({ children }: { children: string }) {
 }
 
 interface StepperProps {
+  mode: PreviewMode;
   value: string;
   // When both handlers are given, the minus and plus signs become real
   // buttons (Phase 5 wiring); without them the stepper is display only,
@@ -107,7 +110,7 @@ interface StepperProps {
   label?: string;
 }
 
-export function Stepper({ label, onDecrement, onIncrement, value }: StepperProps) {
+export function Stepper({ label, mode, onDecrement, onIncrement, value }: StepperProps) {
   const editable = onDecrement !== undefined && onIncrement !== undefined;
   const signSx = {
     alignItems: 'center',
@@ -129,7 +132,7 @@ export function Stepper({ label, onDecrement, onIncrement, value }: StepperProps
       sx={{
         alignItems: 'center',
         bgcolor: 'background.paper',
-        border: '1px solid #e5e5e5',
+        border: shellBorderForMode(mode),
         borderRadius: '6px',
         display: 'flex',
         flexShrink: 0,
@@ -191,6 +194,7 @@ export function Stepper({ label, onDecrement, onIncrement, value }: StepperProps
 
 interface StepperRowProps {
   label: string;
+  mode: PreviewMode;
   value: string;
   onDecrement?: () => void;
   onIncrement?: () => void;
@@ -198,12 +202,18 @@ interface StepperRowProps {
 
 // Label on the left in the 12px semibold secondary section style, stepper
 // pinned to the right edge, as in the frames' global value rows.
-export function StepperRow({ label, onDecrement, onIncrement, value }: StepperRowProps) {
+export function StepperRow({ label, mode, onDecrement, onIncrement, value }: StepperRowProps) {
   return (
     <Box sx={{ alignItems: 'center', display: 'flex', height: 30 }}>
       <SectionLabel>{label}</SectionLabel>
       <Box sx={{ ml: 'auto' }}>
-        <Stepper label={label} onDecrement={onDecrement} onIncrement={onIncrement} value={value} />
+        <Stepper
+          label={label}
+          mode={mode}
+          onDecrement={onDecrement}
+          onIncrement={onIncrement}
+          value={value}
+        />
       </Box>
     </Box>
   );
@@ -211,12 +221,24 @@ export function StepperRow({ label, onDecrement, onIncrement, value }: StepperRo
 
 // Same row with the label in the 14px regular style the frames use for the
 // per-component override rows (Button, Card, Input).
-export function ComponentStepperRow({ label, onDecrement, onIncrement, value }: StepperRowProps) {
+export function ComponentStepperRow({
+  label,
+  mode,
+  onDecrement,
+  onIncrement,
+  value,
+}: StepperRowProps) {
   return (
     <Box sx={{ alignItems: 'center', display: 'flex', height: 30 }}>
       <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{label}</Typography>
       <Box sx={{ ml: 'auto' }}>
-        <Stepper label={label} onDecrement={onDecrement} onIncrement={onIncrement} value={value} />
+        <Stepper
+          label={label}
+          mode={mode}
+          onDecrement={onDecrement}
+          onIncrement={onIncrement}
+          value={value}
+        />
       </Box>
     </Box>
   );
@@ -225,13 +247,14 @@ export function ComponentStepperRow({ label, onDecrement, onIncrement, value }: 
 interface PresetPillsProps {
   activeIndex: number;
   gap?: number;
+  mode: PreviewMode;
   options: string[];
   // When given, the pills become buttons that report their index
   // (Phase 5 wiring); without it they render as the static Phase 2 pills.
   onSelect?: (index: number) => void;
 }
 
-export function PresetPills({ activeIndex, gap = 12, onSelect, options }: PresetPillsProps) {
+export function PresetPills({ activeIndex, gap = 12, mode, onSelect, options }: PresetPillsProps) {
   return (
     <Box sx={{ display: 'flex', gap: `${gap}px` }}>
       {options.map((option, index) => {
@@ -245,7 +268,7 @@ export function PresetPills({ activeIndex, gap = 12, onSelect, options }: Preset
             sx={{
               alignItems: 'center',
               bgcolor: active ? 'primary.main' : 'background.paper',
-              border: active ? '1px solid transparent' : '1px solid #e5e5e5',
+              border: active ? '1px solid transparent' : shellBorderForMode(mode),
               borderRadius: 999,
               color: active ? 'primary.contrastText' : 'text.primary',
               cursor: onSelect ? 'pointer' : undefined,

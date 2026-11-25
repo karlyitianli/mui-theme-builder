@@ -128,7 +128,7 @@ type TokenTab = (typeof tokenTabs)[number];
 // only entry today is the current preset, Default. Choosing it loads the
 // default project through the shared reset flow (use-project-reset.ts),
 // including the dirty confirm when there are edits to lose.
-function PresetRow() {
+function PresetRow({ mode }: { mode: PreviewMode }) {
   const { cancelReset, confirmOpen, confirmReset, requestReset } = useProjectReset();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
@@ -161,7 +161,7 @@ function PresetRow() {
               key={index}
               sx={{
                 bgcolor: color,
-                border: '1px solid #e5e5e5',
+                border: shellBorderForMode(mode),
                 borderRadius: '50%',
                 height: 12,
                 width: 12,
@@ -273,7 +273,7 @@ function TokenTabList({
           data-testid="token-tab-fade-left"
           sx={{
             background:
-              'linear-gradient(to left, transparent, var(--mui-palette-background-paper))',
+              'linear-gradient(to left, transparent, var(--shell-palette-background-paper))',
             bottom: 12,
             left: 0,
             pointerEvents: 'none',
@@ -288,7 +288,7 @@ function TokenTabList({
           data-testid="token-tab-fade-right"
           sx={{
             background:
-              'linear-gradient(to right, transparent, var(--mui-palette-background-paper))',
+              'linear-gradient(to right, transparent, var(--shell-palette-background-paper))',
             bottom: 12,
             pointerEvents: 'none',
             position: 'absolute',
@@ -554,7 +554,7 @@ export function TokenPanel() {
         width: 320,
       }}
     >
-      <PresetRow />
+      <PresetRow mode={activeMode} />
       <TokenTabList activeTab={activeTab} onSelect={handleSelectTab} />
       <Box sx={{ flex: 1, overflowY: 'auto', px: 1, pb: 2 }}>
         <SearchBox mode={activeMode} onChange={handleQuery} value={query} />

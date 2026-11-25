@@ -34,7 +34,7 @@ const shadowPresetValues: Array<Required<ShadowSettings>> = [
 const clampElevation = (value: number) => Math.min(24, Math.max(0, value));
 
 export function ShadowsPanel() {
-  const { project } = useEditorState();
+  const { activeMode, project } = useEditorState();
   const dispatch = useEditorDispatch();
   const shadows = resolveShadows(project.foundations?.shadows);
   const activePreset = shadowPresetValues.findIndex(
@@ -53,11 +53,13 @@ export function ShadowsPanel() {
       <PresetPills
         activeIndex={activePreset}
         gap={10}
+        mode={activeMode}
         onSelect={(index) => dispatch({ type: 'set-shadows', shadows: shadowPresetValues[index] })}
         options={shadowPresets}
       />
       <StepperRow
         label="Global elevation"
+        mode={activeMode}
         onDecrement={() => setElevation('global', shadows.global - 1)}
         onIncrement={() => setElevation('global', shadows.global + 1)}
         value={String(shadows.global)}
@@ -66,18 +68,21 @@ export function ShadowsPanel() {
       <SectionLabel>Overrides</SectionLabel>
       <ComponentStepperRow
         label="Button"
+        mode={activeMode}
         onDecrement={() => setElevation('button', shadows.button - 1)}
         onIncrement={() => setElevation('button', shadows.button + 1)}
         value={String(shadows.button)}
       />
       <ComponentStepperRow
         label="Card"
+        mode={activeMode}
         onDecrement={() => setElevation('card', shadows.card - 1)}
         onIncrement={() => setElevation('card', shadows.card + 1)}
         value={String(shadows.card)}
       />
       <ComponentStepperRow
         label="Input"
+        mode={activeMode}
         onDecrement={() => setElevation('input', shadows.input - 1)}
         onIncrement={() => setElevation('input', shadows.input + 1)}
         value={String(shadows.input)}

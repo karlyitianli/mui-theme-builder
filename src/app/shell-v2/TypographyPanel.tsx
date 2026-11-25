@@ -5,7 +5,9 @@ import type { TypographyVariant } from '../../domain/typography.types';
 import type { CssLengthValue, FontWeight } from '../../domain/value.types';
 import { findGoogleFont, googleFontCatalog } from '../../fonts/catalog';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
+import type { PreviewMode } from '../../state/editor-state.types';
 import { ComponentStepperRow, SectionLabel, StepperRow } from './primitives';
+import { shellBorderForMode } from './shell-border';
 
 // Typography tab panel, from Figma frame 294:152: font family dropdown,
 // base font size and letter spacing steppers, then a specimen row for each
@@ -134,7 +136,7 @@ function VariantRow({
 // Editor for the selected variant, with the old inspector's ranges:
 // font size 8-128 step 0.5, line height 0.8-3 step 0.05, letter
 // spacing -2 to 10 step 0.1, weight one of 300-700.
-function VariantEditor({ row }: { row: VariantRowData }) {
+function VariantEditor({ mode, row }: { mode: PreviewMode; row: VariantRowData }) {
   const dispatch = useEditorDispatch();
   const patch = (partial: { fontSize?: number; fontWeight?: FontWeight; lineHeight?: number; letterSpacing?: number }) =>
     dispatch({ type: 'set-typography-variant', variant: row.variant, patch: partial });
@@ -144,10 +146,11 @@ function VariantEditor({ row }: { row: VariantRowData }) {
   const letterSpacing = asNumber(row.letterSpacing, 0);
 
   return (
-    <Stack spacing={1.5} sx={{ border: '1px solid #e5e5e5', borderRadius: '6px', p: 1.5 }}>
+    <Stack spacing={1.5} sx={{ border: shellBorderForMode(mode), borderRadius: '6px', p: 1.5 }}>
       <SectionLabel>{`${row.variant} settings`}</SectionLabel>
       <ComponentStepperRow
         label="Font size"
+        mode={mode}
         onDecrement={() => patch({ fontSize: clamp(fontSize - 0.5, 8, 128) })}
         onIncrement={() => patch({ fontSize: clamp(fontSize + 0.5, 8, 128) })}
         value={formatPx(row.fontSize)}
@@ -175,12 +178,14 @@ function VariantEditor({ row }: { row: VariantRowData }) {
       </Box>
       <ComponentStepperRow
         label="Line height"
+        mode={mode}
         onDecrement={() => patch({ lineHeight: round2(clamp(lineHeight - 0.05, 0.8, 3)) })}
         onIncrement={() => patch({ lineHeight: round2(clamp(lineHeight + 0.05, 0.8, 3)) })}
         value={formatLineHeight(row.lineHeight)}
       />
       <ComponentStepperRow
         label="Letter spacing"
+        mode={mode}
         onDecrement={() => patch({ letterSpacing: round2(clamp(letterSpacing - 0.1, -2, 10)) })}
         onIncrement={() => patch({ letterSpacing: round2(clamp(letterSpacing + 0.1, -2, 10)) })}
         value={formatPx(row.letterSpacing)}
@@ -190,7 +195,7 @@ function VariantEditor({ row }: { row: VariantRowData }) {
 }
 
 export function TypographyPanel() {
-  const { project } = useEditorState();
+  const { activeMode, project } = useEditorState();
   const dispatch = useEditorDispatch();
   const [selectedVariant, setSelectedVariant] = useState<TypographyVariant | null>(null);
   const typography = project.foundations?.typography;
@@ -241,6 +246,7 @@ export function TypographyPanel() {
       </Stack>
       <StepperRow
         label="Base font size"
+        mode={activeMode}
         onDecrement={() =>
           dispatch({ type: 'set-base-font-size', value: clamp(baseFontSize - 1, 10, 24) })
         }
@@ -253,7 +259,7 @@ export function TypographyPanel() {
           global field), so the editor for it lives in the selected
           variant's settings below; this row keeps the frame's global
           display value. */}
-      <StepperRow label="Letter spacing" value="0 px" />
+      <StepperRow label="Letter spacing" mode={activeMode} value="0 px" />
       <Divider />
       <SectionLabel>Type specimens</SectionLabel>
       <Stack spacing={1.5}>
@@ -271,7 +277,7 @@ export function TypographyPanel() {
       {selectedRow && (
         <>
           <Divider />
-          <VariantEditor row={selectedRow} />
+          <VariantEditor mode={activeMode} row={selectedRow} />
         </>
       )}
     </Stack>

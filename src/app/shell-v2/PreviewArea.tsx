@@ -6,7 +6,7 @@ import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { ExportIcon } from '@phosphor-icons/react/dist/csr/Export';
 import { MoonIcon } from '@phosphor-icons/react/dist/csr/Moon';
 import { SunIcon } from '@phosphor-icons/react/dist/csr/Sun';
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, IconButton, Stack, Typography } from '@mui/material';
 
 import { GeneratedCodeDrawer } from '../../generator/GeneratedCodeDrawer';
 import { PreviewBoundary } from '../../preview/PreviewBoundary';
@@ -33,10 +33,16 @@ import { useProjectReset } from './use-project-reset';
 // Phase 3 made the preview area real: the Components tab renders the
 // component registry (component-registry.tsx) as pure preview cards
 // grouped under collapsible category headers, the search box filters the
-// registry by name, and the Templates tab shows four stub cards. Each
-// card body renders the real MUI component inside the existing
-// PreviewProvider, so it reflects the current project and active mode
-// from the same editor state as the original shell.
+// registry by name, and the Templates tab shows four stub cards.
+//
+// The shell insulation (Nov 25, 2026) split the styling ownership in
+// this area: the frame, top bar, tabs, headings, and search render
+// under the shell theme (see shell-theme.ts), while each card is a real
+// MuiCard inside its own PreviewProvider, so the card and the component
+// in it render under the full project theme. Layout spacing stays the
+// shell's: the card grid's gap, the section margins, and this area's
+// padding sit outside the providers on the shell's 8px scale, and the
+// card's internal padding is a fixed pixel value for the same reason.
 
 function ShellTopBar() {
   const { activeMode, future, past, project } = useEditorState();
@@ -175,41 +181,48 @@ interface CardShellProps {
   title: string;
 }
 
-// Card chrome from the Figma cards frame: white surface, 1px border, 12px
-// radius, header row with the name only. Cards are pure preview, so there
-// is deliberately no edit button (overrides are parked, Nov 25, 2026).
+// The containing card is preview content, not chrome (Karl's rule,
+// Nov 25, 2026): it is a real MuiCard rendered inside the
+// PreviewProvider, so its surface (the project palette's paper), its
+// elevation, and its radius come from the edited theme through the
+// Phase 5 foundation defaults for MuiCard. The header row carries the
+// name only; cards are pure preview, so there is deliberately no edit
+// button (overrides are parked, Nov 25, 2026).
+//
+// Two things stay the shell's even here. The card's internal padding
+// is a fixed 16px rather than sx spacing units, because inside the
+// provider spacing units would resolve against the project's spacing
+// scale. And the hairline edge stays the shell border: the dark
+// defaults make the paper and page colors identical (#0a0a0a), so
+// without it the card's edge would vanish in dark mode.
 function CardShell({ children, title }: CardShellProps) {
-  const { activeMode } = useEditorState();
+  const { activeMode, project } = useEditorState();
 
   return (
-    <Box
-      sx={{
-        bgcolor: 'background.paper',
-        border: shellBorderForMode(activeMode),
-        borderRadius: '12px',
-        p: 2,
-      }}
-    >
-      <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
-        {title}
-      </Typography>
-      <Box sx={{ mt: 2 }}>{children}</Box>
-    </Box>
+    <PreviewBoundary>
+      <PreviewProvider mode={activeMode} project={project}>
+        <Card
+          sx={{
+            border: shellBorderForMode(activeMode),
+            p: '16px',
+          }}
+        >
+          <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
+            {title}
+          </Typography>
+          <Box sx={{ mt: '16px' }}>{children}</Box>
+        </Card>
+      </PreviewProvider>
+    </PreviewBoundary>
   );
 }
 
 function PreviewCard({ entry }: { entry: PreviewComponentEntry }) {
-  const { activeMode, project } = useEditorState();
-
   return (
     <CardShell title={entry.name}>
-      <PreviewBoundary>
-        <PreviewProvider mode={activeMode} project={project}>
-          <Box sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
-            {entry.render()}
-          </Box>
-        </PreviewProvider>
-      </PreviewBoundary>
+      <Box sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
+        {entry.render()}
+      </Box>
     </CardShell>
   );
 }

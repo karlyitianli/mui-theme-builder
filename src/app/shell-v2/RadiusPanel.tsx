@@ -44,7 +44,7 @@ function asNumber(value: CssLengthValue, fallback: number): number {
 const clampRadius = (value: number) => Math.min(32, Math.max(0, value));
 
 export function RadiusPanel() {
-  const { project } = useEditorState();
+  const { activeMode, project } = useEditorState();
   const dispatch = useEditorDispatch();
   const globalRadius = project.foundations?.shape?.borderRadius ?? DEFAULT_BORDER_RADIUS;
   const globalNumber = asNumber(globalRadius, DEFAULT_BORDER_RADIUS);
@@ -81,11 +81,13 @@ export function RadiusPanel() {
       <SectionLabel>Preset</SectionLabel>
       <PresetPills
         activeIndex={radiusPresetValues.indexOf(globalNumber)}
+        mode={activeMode}
         onSelect={(index) => setGlobal(radiusPresetValues[index])}
         options={radiusPresets}
       />
       <StepperRow
         label="Global border radius"
+        mode={activeMode}
         onDecrement={() => setGlobal(clampRadius(globalNumber - 1))}
         onIncrement={() => setGlobal(clampRadius(globalNumber + 1))}
         value={formatRadius(globalRadius)}
@@ -94,18 +96,21 @@ export function RadiusPanel() {
       <SectionLabel>Overrides</SectionLabel>
       <ComponentStepperRow
         label="Button"
+        mode={activeMode}
         onDecrement={() => setButton(clampRadius(asNumber(buttonRadius, globalNumber) - 1))}
         onIncrement={() => setButton(clampRadius(asNumber(buttonRadius, globalNumber) + 1))}
         value={formatRadius(buttonRadius)}
       />
       <ComponentStepperRow
         label="Card"
+        mode={activeMode}
         onDecrement={() => setCard(clampRadius(cardNumber - 1))}
         onIncrement={() => setCard(clampRadius(cardNumber + 1))}
         value={formatRadius(cardRadius)}
       />
       <ComponentStepperRow
         label="Input"
+        mode={activeMode}
         onDecrement={() => setInput(clampRadius(asNumber(inputRadius, globalNumber) - 1))}
         onIncrement={() => setInput(clampRadius(asNumber(inputRadius, globalNumber) + 1))}
         value={formatRadius(inputRadius)}

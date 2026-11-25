@@ -51,7 +51,7 @@ function ScaleRow({ multiplier, px }: { multiplier: number; px: number }) {
 }
 
 export function SpacingPanel() {
-  const { project } = useEditorState();
+  const { activeMode, project } = useEditorState();
   const dispatch = useEditorDispatch();
   const baseUnit = project.foundations?.spacing ?? DEFAULT_SPACING;
   const setBaseUnit = (value: number) =>
@@ -62,11 +62,13 @@ export function SpacingPanel() {
       <SectionLabel>Density presets</SectionLabel>
       <PresetPills
         activeIndex={densityBaseUnits.indexOf(baseUnit)}
+        mode={activeMode}
         onSelect={(index) => setBaseUnit(densityBaseUnits[index])}
         options={densityPresets}
       />
       <StepperRow
         label="Base spacing unit"
+        mode={activeMode}
         onDecrement={() => setBaseUnit(baseUnit - 1)}
         onIncrement={() => setBaseUnit(baseUnit + 1)}
         value={`${baseUnit} px`}
