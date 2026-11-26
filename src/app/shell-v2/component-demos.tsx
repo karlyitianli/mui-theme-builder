@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode, type SyntheticEvent } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -10,7 +10,10 @@ import {
   AvatarGroup,
   Backdrop,
   Badge,
+  BottomNavigation,
+  BottomNavigationAction,
   Box,
+  Breadcrumbs,
   Button,
   ButtonGroup,
   Card,
@@ -27,6 +30,7 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  Drawer,
   Fab,
   FormControl,
   FormControlLabel,
@@ -34,10 +38,14 @@ import {
   Icon,
   IconButton,
   LinearProgress,
+  Link,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Menu,
+  MenuItem,
+  Pagination,
   Paper,
   Radio,
   RadioGroup,
@@ -45,14 +53,22 @@ import {
   Skeleton,
   Slider,
   Snackbar,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
   Stack,
+  Step,
+  StepLabel,
+  Stepper,
   Switch,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   Toolbar,
   ToggleButton,
@@ -66,12 +82,19 @@ import { CaretDoubleRightIcon } from '@phosphor-icons/react/dist/csr/CaretDouble
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { CaretLeftIcon } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRightIcon } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { ClockCounterClockwiseIcon } from '@phosphor-icons/react/dist/csr/ClockCounterClockwise';
+import { CopyIcon } from '@phosphor-icons/react/dist/csr/Copy';
 import { DotsThreeVerticalIcon } from '@phosphor-icons/react/dist/csr/DotsThreeVertical';
 import { FileIcon } from '@phosphor-icons/react/dist/csr/File';
+import { FloppyDiskIcon } from '@phosphor-icons/react/dist/csr/FloppyDisk';
+import { FolderIcon } from '@phosphor-icons/react/dist/csr/Folder';
 import { HeartIcon } from '@phosphor-icons/react/dist/csr/Heart';
+import { HouseIcon } from '@phosphor-icons/react/dist/csr/House';
 import { ListIcon } from '@phosphor-icons/react/dist/csr/List';
+import { MapPinIcon } from '@phosphor-icons/react/dist/csr/MapPin';
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/csr/PaperPlaneTilt';
 import { PlusIcon } from '@phosphor-icons/react/dist/csr/Plus';
+import { PrinterIcon } from '@phosphor-icons/react/dist/csr/Printer';
 import { ShareNetworkIcon } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { TrashIcon } from '@phosphor-icons/react/dist/csr/Trash';
 import { TrayIcon } from '@phosphor-icons/react/dist/csr/Tray';
@@ -901,5 +924,330 @@ export function PaperDemo() {
         <Typography variant="caption">Outlined</Typography>
       </Paper>
     </Stack>
+  );
+}
+
+// Navigation demos, in the same style as the categories above:
+// canonical variants per component, interaction state local to the
+// card where the component has a meaningful interaction.
+//
+// Drawer and Menu are overlay components, contained in a stage in
+// their card the way the Feedback overlays are. The Drawer is a
+// modal whose root, backdrop, and paper are all fixed-position by
+// default, so the demo points the modal's container at the stage
+// and restyles all three as absolute: the drawer then slides in
+// from the stage's left edge and its backdrop covers only the
+// stage. The Menu's popover paper is positioned from its anchor's
+// viewport rect inside a fixed modal root, so pointing the
+// container at the stage is enough there: the menu opens under its
+// anchor button in the card, with its DOM inside the stage. Both
+// render under the card's preview theme like everything else here.
+
+export function BottomNavigationDemo() {
+  const [value, setValue] = useState('recents');
+  return (
+    <BottomNavigation
+      onChange={(_, newValue) => setValue(newValue)}
+      showLabels
+      value={value}
+    >
+      <BottomNavigationAction
+        icon={<ClockCounterClockwiseIcon size={20} />}
+        label="Recents"
+        value="recents"
+      />
+      <BottomNavigationAction
+        icon={<HeartIcon size={20} />}
+        label="Favorites"
+        value="favorites"
+      />
+      <BottomNavigationAction
+        icon={<MapPinIcon size={20} />}
+        label="Nearby"
+        value="nearby"
+      />
+      <BottomNavigationAction
+        icon={<FolderIcon size={20} />}
+        label="Folder"
+        value="folder"
+      />
+    </BottomNavigation>
+  );
+}
+
+export function BreadcrumbsDemo() {
+  const handleClick = (event: SyntheticEvent) => {
+    event.preventDefault();
+  };
+  return (
+    <Breadcrumbs aria-label="Breadcrumb">
+      <Link
+        color="inherit"
+        href="#"
+        onClick={handleClick}
+        sx={{ alignItems: 'center', display: 'flex', gap: 0.5 }}
+        underline="hover"
+      >
+        <HouseIcon size={16} />
+        Home
+      </Link>
+      <Link color="inherit" href="#" onClick={handleClick} underline="hover">
+        Catalog
+      </Link>
+      <Typography color="text.primary">Accessories</Typography>
+    </Breadcrumbs>
+  );
+}
+
+export function DrawerDemo() {
+  const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const [selected, setSelected] = useState(0);
+  const close = () => setOpen(false);
+  const items = [
+    { icon: <TrayIcon size={20} />, label: 'Inbox' },
+    { icon: <PaperPlaneTiltIcon size={20} />, label: 'Sent' },
+    { icon: <FileIcon size={20} />, label: 'Drafts' },
+  ];
+  return (
+    <OverlayStage stageRef={setStage}>
+      <Button onClick={() => setOpen(true)} variant="outlined">
+        Open drawer
+      </Button>
+      <Drawer
+        anchor="left"
+        ModalProps={{ container: stage ?? undefined }}
+        onClose={close}
+        open={open}
+        slotProps={{
+          backdrop: { sx: { position: 'absolute' } },
+          paper: { sx: { position: 'absolute', width: 200 } },
+        }}
+        sx={{ position: 'absolute' }}
+      >
+        <List dense disablePadding sx={{ py: 1 }}>
+          {items.map((item, index) => (
+            <ListItemButton
+              key={item.label}
+              onClick={() => {
+                setSelected(index);
+                close();
+              }}
+              selected={selected === index}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          ))}
+        </List>
+      </Drawer>
+    </OverlayStage>
+  );
+}
+
+export function LinkDemo() {
+  const handleClick = (event: SyntheticEvent) => {
+    event.preventDefault();
+  };
+  return (
+    <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
+      <Link href="#" onClick={handleClick} underline="hover">
+        Link
+      </Link>
+      <Link href="#" onClick={handleClick} underline="always">
+        Link
+      </Link>
+      <Link href="#" onClick={handleClick} underline="none">
+        Link
+      </Link>
+      <Link color="inherit" href="#" onClick={handleClick}>
+        Link
+      </Link>
+    </Stack>
+  );
+}
+
+export function MenuDemo() {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const open = Boolean(anchorEl);
+  const close = () => setAnchorEl(null);
+  return (
+    <OverlayStage stageRef={setStage}>
+      <Button
+        aria-controls={open ? 'preview-menu' : undefined}
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        variant="outlined"
+      >
+        Open menu
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        container={stage ?? undefined}
+        id="preview-menu"
+        onClose={close}
+        open={open}
+      >
+        <MenuItem onClick={close}>Profile</MenuItem>
+        <MenuItem onClick={close}>My account</MenuItem>
+        <MenuItem onClick={close}>Logout</MenuItem>
+      </Menu>
+    </OverlayStage>
+  );
+}
+
+export function PaginationDemo() {
+  const [page, setPage] = useState(1);
+  return (
+    <Stack spacing={1.5}>
+      <Pagination count={10} onChange={(_, value) => setPage(value)} page={page} />
+      <Pagination
+        color="primary"
+        count={10}
+        onChange={(_, value) => setPage(value)}
+        page={page}
+        variant="outlined"
+      />
+    </Stack>
+  );
+}
+
+// Speed Dial opens upward from its floating action button, so its
+// stage is taller than the shared overlay stage: a containing box
+// in the style of the MUI docs pattern, with the dial anchored to
+// the box's bottom-right corner and room above it for the actions.
+export function SpeedDialDemo() {
+  const [open, setOpen] = useState(false);
+  const actions = [
+    { icon: <CopyIcon size={20} />, name: 'Copy' },
+    { icon: <FloppyDiskIcon size={20} />, name: 'Save' },
+    { icon: <PrinterIcon size={20} />, name: 'Print' },
+  ];
+  return (
+    <Box
+      sx={{
+        bgcolor: 'action.hover',
+        borderRadius: 1,
+        height: 248,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <SpeedDial
+        ariaLabel="Speed dial"
+        icon={<SpeedDialIcon />}
+        onClose={() => setOpen(false)}
+        onOpen={() => setOpen(true)}
+        open={open}
+        sx={{ bottom: 16, position: 'absolute', right: 16 }}
+      >
+        {actions.map((action) => (
+          <SpeedDialAction
+            icon={action.icon}
+            key={action.name}
+            slotProps={{ fab: { 'aria-label': action.name } }}
+            title={action.name}
+          />
+        ))}
+      </SpeedDial>
+    </Box>
+  );
+}
+
+export function StepperDemo() {
+  const steps = [
+    {
+      content: 'Choose the audience, budget, and schedule for the campaign.',
+      label: 'Campaign settings',
+    },
+    {
+      content: 'Group the ads that share the same targeting and bids.',
+      label: 'Ad group',
+    },
+    {
+      content: 'Write the headline and copy, then launch the ad.',
+      label: 'Create ad',
+    },
+  ];
+  const [activeStep, setActiveStep] = useState(0);
+  const finished = activeStep === steps.length;
+  return (
+    <Box>
+      <Stepper activeStep={activeStep}>
+        {steps.map((step) => (
+          <Step key={step.label}>
+            <StepLabel>{step.label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+      {finished ? (
+        <>
+          <Typography sx={{ mt: 2 }}>All steps completed.</Typography>
+          <Button onClick={() => setActiveStep(0)} size="small" sx={{ mt: 1 }}>
+            Reset
+          </Button>
+        </>
+      ) : (
+        <>
+          <Typography sx={{ mt: 2 }} variant="body2">
+            {steps[activeStep].content}
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={() => setActiveStep((current) => current - 1)}
+              size="small"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={() => setActiveStep((current) => current + 1)}
+              size="small"
+              variant="contained"
+            >
+              {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+            </Button>
+          </Stack>
+        </>
+      )}
+    </Box>
+  );
+}
+
+export function TabsDemo() {
+  const [value, setValue] = useState(0);
+  const panels = ['Item One', 'Item Two', 'Item Three'];
+  return (
+    <Box>
+      <Tabs
+        aria-label="Preview tabs"
+        onChange={(_, newValue) => setValue(newValue)}
+        value={value}
+      >
+        {panels.map((label, index) => (
+          <Tab
+            aria-controls={`preview-tabpanel-${index}`}
+            id={`preview-tab-${index}`}
+            key={label}
+            label={label}
+          />
+        ))}
+      </Tabs>
+      {panels.map((label, index) => (
+        <Box
+          hidden={value !== index}
+          id={`preview-tabpanel-${index}`}
+          key={label}
+          role="tabpanel"
+          sx={{ pt: 1.5 }}
+        >
+          {value === index && (
+            <Typography variant="body2">{`${label} panel.`}</Typography>
+          )}
+        </Box>
+      ))}
+    </Box>
   );
 }

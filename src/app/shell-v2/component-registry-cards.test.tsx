@@ -413,3 +413,194 @@ describe('Surfaces preview cards', () => {
     }
   });
 });
+
+// Render and interaction smoke tests for the Navigation cards added
+// after Surfaces (Karl, Nov 25, 2026), in the same style as above.
+// The two overlays (Drawer, Menu) open inside their card's stage;
+// the tests open and close each one there.
+describe('Navigation preview cards', () => {
+  afterEach(() => cleanup());
+
+  it('Bottom Navigation renders four actions with Recents selected', () => {
+    renderEntry('bottom-navigation');
+    for (const label of ['Recents', 'Favorites', 'Nearby', 'Folder']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(
+      screen.getByText('Recents').closest('.MuiBottomNavigationAction-root')?.className,
+    ).toContain('Mui-selected');
+    expect(
+      screen.getByText('Favorites').closest('.MuiBottomNavigationAction-root')?.className,
+    ).not.toContain('Mui-selected');
+  });
+
+  it('clicking a Bottom Navigation action moves the selection to it', () => {
+    renderEntry('bottom-navigation');
+    fireEvent.click(screen.getByText('Favorites'));
+    expect(
+      screen.getByText('Favorites').closest('.MuiBottomNavigationAction-root')?.className,
+    ).toContain('Mui-selected');
+    expect(
+      screen.getByText('Recents').closest('.MuiBottomNavigationAction-root')?.className,
+    ).not.toContain('Mui-selected');
+  });
+
+  it('Breadcrumbs renders two links and the current page as text', () => {
+    renderEntry('breadcrumbs');
+    expect(screen.getByRole('link', { name: /Home/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Catalog' })).toBeInTheDocument();
+    expect(screen.getByText('Accessories')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Accessories' })).not.toBeInTheDocument();
+  });
+
+  it('Drawer opens contained in the card and closes from its backdrop', async () => {
+    const { container } = renderEntry('drawer');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open drawer' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Inbox')).toBeInTheDocument();
+    expect(within(dialog).getByText('Sent')).toBeInTheDocument();
+    expect(within(dialog).getByText('Drafts')).toBeInTheDocument();
+    fireEvent.click(container.querySelector('.MuiBackdrop-root') as Element);
+    await waitFor(
+      () => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+  });
+
+  it('choosing a Drawer item closes the drawer', async () => {
+    renderEntry('drawer');
+    fireEvent.click(screen.getByRole('button', { name: 'Open drawer' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByText('Sent'));
+    await waitFor(
+      () => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+  });
+
+  it('Link renders the hover, always, none, and inherit variants', () => {
+    const { container } = renderEntry('link');
+    const links = container.querySelectorAll('.MuiLink-root');
+    expect(links).toHaveLength(4);
+    expect(container.querySelector('.MuiLink-underlineHover')).not.toBeNull();
+    expect(container.querySelector('.MuiLink-underlineAlways')).not.toBeNull();
+    expect(container.querySelector('.MuiLink-underlineNone')).not.toBeNull();
+    // The inherit-color link takes the surrounding text color, which
+    // the Typography classes on the same element record.
+    const inherit = Array.from(links).find((link) =>
+      link.className.includes('MuiTypography-inherit'),
+    );
+    expect(inherit).toBeDefined();
+  });
+
+  it('Menu opens from its button and closes when an item is chosen', async () => {
+    renderEntry('menu');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    const menu = await screen.findByRole('menu');
+    for (const label of ['Profile', 'My account', 'Logout']) {
+      expect(within(menu).getByText(label)).toBeInTheDocument();
+    }
+    fireEvent.click(within(menu).getByText('Profile'));
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument(), {
+      timeout: 3000,
+    });
+  });
+
+  it('Pagination renders two synced rows and moves both when a page is chosen', () => {
+    renderEntry('pagination');
+    const pageThrees = screen.getAllByRole('button', { name: 'Go to page 3' });
+    expect(pageThrees).toHaveLength(2);
+    for (const button of pageThrees) {
+      expect(button).not.toHaveAttribute('aria-current');
+    }
+    fireEvent.click(pageThrees[0]);
+    // A selected page's accessible name drops the "Go to" prefix.
+    for (const button of screen.getAllByRole('button', { name: 'page 3' })) {
+      expect(button).toHaveAttribute('aria-current', 'page');
+    }
+    // Page 1 is no longer current in either row.
+    for (const button of screen.getAllByRole('button', { name: 'Go to page 1' })) {
+      expect(button).not.toHaveAttribute('aria-current');
+    }
+  });
+
+  it('Speed Dial opens its actions when the main button is clicked', () => {
+    renderEntry('speed-dial');
+    const fab = screen.getByRole('button', { name: 'Speed dial' });
+    expect(fab).toHaveAttribute('aria-expanded', 'false');
+    // The actions render as menuitems; while the dial is closed
+    // they are scaled and faded out.
+    expect(screen.getByRole('menuitem', { name: 'Copy' })).not.toBeVisible();
+    fireEvent.click(fab);
+    expect(fab).toHaveAttribute('aria-expanded', 'true');
+    for (const name of ['Copy', 'Save', 'Print']) {
+      expect(screen.getByRole('menuitem', { name })).toBeVisible();
+    }
+    fireEvent.click(fab);
+    expect(fab).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('menuitem', { name: 'Copy' })).not.toBeVisible();
+  });
+
+  it('Stepper starts on the first step with Back disabled', () => {
+    renderEntry('stepper');
+    expect(screen.getByText('Campaign settings')).toBeInTheDocument();
+    expect(
+      screen.getByText('Choose the audience, budget, and schedule for the campaign.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
+  });
+
+  it('Stepper walks forward and back through its steps', () => {
+    renderEntry('stepper');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(
+      screen.getByText('Group the ads that share the same targeting and bids.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back' })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(
+      screen.getByText('Choose the audience, budget, and schedule for the campaign.'),
+    ).toBeInTheDocument();
+  });
+
+  it('Stepper finishes on the last step and resets', () => {
+    renderEntry('stepper');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    expect(screen.getByText('All steps completed.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(
+      screen.getByText('Choose the audience, budget, and schedule for the campaign.'),
+    ).toBeInTheDocument();
+  });
+
+  it('Tabs renders three tabs with the first panel showing', () => {
+    renderEntry('tabs');
+    expect(screen.getByRole('tab', { name: 'Item One' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('tab', { name: 'Item Two' })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    );
+    expect(screen.getByText('Item One panel.')).toBeInTheDocument();
+    expect(screen.queryByText('Item Two panel.')).not.toBeInTheDocument();
+  });
+
+  it('clicking a Tab switches the panel to it', () => {
+    renderEntry('tabs');
+    fireEvent.click(screen.getByRole('tab', { name: 'Item Three' }));
+    expect(screen.getByRole('tab', { name: 'Item Three' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByText('Item Three panel.')).toBeInTheDocument();
+    expect(screen.queryByText('Item One panel.')).not.toBeInTheDocument();
+  });
+});

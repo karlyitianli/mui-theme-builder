@@ -17,15 +17,21 @@ import {
   AvatarDemo,
   BackdropDemo,
   BadgeDemo,
+  BottomNavigationDemo,
+  BreadcrumbsDemo,
   ButtonGroupDemo,
   CardDemo,
   CheckboxDemo,
   ChipDemo,
   DialogDemo,
   DividerDemo,
+  DrawerDemo,
   FabDemo,
   IconDemo,
+  LinkDemo,
   ListDemo,
+  MenuDemo,
+  PaginationDemo,
   PaperDemo,
   ProgressDemo,
   RadioGroupDemo,
@@ -33,8 +39,11 @@ import {
   SkeletonDemo,
   SliderDemo,
   SnackbarDemo,
+  SpeedDialDemo,
+  StepperDemo,
   SwitchDemo,
   TableDemo,
+  TabsDemo,
   ToggleButtonDemo,
   TooltipDemo,
   TransferListDemo,
@@ -98,6 +107,27 @@ import {
 // chrome; it uses the outlined variant so the two cards read as
 // separate surfaces (see the Surfaces demos in
 // component-demos.tsx).
+//
+// The Navigation category follows Surfaces with MUI's Navigation
+// list, again alphabetical: Bottom Navigation, Breadcrumbs,
+// Drawer, Link, Menu, Pagination, Speed Dial, Stepper, Tabs. All
+// nine are exported by the installed @mui/material (9.3.1,
+// verified against the runtime exports, including the
+// sub-components the demos compose: BottomNavigationAction, Menu,
+// MenuItem, SpeedDialAction, Step, StepLabel, Tab), so this
+// category has no omissions either. (TabPanel and TabList are not
+// @mui/material exports; the Tabs demo follows the MUI docs
+// pattern of a plain element with role="tabpanel" instead.) Two
+// demo notes. Drawer and Menu are overlays, contained in a stage
+// in their card like the Feedback overlays: the Drawer's modal
+// container points at the stage and its fixed-position root,
+// backdrop, and paper are restyled as absolute, so the drawer
+// covers only the stage; the Menu's container points at the stage
+// and its popover paper is positioned from its anchor button's
+// rect, so the menu opens under the button in the card. And the
+// Speed Dial demo sits in a taller stage of its own, because the
+// dial opens upward and needs room for its actions (see the
+// Navigation demos in component-demos.tsx).
 
 export interface PreviewComponentEntry {
   category: string;
@@ -328,6 +358,60 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     id: 'paper',
     name: 'Paper',
     render: () => <PaperDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'bottom-navigation',
+    name: 'Bottom Navigation',
+    render: () => <BottomNavigationDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'breadcrumbs',
+    name: 'Breadcrumbs',
+    render: () => <BreadcrumbsDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'drawer',
+    name: 'Drawer',
+    render: () => <DrawerDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'link',
+    name: 'Link',
+    render: () => <LinkDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'menu',
+    name: 'Menu',
+    render: () => <MenuDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'pagination',
+    name: 'Pagination',
+    render: () => <PaginationDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'speed-dial',
+    name: 'Speed Dial',
+    render: () => <SpeedDialDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'stepper',
+    name: 'Stepper',
+    render: () => <StepperDemo />,
+  },
+  {
+    category: 'Navigation',
+    id: 'tabs',
+    name: 'Tabs',
+    render: () => <TabsDemo />,
   },
 ];
 

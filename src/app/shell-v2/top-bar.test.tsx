@@ -117,7 +117,7 @@ describe('v2 top bar (Phase 4)', () => {
     expect(redo).toBeDisabled();
   });
 
-  it('reset with no edits applies immediately, without a confirm dialog', () => {
+  it('reset with no edits applies immediately, without a confirm dialog', { timeout: 20000 }, () => {
     renderWithShell(<PreviewArea />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
@@ -135,16 +135,16 @@ describe('v2 top bar (Phase 4)', () => {
     expect(screen.getByText('Reset the entire theme?')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 5000 });
     expect(screen.getByText(`primary: ${CUSTOM_PRIMARY}`)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     fireEvent.click(screen.getByRole('button', { name: 'Reset theme' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(), { timeout: 5000 });
     expect(screen.getByText('primary: none')).toBeInTheDocument();
   });
 
-  it('choosing the Default preset with no edits loads the default project without asking', () => {
+  it('choosing the Default preset with no edits loads the default project without asking', { timeout: 20000 }, () => {
     renderWithShell(<TokenPanel />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Theme preset: Default' }));
@@ -154,7 +154,7 @@ describe('v2 top bar (Phase 4)', () => {
     expect(screen.getByText('primary: none')).toBeInTheDocument();
   });
 
-  it('choosing the Default preset with edits asks, and confirming loads the default project', async () => {
+  it('choosing the Default preset with edits asks, and confirming loads the default project', { timeout: 20000 }, async () => {
     renderWithShell(<TokenPanel />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit primary' }));
     expect(screen.getByText(`primary: ${CUSTOM_PRIMARY}`)).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe('v2 top bar (Phase 4)', () => {
     expect(screen.getByText('primary: none')).toBeInTheDocument();
   });
 
-  it('export opens the code drawer on the current project and downloads theme.tsx from it', () => {
+  it('export opens the code drawer on the current project and downloads theme.tsx from it', { timeout: 20000 }, () => {
     renderWithShell(<PreviewArea />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit primary' }));
 

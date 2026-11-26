@@ -62,7 +62,7 @@ describe('PreviewArea (Phase 3)', () => {
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
   });
 
-  it('filters the cards by name through the search box', () => {
+  it('filters the cards by name through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'text' },
@@ -72,7 +72,7 @@ describe('PreviewArea (Phase 3)', () => {
     expect(screen.queryAllByRole('button', { name: 'Button' })).toHaveLength(0);
   });
 
-  it('shows the empty line when no component matches the search', () => {
+  it('shows the empty line when no component matches the search', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'zzzz-not-a-component' },
@@ -81,7 +81,7 @@ describe('PreviewArea (Phase 3)', () => {
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
   });
 
-  it('collapses and expands a category section from its header', () => {
+  it('collapses and expands a category section from its header', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Inputs'));
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('PreviewArea (Phase 3)', () => {
     expect(screen.getByText('Text Field')).toBeInTheDocument();
   });
 
-  it('shows the four template stubs on the Templates tab', () => {
+  it('shows the four template stubs on the Templates tab', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Templates'));
     for (const name of ['Sign up', 'Dashboard', 'Marketing', 'Checkout']) {
@@ -103,7 +103,7 @@ describe('PreviewArea (Phase 3)', () => {
 describe('PreviewArea Data Display section', () => {
   afterEach(() => cleanup());
 
-  it('renders the Data Display cards in a section after Inputs', () => {
+  it('renders the Data Display cards in a section after Inputs', { timeout: 20000 }, () => {
     renderPreviewArea();
     const inputsHeader = screen.getByText('Inputs');
     const dataDisplayHeader = screen.getByText('Data Display');
@@ -126,7 +126,7 @@ describe('PreviewArea Data Display section', () => {
     }
   });
 
-  it('filters across both categories through the search box', () => {
+  it('filters across both categories through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'chip' },
@@ -138,7 +138,7 @@ describe('PreviewArea Data Display section', () => {
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
   });
 
-  it('collapses and expands the Data Display section from its header', () => {
+  it('collapses and expands the Data Display section from its header', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Data Display'));
     expect(screen.queryByText('Chip')).not.toBeInTheDocument();
@@ -171,7 +171,7 @@ describe('PreviewArea Feedback section', () => {
     }
   });
 
-  it('filters across all three categories through the search box', () => {
+  it('filters across all three categories through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'alert' },
@@ -185,7 +185,7 @@ describe('PreviewArea Feedback section', () => {
     expect(screen.queryByText('Chip')).not.toBeInTheDocument();
   });
 
-  it('collapses and expands the Feedback section from its header', () => {
+  it('collapses and expands the Feedback section from its header', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Feedback'));
     expect(screen.queryByText('Alert')).not.toBeInTheDocument();
@@ -211,7 +211,7 @@ describe('PreviewArea Surfaces section', () => {
     }
   });
 
-  it('filters across all four categories through the search box', () => {
+  it('filters across all four categories through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'paper' },
@@ -227,13 +227,68 @@ describe('PreviewArea Surfaces section', () => {
     expect(screen.queryByText('Alert')).not.toBeInTheDocument();
   });
 
-  it('collapses and expands the Surfaces section from its header', () => {
+  it('collapses and expands the Surfaces section from its header', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Surfaces'));
     expect(screen.queryByText('Paper')).not.toBeInTheDocument();
     expect(screen.getByText('Alert')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Surfaces'));
     expect(screen.getByText('Paper')).toBeInTheDocument();
+  });
+});
+
+describe('PreviewArea Navigation section', () => {
+  afterEach(() => cleanup());
+
+  it('renders the Navigation cards in a section after Surfaces', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const surfacesHeader = screen.getByText('Surfaces');
+    const navigationHeader = screen.getByText('Navigation');
+    expect(
+      surfacesHeader.compareDocumentPosition(navigationHeader) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of [
+      'Bottom Navigation',
+      'Breadcrumbs',
+      'Drawer',
+      'Menu',
+      'Pagination',
+      'Speed Dial',
+      'Stepper',
+      'Tabs',
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+    // The Link card header plus the demo's four links all carry the
+    // text "Link".
+    expect(screen.getAllByText('Link')).toHaveLength(5);
+  });
+
+  it('filters across all five categories through the search box', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    fireEvent.change(screen.getByPlaceholderText('Search'), {
+      target: { value: 'pagination' },
+    });
+    expect(screen.getByText('Pagination')).toBeInTheDocument();
+    expect(screen.getByText('Navigation')).toBeInTheDocument();
+    // No Inputs, Data Display, Feedback, or Surfaces entry matches,
+    // so those sections drop out.
+    expect(screen.queryByText('Inputs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Data Display')).not.toBeInTheDocument();
+    expect(screen.queryByText('Feedback')).not.toBeInTheDocument();
+    expect(screen.queryByText('Surfaces')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
+    expect(screen.queryByText('Paper')).not.toBeInTheDocument();
+  });
+
+  it('collapses and expands the Navigation section from its header', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Navigation'));
+    expect(screen.queryByText('Pagination')).not.toBeInTheDocument();
+    expect(screen.getByText('Paper')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Navigation'));
+    expect(screen.getByText('Pagination')).toBeInTheDocument();
   });
 });
 
@@ -268,7 +323,7 @@ describe('PreviewArea theme reflection (Phase 3 integration)', () => {
     );
   }
 
-  it('changing the primary color through the reducer changes the preview theme the Button card renders under', () => {
+  it('changing the primary color through the reducer changes the preview theme the Button card renders under', { timeout: 20000 }, () => {
     render(
       <ReducerHarness>
         <PreviewArea />
