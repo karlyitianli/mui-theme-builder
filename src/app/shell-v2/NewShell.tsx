@@ -153,7 +153,10 @@ export function NewShell() {
                 position: 'absolute',
                 top: 0,
                 bottom: 0,
-                width: 1,
+                // Exactly 1px: a bare width of 1 in sx is the sizing
+                // fraction (100%), which made the line span the whole
+                // 10px handle.
+                width: '1px',
               },
               '&:hover::before, &:focus-visible::before': {
                 backgroundColor: SHELL_RESIZE_EDGE_ACTIVE_COLOR,

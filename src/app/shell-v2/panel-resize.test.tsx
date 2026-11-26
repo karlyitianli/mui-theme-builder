@@ -146,6 +146,16 @@ describe('NewShell panel resize handle', () => {
     );
   });
 
+  it('keeps the edge line exactly 1px wide', { timeout: 20000 }, () => {
+    renderShell();
+    const handle = screen.getByTestId('panel-resize-handle');
+    // Regression: the line's width was declared as a bare 1 in the
+    // sx object, which MUI reads as the sizing fraction (100%), so
+    // the line rendered the handle's full 10px instead of 1px.
+    expect(pseudoRuleFor(handle, '')).toContain('width:1px');
+    expect(pseudoRuleFor(handle, '')).not.toContain('width:100%');
+  });
+
   it('keeps the edge blue through a drag and restores it on release', { timeout: 20000 }, () => {
     renderShell();
     const handle = screen.getByTestId('panel-resize-handle');
