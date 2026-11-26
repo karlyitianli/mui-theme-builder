@@ -72,6 +72,9 @@ function scopeComponentsToShellPrefix(value: unknown): unknown {
 }
 
 export function createShellTheme(mode: PreviewMode): Theme {
+  const scopedComponents = scopeComponentsToShellPrefix(
+    mergeThemeComponents(shadcnComponents, externalLabelComponents),
+  ) as ThemeOptions['components'];
   return createTheme({
     cssVariables: { cssVarPrefix: 'shell' },
     palette: paletteSettingsToMui(mode),
@@ -83,8 +86,20 @@ export function createShellTheme(mode: PreviewMode): Theme {
     shape: {
       borderRadius: 6,
     },
-    components: scopeComponentsToShellPrefix(
-      mergeThemeComponents(shadcnComponents, externalLabelComponents),
-    ) as ThemeOptions['components'],
+    // The chrome's Menu paper keeps the exact soft shadow it had
+    // before Nov 26, 2026, declared here: the shared baseline no
+    // longer hand-sets that shadow, because in project themes the
+    // foundations menu elevation owns the Menu shadow now. Without
+    // this line the chrome's dropdowns would fall back to MUI's
+    // elevation-8 shadow and token work would have restyled the shell.
+    components: mergeThemeComponents(scopedComponents, {
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
+          },
+        },
+      },
+    }),
   });
 }

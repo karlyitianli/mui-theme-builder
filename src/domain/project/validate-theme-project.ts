@@ -93,7 +93,7 @@ export function validateThemeProject(value: unknown): ProjectValidationResult {
     } else if (
       value.foundations.shadows !== undefined &&
       (!isRecord(value.foundations.shadows) ||
-        !hasOnlyKeys(value.foundations.shadows, ['global', 'button', 'card', 'input']) ||
+        !hasOnlyKeys(value.foundations.shadows, ['global', 'button', 'card', 'input', 'menu']) ||
         !Object.values(value.foundations.shadows).every((entry) => isOptionalNumber(entry)))
     ) {
       errors.push('foundations.shadows must contain only numeric elevations.');

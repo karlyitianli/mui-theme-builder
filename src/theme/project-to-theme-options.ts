@@ -25,8 +25,15 @@ export function projectToThemeOptions(project: ThemeProject): ThemeOptions {
   // Foundation shadows and the card radius (Phase 5 model homes). Paper
   // carries the global elevation, Card its own elevation and the card
   // radius, Button elevation maps to MUI's disableElevation switch (its
-  // contained shadow then comes from the theme's shadow scale), and an
-  // input elevation of 0 pins the outlined input's box shadow to none.
+  // contained shadow then comes from the theme's shadow scale), the
+  // Menu paper's elevation comes from the menu shadow (Karl's Nov 26,
+  // 2026 decision: the foundations own the Menu shadow now, so the
+  // baseline MuiMenu override keeps only its border, radius, and offset),
+  // the Autocomplete dropdown paper follows the same menu elevation so
+  // the two dropdowns keep the matched treatment Karl locked on
+  // Nov 25, 2026 (the baseline no longer hand-sets either shadow), and
+  // an input elevation of 0 pins the outlined input's box shadow to
+  // none.
   // Explicit component settings merge after this block, so a Button or
   // TextField setting the user made still wins over the foundation value.
   // The block also carries Karl's dropdown default: Select and
@@ -43,8 +50,16 @@ export function projectToThemeOptions(project: ThemeProject): ThemeOptions {
       styleOverrides: { root: { borderRadius: cardBorderRadius } },
     },
     MuiButton: { defaultProps: { disableElevation: shadows.button === 0 } },
+    MuiMenu: {
+      defaultProps: { slotProps: { paper: { elevation: shadows.menu } } },
+    },
     MuiSelect: { defaultProps: { IconComponent: DropdownIcon } },
-    MuiAutocomplete: { defaultProps: { popupIcon: dropdownIconElement } },
+    MuiAutocomplete: {
+      defaultProps: {
+        popupIcon: dropdownIconElement,
+        slotProps: { paper: { elevation: shadows.menu } },
+      },
+    },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {

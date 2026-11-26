@@ -1,4 +1,9 @@
-import { createDefaultProject, type ThemeProject } from '../domain/project';
+import {
+  createDefaultProject,
+  findThemePreset,
+  STARTUP_PRESET_ID,
+  type ThemeProject,
+} from '../domain/project';
 import type { PaletteColorSettings } from '../domain/palette.types';
 import { semanticColorMainDefault } from '../theme/palette-adapter';
 import type { EditorAction, EditorSection, EditorState } from './editor-state.types';
@@ -8,6 +13,7 @@ const HISTORY_LIMIT = 50;
 export function createInitialEditorState(): EditorState {
   return {
     activeMode: 'light',
+    activePreset: STARTUP_PRESET_ID,
     activeSection: 'palette',
     future: [],
     past: [],
@@ -282,7 +288,19 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         resetSection(state.project, state.activeSection, state.activeMode),
       );
     case 'reset-project':
-      return commitProject(state, createDefaultProject());
+      // Reset returns to the startup preset's project (Black), the same
+      // project a fresh session opens with.
+      return {
+        ...commitProject(state, createDefaultProject()),
+        activePreset: STARTUP_PRESET_ID,
+      };
+    case 'load-preset': {
+      const preset = findThemePreset(action.preset);
+      return {
+        ...commitProject(state, preset.createProject()),
+        activePreset: preset.id,
+      };
+    }
     case 'undo': {
       const previous = state.past.at(-1);
       if (!previous) return state;

@@ -16,7 +16,11 @@ describe('projectToThemeOptions (characterization)', () => {
     const options = projectToThemeOptions(defaultProjectFixture);
     expect(options.cssVariables).toMatchObject({ colorSchemeSelector: 'data' });
     expect(options.shape?.borderRadius).toBe(6);
-    expect(options.spacing).toBeUndefined();
+    // Karl's Nov 26, 2026 spacing fix: the default (Black) project now
+    // stores its 8px base, so the options carry it and the panel, the
+    // preview, and the exported theme agree. This assertion previously
+    // pinned the disagreement (spacing undefined for a fresh project).
+    expect(options.spacing).toBe(8);
     expect(options.colorSchemes?.light).toBeDefined();
     expect(options.colorSchemes?.dark).toBeDefined();
   });

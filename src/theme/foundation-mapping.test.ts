@@ -10,7 +10,7 @@ import { projectToThemeOptions } from './project-to-theme-options';
 // (the model homes for the Shadows and Card radius controls) map into
 // the MUI theme options the preview and the exporter consume.
 describe('projectToThemeOptions foundation shadows and card radius (Phase 5)', () => {
-  it('maps the locked defaults into Paper, Card, Button, and OutlinedInput', () => {
+  it('maps the builder defaults into Paper, Card, Button, Menu, and OutlinedInput', () => {
     const options = projectToThemeOptions(defaultProjectFixture);
     const paper = options.components?.MuiPaper as { defaultProps?: { elevation?: number } };
     const card = options.components?.MuiCard as {
@@ -20,13 +20,36 @@ describe('projectToThemeOptions foundation shadows and card radius (Phase 5)', (
     const button = options.components?.MuiButton as {
       defaultProps?: { disableElevation?: boolean };
     };
+    const menu = options.components?.MuiMenu as {
+      defaultProps?: { slotProps?: { paper?: { elevation?: number } } };
+      styleOverrides?: { paper?: { border?: string; boxShadow?: string } };
+    };
     const input = options.components?.MuiOutlinedInput as {
       styleOverrides?: { root?: { boxShadow?: string } };
     };
-    expect(paper.defaultProps?.elevation).toBe(2);
+    // Karl's Nov 26, 2026 shadow configuration: no global elevation
+    // (Paper 0, previously 2 under the Medium lock), elevation on the
+    // components.
+    expect(paper.defaultProps?.elevation).toBe(0);
     expect(card.defaultProps?.elevation).toBe(1);
     expect(card.styleOverrides?.root?.borderRadius).toBe(12);
     expect(button.defaultProps?.disableElevation).toBe(false);
+    // The foundations own the Menu paper's shadow now: its elevation
+    // comes from the menu shadow, and the baseline paper override keeps
+    // its border but no longer sets a boxShadow of its own.
+    expect(menu.defaultProps?.slotProps?.paper?.elevation).toBe(8);
+    expect(menu.styleOverrides?.paper?.border).toContain('solid');
+    expect(menu.styleOverrides?.paper?.boxShadow).toBeUndefined();
+    // The Autocomplete dropdown paper follows the same menu elevation
+    // (the Nov 25, 2026 matched-dropdown treatment, re-based onto the
+    // elevation mechanism), and its baseline override likewise sets
+    // no shadow of its own.
+    const autocomplete = options.components?.MuiAutocomplete as {
+      defaultProps?: { slotProps?: { paper?: { elevation?: number } } };
+      styleOverrides?: { paper?: { boxShadow?: string } };
+    };
+    expect(autocomplete.defaultProps?.slotProps?.paper?.elevation).toBe(8);
+    expect(autocomplete.styleOverrides?.paper?.boxShadow).toBeUndefined();
     expect(input.styleOverrides?.root?.boxShadow).toBe('none');
   });
 

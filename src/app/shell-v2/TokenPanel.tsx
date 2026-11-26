@@ -5,6 +5,11 @@ import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { Box, Divider, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
 import type { PaletteSettings } from '../../domain/palette.types';
+import {
+  findThemePreset,
+  THEME_PRESETS,
+  type ThemePresetId,
+} from '../../domain/project';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
 import type {
   PreviewMode,
@@ -169,28 +174,38 @@ function buildColorSections(
   ];
 }
 
-const presetDots = ['#171717', '#f5f5f5', '#f5f5f5', '#e5e5e5'];
 const tokenTabs = ['Color', 'Typography', 'Spacing', 'Radius', 'Shadows'] as const;
 type TokenTab = (typeof tokenTabs)[number];
 
-// The preset selector is a real control (Phase 4): it opens a menu whose
-// only entry today is the current preset, Default. Choosing it loads the
-// default project through the shared reset flow (use-project-reset.ts),
-// including the dirty confirm when there are edits to lose.
+// The preset selector (Phase 4, two presets since Nov 26, 2026): it
+// opens a menu listing the presets (Black, the shadcn-styled baseline,
+// and Default, MUI's actual defaults; see theme-presets.ts). Choosing
+// one loads that preset's project through the shared reset flow
+// (use-project-reset.ts), including the dirty confirm when there are
+// edits to lose. Choosing Black is the reset flow's plain reset. The
+// row shows the session's active preset from the editor state, with
+// that preset's swatch dots.
 function PresetRow({ mode }: { mode: PreviewMode }) {
-  const { cancelReset, confirmOpen, confirmReset, requestReset } = useProjectReset();
+  const { activePreset } = useEditorState();
+  const { cancelReset, confirmOpen, confirmReset, requestPreset, requestReset } =
+    useProjectReset();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const preset = findThemePreset(activePreset);
 
-  const chooseDefault = () => {
+  const choose = (id: ThemePresetId) => {
     setAnchorEl(null);
-    requestReset();
+    if (id === 'black') {
+      requestReset();
+    } else {
+      requestPreset(id);
+    }
   };
 
   return (
     <>
       <Box
         aria-haspopup="menu"
-        aria-label="Theme preset: Default"
+        aria-label={`Theme preset: ${preset.name}`}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         role="button"
         sx={{
@@ -205,7 +220,7 @@ function PresetRow({ mode }: { mode: PreviewMode }) {
         }}
       >
         <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
-          {presetDots.map((color, index) => (
+          {preset.dots.map((color, index) => (
             <Box
               key={index}
               sx={{
@@ -218,13 +233,19 @@ function PresetRow({ mode }: { mode: PreviewMode }) {
             />
           ))}
         </Stack>
-        <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1 }}>Default</Typography>
+        <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1 }}>{preset.name}</Typography>
         <CaretDownIcon size={16} style={{ marginLeft: 'auto' }} />
       </Box>
       <Menu anchorEl={anchorEl} onClose={() => setAnchorEl(null)} open={anchorEl !== null}>
-        <MenuItem onClick={chooseDefault} selected>
-          Default
-        </MenuItem>
+        {THEME_PRESETS.map((entry) => (
+          <MenuItem
+            key={entry.id}
+            onClick={() => choose(entry.id)}
+            selected={entry.id === activePreset}
+          >
+            {entry.name}
+          </MenuItem>
+        ))}
       </Menu>
       <ResetProjectDialog
         onCancel={cancelReset}

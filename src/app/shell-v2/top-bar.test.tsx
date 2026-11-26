@@ -144,28 +144,41 @@ describe('v2 top bar (Phase 4)', () => {
     expect(screen.getByText('primary: none')).toBeInTheDocument();
   });
 
-  it('choosing the Default preset with no edits loads the default project without asking', { timeout: 20000 }, () => {
+  it('choosing the Black preset with no edits loads the Black project without asking', { timeout: 20000 }, () => {
     renderWithShell(<TokenPanel />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Theme preset: Default' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Default' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Theme preset: Black' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Black' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText('primary: none')).toBeInTheDocument();
   });
 
-  it('choosing the Default preset with edits asks, and confirming loads the default project', { timeout: 20000 }, async () => {
+  it('choosing the Black preset with edits asks, and confirming loads the Black project', { timeout: 20000 }, async () => {
     renderWithShell(<TokenPanel />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit primary' }));
     expect(screen.getByText(`primary: ${CUSTOM_PRIMARY}`)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Theme preset: Default' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Default' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Theme preset: Black' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Black' }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset theme' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(screen.getByText('primary: none')).toBeInTheDocument();
+  });
+
+  it('choosing the Default preset loads the MUI default project and relabels the row', { timeout: 20000 }, () => {
+    renderWithShell(<TokenPanel />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Theme preset: Black' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Default' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // The MUI Default preset stores its palette, so the probe reads
+    // MUI's primary rather than the Black project's sparse none.
+    expect(screen.getByText('primary: #1976d2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Theme preset: Default' })).toBeInTheDocument();
   });
 
   it('export opens the code drawer on the current project and downloads theme.tsx from it', { timeout: 20000 }, () => {

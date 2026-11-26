@@ -122,13 +122,11 @@ export const shadcnComponents = {
     styleOverrides: { root: { backgroundImage: 'none' } },
   },
   MuiMenu: {
-    defaultProps: { slotProps: { paper: { elevation: 0 } } },
     styleOverrides: {
       paper: {
         marginTop: 4,
         border: '1px solid var(--mui-palette-divider)',
         borderRadius: 6,
-        boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
       },
     },
   },
@@ -140,14 +138,16 @@ export const shadcnComponents = {
   // alone it renders with no border and only the Paper elevation shadow
   // (the foundation's global elevation), which reads as flat against
   // the page. Karl flagged the mismatch from the live preview (Nov 25,
-  // 2026); the paper slot gets the same border, radius, and shadow as
-  // the Menu paper so both dropdowns read the same.
+  // 2026); the paper slot gets the same border and radius as the Menu
+  // paper, plus a hand-set shadow matching the depth the Menu paper had
+  // at the time (the Menu's own shadow is elevation-driven since Nov
+  // 26, 2026, and the Autocomplete paper has no elevation slot in this
+  // model, so its shadow stays written out here).
   MuiAutocomplete: {
     styleOverrides: {
       paper: {
         border: '1px solid var(--mui-palette-divider)',
         borderRadius: 6,
-        boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
       },
     },
   },

@@ -18,9 +18,11 @@ vi.mock('../persistence/indexed-db-repository', () => ({
 // Phase 1 switch tests, which pinned the opposite (v2 opt-in via
 // ?shell=v2). The v2 marker is the token panel's preset button; the old
 // shell marker is its toolbar's import button, which must never appear.
+// The preset button's name tracks the startup preset, renamed from
+// Default to Black on Nov 26, 2026.
 async function expectV2Shell() {
   expect(
-    await screen.findByRole('button', { name: 'Theme preset: Default' }, { timeout: 15000 }),
+    await screen.findByRole('button', { name: 'Theme preset: Black' }, { timeout: 15000 }),
   ).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Import project JSON' })).not.toBeInTheDocument();
 }

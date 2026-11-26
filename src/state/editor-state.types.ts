@@ -1,4 +1,4 @@
-import type { ThemeProject } from '../domain/project';
+import type { ThemeProject, ThemePresetId } from '../domain/project';
 import type { ShadowSettings } from '../domain/foundation-defaults';
 import type { ButtonSettings } from '../domain/components/button.types';
 import type { SelectSettings } from '../domain/components/select.types';
@@ -34,6 +34,7 @@ export type SurfacePaletteRole =
 
 export interface EditorState {
   activeMode: PreviewMode;
+  activePreset: ThemePresetId;
   activeSection: EditorSection;
   future: ThemeProject[];
   past: ThemeProject[];
@@ -76,5 +77,6 @@ export type EditorAction =
   | { type: 'set-save-status'; status: SaveStatus }
   | { type: 'reset-active-section' }
   | { type: 'reset-project' }
+  | { type: 'load-preset'; preset: ThemePresetId }
   | { type: 'undo' }
   | { type: 'redo' };

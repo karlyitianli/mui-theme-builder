@@ -2,7 +2,7 @@
 
 **Last updated:** Nov 26, 2026
 
-**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 207 tests passing
+**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 216 tests passing
 
 ## Maintenance rule
 
@@ -19,6 +19,7 @@ This file is the plan of record for the project. Read it before starting work on
 | M5 Token panel wiring | Done | Every panel edit goes through the reducer and is undoable |
 | M6 Component defaults editors (Button, TextField, Select) | Open | Not started; see open tasks |
 | M7 New shell becomes the only shell | Done | Original shell removed Nov 25, 2026 |
+| M8 Templates (Sign up, Dashboard, Marketing, Checkout) | Open | All four are stubs today |
 | Post-phase polish batches | Done | Color picker, shell insulation, preview category expansion, Phosphor icon swaps, resize edge |
 
 ## Completed tasks
@@ -70,6 +71,9 @@ This file is the plan of record for the project. Read it before starting work on
 - Backdrop, Dialog, and Snackbar stage buttons render white in dark mode
 - Autocomplete dropdown paper matched to the Select menu (border, radius, shadow) in the baseline, so preview and export agree
 - Resize edge restyled to a 1px line that highlights on hover, focus, and drag; the earlier notch was removed, and a sizing bug that rendered the line at 10px was fixed with a regression test
+- Fresh-project spacing agreement fixed (Nov 26, 2026): the default project now stores its spacing base, so panel, preview, and export agree; the characterization test that pinned the omission now asserts the stored value
+- Nov 26, 2026 decisions implemented: density presets redefined (Compact 4px, Comfortable 8px default, Spacious 12px); shadows re-based to global none with per-component elevations (Button 2, Card 1, Input 0, Menu 8, new); preset Default renamed Black and a true MUI Default preset added (values checked against a createTheme oracle); new projects start on Black
+- Preset identity is session state only: saved and imported projects store values, not which preset they came from, and both presets share the builder's component baseline by design
 
 ## Open tasks
 
@@ -81,6 +85,7 @@ Effort estimates are rough. Small means a single small change, Medium means a fo
 - [ ] 1.2 Fix the button and text-field adapters' unconditional defaultProps emission (Effort: Small). They emit defaultProps unconditionally and can erase foundation defaults in the deep merge; the select adapter is already fixed.
 - [ ] 1.3 Decide what shell should be, and what components are editable (Effort: Small). A decision that gates the inspector and overrides work.
 - [ ] 1.4 Inspector from tweakcn, very interesting concept (Effort: Large). Component overrides and the inspector were parked on Nov 25, 2026, until almost everything else is built; component defaults are theme-level and prescribed in the meantime. tweakcn's inspector is the reference for this thread.
+- [ ] 1.5 Typography model cannot express textTransform (Effort: Small). Found Nov 26, 2026: the MUI Default preset's Button and Overline variants are uppercase in real MUI, but the model has no textTransform field, so the preset cannot reproduce them. Decide whether to add the field.
 
 ### Preview coverage
 
@@ -95,15 +100,16 @@ Effort estimates are rough. Small means a single small change, Medium means a fo
 - [ ] 3.2 Links to MUI docs per component (Effort: Small). Each preview card links to that component's MUI documentation page.
 - [ ] 3.3 Color palette browser with official MUI color tokens (Effort: Medium). Karl clarified on Nov 26, 2026 with a tweakcn screenshot: next to each color field, a button opens a searchable palette browser of officially supported MUI color tokens and their names (the @mui/material/colors palette: families such as red, blue, grey with their numbered shades), the way tweakcn's button opens the official Tailwind v4 tokens. Picking a named swatch sets the field's color value.
 - [ ] 3.4 Make it mobile responsive a la tweakcn (Effort: Large).
+- [ ] 3.5 Other tab for breakpoints, transitions, and z-index (Effort: Medium). Added Nov 26, 2026: these theme values get a new Other tab after Shadows in the token panel, rather than tabs of their own.
+- [ ] 3.6 Complete the Color panel palette: grey ramp and action colors (Effort: Medium). Added Nov 26, 2026: add a Grey section (50 to 900) and an Action section (active, hover, selected, disabled and their opacities) per scheme, wired like the existing palette groups.
 
 ### Quality and correctness
 
 - [ ] 4.1 Color and typography audit fixes (Effort: Medium). 14 findings from the Nov 25, 2026 audit, report only; fixes not yet requested. The two highs are T1 (Typography panel specimens show fallback values, not the applied theme) and T2 (an unset font shows Inter in the panel while preview and export use a system stack).
 - [ ] 4.2 Audit shell color and typography (Effort: Small). A report-only audit of exactly this exists (Nov 25, 2026, 14 findings) and the fixes task above is its open half; this item is about running or refreshing that audit for the shell specifically.
-- [ ] 4.3 Brand-new project spacing export quirk (Effort: Small). A brand-new, never-saved default project exports without explicit spacing. This is pinned by a characterization test.
 
 ### Product and platform
 
 - [ ] 5.1 A way to send to Claude, Muse, Codex etc (Effort: Medium). Hand the theme or project off to AI coding tools; the form is to be decided.
 - [ ] 5.2 Landing page (Effort: Medium).
-- [ ] 5.3 Builder-chosen values awaiting Karl's review (Effort: Small). Radius presets (Sharp 0, Rounded 6, Spacious 16), shadow presets Subtle and Strong (Medium is locked), and density implemented as base-unit presets (3px, 4px, 5px) rather than a stored density field.
+- [ ] 5.3 Radius presets awaiting Karl's review (Effort: Small). Radius presets (Sharp 0, Rounded 6, Spacious 16) are the remaining builder-chosen values awaiting review. The density and shadow questions were decided on Nov 26, 2026: density presets are Compact 4px, Comfortable 8px, Spacious 12px with Comfortable as the default, and shadows are global none with per-component overrides for Button, Card, Input, and Menu (values recorded in the PRD decision log; implemented Nov 26, 2026). The Subtle and Strong shadow presets' new Menu elevations (4 and 12) are builder interpolations from the Nov 26, 2026 build and join the review queue alongside the radius presets.

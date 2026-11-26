@@ -143,21 +143,23 @@ describe('TokenPanel wiring (Phase 5)', () => {
   it('a Spacing base edit updates the project and the scale values', () => {
     renderPanel();
     fireEvent.click(screen.getByText('Spacing'));
-    // Unset spacing shows the shared 4px default, so x12 reads 48 px.
-    expect(screen.getByText('48 px')).toBeInTheDocument();
+    // The Black project stores its 8px base (Comfortable), so x12 reads
+    // 96 px. (Before Nov 26, 2026 the default project stored no spacing
+    // and this showed the 4px fallback.)
+    expect(screen.getByText('96 px')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Increase Base spacing unit'));
-    expect(probeProject().foundations?.spacing).toBe(5);
-    expect(screen.getByText('60 px')).toBeInTheDocument();
+    expect(probeProject().foundations?.spacing).toBe(9);
+    expect(screen.getByText('108 px')).toBeInTheDocument();
   });
 
   it('a Spacing density preset applies its base unit', () => {
     renderPanel();
     fireEvent.click(screen.getByText('Spacing'));
     fireEvent.click(screen.getByText('Compact'));
-    expect(probeProject().foundations?.spacing).toBe(3);
-    expect(screen.getByText('36 px')).toBeInTheDocument();
+    expect(probeProject().foundations?.spacing).toBe(4);
+    expect(screen.getByText('48 px')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Spacious'));
-    expect(probeProject().foundations?.spacing).toBe(5);
+    expect(probeProject().foundations?.spacing).toBe(12);
   });
 
   it('Radius global and override edits update the project', () => {
@@ -188,6 +190,7 @@ describe('TokenPanel wiring (Phase 5)', () => {
       button: 4,
       card: 3,
       input: 2,
+      menu: 12,
     });
     fireEvent.click(screen.getByLabelText('Increase Global elevation'));
     expect(probeProject().foundations?.shadows?.global).toBe(5);

@@ -10,19 +10,23 @@ import { PresetPills, SectionLabel, StepperRow } from './primitives';
 //
 // The base unit comes from the existing editor state
 // (foundations.spacing), falling back to the shared DEFAULT_SPACING of
-// 4px (Karl's Nov 23 decision, now also the old shell's fallback and the
-// migration default, so both shells agree). Phase 5 wired the stepper to
-// set-spacing with the old inspector's 1-16 range.
+// 4px. That fallback is the legacy meaning of an unset spacing: projects
+// saved before spacing was stored display and export at 4px. Stored
+// projects carry their base explicitly; the Black preset's project
+// stores 8px. Phase 5 wired the stepper to set-spacing with the old
+// inspector's 1-16 range.
 //
 // The project model has no density concept, so the density presets are
 // implemented as base-unit presets: Compact, Comfortable, and Spacious
-// are the locked 4px base at 0.75x, 1x, and 1.25x, i.e. base units of
-// 3px, 4px, and 5px, applied through the same set-spacing action. A base
-// unit that is not one of those three shows no active preset.
+// are base units of 4px, 8px, and 12px (Karl's Nov 26, 2026 density
+// decision, superseding the earlier 3px, 4px, 5px set), applied through
+// the same set-spacing action. Comfortable (8px) is the default: the
+// Black preset's project starts there. A base unit that is not one of
+// those three shows no active preset.
 
 const multipliers = [0, 1, 2, 3, 4, 6, 8, 10, 12];
 const densityPresets = ['Compact', 'Comfortable', 'Spacious'];
-const densityBaseUnits = [3, 4, 5];
+const densityBaseUnits = [4, 8, 12];
 
 function ScaleRow({ multiplier, px }: { multiplier: number; px: number }) {
   return (

@@ -1,0 +1,185 @@
+import { createTheme } from '@mui/material/styles';
+import { describe, expect, it } from 'vitest';
+
+import { emitThemeTsx } from '../../generator/emit-theme-tsx';
+import { createRuntimeTheme } from '../../theme/create-runtime-theme';
+import { projectToThemeOptions } from '../../theme/project-to-theme-options';
+import { createDefaultProject } from './create-default-project';
+import { createMuiDefaultProject } from './create-mui-default-project';
+import { migrateThemeProject } from './migrate-theme-project';
+import { STARTUP_PRESET_ID, THEME_PRESETS } from './theme-presets';
+
+// Karl's Nov 26, 2026 preset decisions: the shadcn-styled preset is
+// renamed "Black" and stays the startup preset; a new "Default" preset
+// carries MUI's actual default theme values.
+describe('theme presets (Nov 26, 2026)', () => {
+  it('registers Black first and Default second, starting on Black', () => {
+    expect(THEME_PRESETS.map((preset) => preset.name)).toEqual(['Black', 'Default']);
+    expect(STARTUP_PRESET_ID).toBe('black');
+  });
+
+  it('the Black project stores the Nov 26 density and shadow configuration', () => {
+    const project = createDefaultProject();
+    // Comfortable (8px) is stored explicitly; shadows are the None
+    // configuration (global 0, elevation on the components).
+    expect(project.foundations?.spacing).toBe(8);
+    expect(project.foundations?.shadows).toEqual({
+      global: 0,
+      button: 2,
+      card: 1,
+      input: 0,
+      menu: 8,
+    });
+    // The palette stays sparse: the baseline in the theme mapping
+    // supplies the Black values.
+    expect(project.colorSchemes.light.palette).toBeUndefined();
+    expect(project.colorSchemes.dark.palette).toBeUndefined();
+  });
+
+  it('a fresh Black project agrees on spacing across panel value, options, runtime theme, and export', () => {
+    const project = createDefaultProject();
+    // The panel reads foundations.spacing; the theme options, the
+    // runtime theme the preview renders, and the exported theme.tsx
+    // must all carry the same 8px base. Before Nov 26, 2026 the
+    // options omitted spacing for a fresh project and MUI's default
+    // silently governed the export instead.
+    expect(project.foundations?.spacing).toBe(8);
+    expect(projectToThemeOptions(project).spacing).toBe(8);
+    // The runtime theme is a CSS-variables theme, so its spacing
+    // function returns the variable reference whose fallback is the
+    // base unit: 8px, the same value.
+    expect(createRuntimeTheme(project).spacing(1)).toBe('var(--mui-spacing, 8px)');
+    expect(emitThemeTsx(project)).toContain('spacing: 8');
+  });
+});
+
+describe('the Default preset against a plain createTheme oracle', () => {
+  const project = createMuiDefaultProject();
+  const theme = createRuntimeTheme(project);
+
+  it('matches MUI palette values for both schemes', () => {
+    const roles = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const;
+    for (const mode of ['light', 'dark'] as const) {
+      const oracle = createTheme({ palette: { mode } }).palette;
+      const palette = theme.colorSchemes[mode]!.palette;
+      for (const role of roles) {
+        // Per-value comparison: the CSS-variables runtime palette also
+        // carries channel bookkeeping keys the plain oracle lacks.
+        expect(palette[role].main).toBe(oracle[role].main);
+        expect(palette[role].light).toBe(oracle[role].light);
+        expect(palette[role].dark).toBe(oracle[role].dark);
+        expect(palette[role].contrastText).toBe(oracle[role].contrastText);
+      }
+      expect(palette.background.default).toBe(oracle.background.default);
+      expect(palette.background.paper).toBe(oracle.background.paper);
+      expect(palette.text.primary).toBe(oracle.text.primary);
+      expect(palette.text.secondary).toBe(oracle.text.secondary);
+      expect(palette.text.disabled).toBe(oracle.text.disabled);
+      expect(palette.divider).toBe(oracle.divider);
+    }
+  });
+
+  it('matches MUI typography: Roboto stack, base size, and variant values', () => {
+    const oracle = createTheme().typography;
+    // The adapter joins the stack without per-family quotes; compare
+    // with the oracle's quotes stripped.
+    expect(theme.typography.fontFamily?.replaceAll('"', '')).toBe(
+      oracle.fontFamily?.replaceAll('"', ''),
+    );
+    expect(theme.typography.fontSize).toBe(oracle.fontSize);
+    // The builder's model stores variant font sizes in px; the oracle
+    // expresses them in rem at the 16px root. Compare the same quantity
+    // in px.
+    const toPx = (value: string | number | undefined): number => {
+      if (value === undefined) throw new Error('expected a font size');
+      return typeof value === 'number' ? value : parseFloat(value) * (value.endsWith('rem') ? 16 : 1);
+    };
+    for (const variant of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'caption', 'overline'] as const) {
+      expect(toPx(theme.typography[variant].fontSize)).toBe(toPx(oracle[variant].fontSize));
+      expect(theme.typography[variant]).toMatchObject({
+        fontWeight: oracle[variant].fontWeight,
+        lineHeight: oracle[variant].lineHeight,
+        letterSpacing: oracle[variant].letterSpacing,
+      });
+    }
+    // The button variant matches on the properties the project model
+    // can express; its textTransform: 'uppercase' is not one of them
+    // (TypographyStyle has no textTransform field).
+    expect(toPx(theme.typography.button.fontSize)).toBe(toPx(oracle.button.fontSize));
+    expect(theme.typography.button).toMatchObject({
+      fontWeight: oracle.button.fontWeight,
+      lineHeight: oracle.button.lineHeight,
+      letterSpacing: oracle.button.letterSpacing,
+    });
+  });
+
+  it('matches MUI spacing, radius, and component default elevations', () => {
+    const options = projectToThemeOptions(project);
+    expect(options.spacing).toBe(8);
+    expect(options.shape?.borderRadius).toBe(4);
+    const paper = options.components?.MuiPaper as { defaultProps?: { elevation?: number } };
+    const card = options.components?.MuiCard as {
+      defaultProps?: { elevation?: number };
+      styleOverrides?: { root?: { borderRadius?: number } };
+    };
+    const button = options.components?.MuiButton as {
+      defaultProps?: { disableElevation?: boolean };
+    };
+    const menu = options.components?.MuiMenu as {
+      defaultProps?: { slotProps?: { paper?: { elevation?: number } } };
+    };
+    expect(paper.defaultProps?.elevation).toBe(1);
+    expect(card.defaultProps?.elevation).toBe(1);
+    expect(card.styleOverrides?.root?.borderRadius).toBe(4);
+    expect(button.defaultProps?.disableElevation).toBe(false);
+    expect(menu.defaultProps?.slotProps?.paper?.elevation).toBe(8);
+  });
+});
+
+// The rename safety net: stored projects never carried a preset name
+// (the schema has no preset field), so nothing resolves "Default" to a
+// factory on load. What migration must guarantee instead is that a
+// project saved in the pre-rename shape keeps its stored values: its
+// Medium shadows stay Medium, and it only gains the keys invented
+// since (the menu elevation, and the legacy 4px spacing it was always
+// displayed with).
+describe('preset rename and saved projects', () => {
+  it('a project saved before the rename keeps its stored values through migration', () => {
+    const preRenameProject = {
+      schemaVersion: 1,
+      builderVersion: '0.0.0',
+      targetMuiVersion: '9.3.1',
+      metadata: {
+        name: 'Untitled theme',
+        createdAt: '2026-11-25T00:00:00.000Z',
+        updatedAt: '2026-11-25T00:00:00.000Z',
+      },
+      colorSchemes: { light: {}, dark: {} },
+      foundations: {
+        shape: { cardBorderRadius: 12 },
+        shadows: { global: 2, button: 2, card: 1, input: 0 },
+      },
+    };
+    const result = migrateThemeProject(preRenameProject);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.migrated).toBe(true);
+    expect(result.project.foundations?.shadows).toEqual({
+      global: 2,
+      button: 2,
+      card: 1,
+      input: 0,
+      menu: 8,
+    });
+    expect(result.project.foundations?.spacing).toBe(4);
+  });
+
+  it('both preset projects round-trip through migration unchanged', () => {
+    for (const createProject of [createDefaultProject, createMuiDefaultProject]) {
+      const result = migrateThemeProject(createProject());
+      expect(result.success).toBe(true);
+      if (!result.success) continue;
+      expect(result.migrated).toBe(false);
+    }
+  });
+});

@@ -667,3 +667,8 @@ Decisions that changed the product after the original draft of this document, wi
 - **Nov 25, 2026:** Phosphor icons replace MUI icons for dropdowns, Alert severities and close, and the Chip delete icon, in the preview and in exported themes.
 - **Nov 25, 2026:** Preview cards removed: Transfer List, Icon, Typography, and Paper. 37 cards remain.
 - **Nov 26, 2026:** PROJECT_STATUS.md is the plan of record. This PRD is updated retroactively and kept as a living document with this log.
+- **Nov 26, 2026:** Density presets redefined: Compact 4px, Comfortable 8px, Spacious 12px; Comfortable is the default selected preset. This supersedes the Nov 23, 2026 4px base for the default theme.
+- **Nov 26, 2026:** Shadows: the global elevation is none; elevation is applied as overrides on specific components (Button, Card, Input, and Menu, newly added). Authoring custom shadow geometry is a non-goal by design.
+- **Nov 26, 2026:** The preset currently named Default is renamed Black (it is a shadcn-styled baseline, not MUI's defaults). A new preset named Default will carry MUI's actual default theme values.
+- **Nov 26, 2026:** The baseline component configuration being always emitted in exported themes is accepted as intended behaviour for the default theme.
+- **Nov 26, 2026:** Breakpoints, transitions, and z-index will be edited in a new Other tab after Shadows; the Color panel will be completed with the grey ramp and action colors. Both are recorded as open tasks in PROJECT_STATUS.md.

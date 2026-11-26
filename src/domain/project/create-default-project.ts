@@ -18,11 +18,17 @@ export function createDefaultProject(now = new Date()): ThemeProjectV1 {
       light: {},
       dark: {},
     },
-    // Shadows and the card radius carry Karl's locked defaults explicitly
-    // so a new project exports exactly what the v2 panels show. Spacing
-    // stays sparse: the shared DEFAULT_SPACING fallback (and migration
-    // for saved projects) supplies the 4px base unit.
+    // This factory is the Black preset's project (the shadcn-styled
+    // baseline; see theme-presets.ts). Its foundations are stored
+    // explicitly so a brand-new project exports exactly what the panels
+    // show: spacing carries the 8px base (Comfortable, Karl's Nov 26,
+    // 2026 density decision) instead of staying sparse and relying on
+    // the DEFAULT_SPACING fallback, which now only gives older, unset
+    // projects their historical 4px. Shadows carry the Nov 26, 2026
+    // configuration (global none, per-component elevations) and the
+    // card radius Karl's locked default.
     foundations: {
+      spacing: 8,
       shape: { cardBorderRadius: DEFAULT_CARD_BORDER_RADIUS },
       shadows: { ...DEFAULT_SHADOWS },
     },

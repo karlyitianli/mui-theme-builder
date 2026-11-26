@@ -695,12 +695,16 @@ describe('Preview theme treatments', () => {
     expect(menuPaper).not.toBeNull();
     const menuRules = rulesFor(menuPaper as Element);
 
-    // The treatment the Select menu gets from the baseline's MuiMenu
-    // paper override; the Autocomplete paper must carry the same two
-    // declarations.
+    // The treatment the two dropdown papers share. The border comes
+    // from the baseline's paper overrides; the shadow is the
+    // foundations menu elevation, which MuiPaper renders through its
+    // --Paper-shadow variable since Nov 26, 2026 (before that, both
+    // papers carried one hand-set shadow string from the baseline).
+    // The elevation value itself is pinned in foundation-mapping
+    // tests.
     for (const declaration of [
       'border:1px solid var(--mui-palette-divider)',
-      'box-shadow:0 8px 24px rgb(0 0 0 / 0.12)',
+      'box-shadow:var(--Paper-shadow)',
     ]) {
       expect(menuRules).toContain(declaration);
       expect(autocompleteRules).toContain(declaration);

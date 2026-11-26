@@ -9,7 +9,11 @@ import { migrateThemeProject } from './migrate-theme-project';
 // Phase 5: projects saved before foundations.shadows,
 // foundations.shape.cardBorderRadius, and the shared 4px spacing default
 // existed gain those defaults through migration, per key, without
-// overwriting values the project already carries.
+// overwriting values the project already carries. The shadow defaults
+// migration fills are the builder's current ones: since Karl's Nov 26,
+// 2026 shadow decision that is the None configuration (global 0, Button
+// 2, Card 1, Input 0, Menu 8); before that decision it filled the
+// Medium set (global 2, no menu key).
 describe('migrateThemeProject foundation defaults (Phase 5)', () => {
   it('gives an old project the new shadow and card radius defaults', () => {
     const result = migrateThemeProject(customizedProjectFixture);
@@ -17,10 +21,11 @@ describe('migrateThemeProject foundation defaults (Phase 5)', () => {
     if (!result.success) return;
     expect(result.migrated).toBe(true);
     expect(result.project.foundations?.shadows).toEqual({
-      global: 2,
+      global: 0,
       button: 2,
       card: 1,
       input: 0,
+      menu: 8,
     });
     expect(result.project.foundations?.shape?.cardBorderRadius).toBe(12);
     // Values the project already had are preserved.
@@ -36,10 +41,11 @@ describe('migrateThemeProject foundation defaults (Phase 5)', () => {
     expect(result.migrated).toBe(true);
     expect(result.project.foundations?.spacing).toBe(4);
     expect(result.project.foundations?.shadows).toEqual({
-      global: 2,
+      global: 0,
       button: 2,
       card: 1,
       input: 0,
+      menu: 8,
     });
     expect(result.project.foundations?.shape?.cardBorderRadius).toBe(12);
   });
@@ -62,6 +68,7 @@ describe('migrateThemeProject foundation defaults (Phase 5)', () => {
       button: 2,
       card: 1,
       input: 0,
+      menu: 8,
     });
     expect(first.project.foundations?.shape?.cardBorderRadius).toBe(9);
     expect(first.project.foundations?.spacing).toBe(6);
