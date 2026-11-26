@@ -309,6 +309,18 @@ describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => 
     }
   });
 
+  it('renders the count as an MUI notification badge anchored to the section title', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    // The Nov 26, 2026 restyle: the count is a real MuiBadge anchored
+    // to the title's top-right corner, not an inline pill beside it.
+    const title = screen.getByText('Inputs');
+    const badgeRoot = title.closest('.MuiBadge-root');
+    expect(badgeRoot).not.toBeNull();
+    const badge = badgeRoot?.querySelector('.MuiBadge-badge');
+    expect(badge?.textContent).toBe('12');
+    expect(badge?.className).toContain('MuiBadge-anchorOriginTopRightRectangular');
+  });
+
   it('counts the filtered cards while searching', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {

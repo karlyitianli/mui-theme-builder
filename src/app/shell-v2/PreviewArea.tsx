@@ -7,7 +7,7 @@ import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { ExportIcon } from '@phosphor-icons/react/dist/csr/Export';
 import { MoonIcon } from '@phosphor-icons/react/dist/csr/Moon';
 import { SunIcon } from '@phosphor-icons/react/dist/csr/Sun';
-import { Box, Button, Card, IconButton, Link, Stack, Typography } from '@mui/material';
+import { Badge, Box, Button, Card, IconButton, Link, Stack, Typography } from '@mui/material';
 
 import { GeneratedCodeDrawer } from '../../generator/GeneratedCodeDrawer';
 import { PreviewBoundary } from '../../preview/PreviewBoundary';
@@ -264,35 +264,38 @@ interface CategorySectionProps {
 }
 
 function CategorySection({ category, collapsed, entries, onToggle }: CategorySectionProps) {
-  const { activeMode } = useEditorState();
-
   return (
     <Box>
       <Box
         onClick={onToggle}
         sx={{ alignItems: 'center', cursor: 'pointer', display: 'flex' }}
       >
-        <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
-          {category}
-        </Typography>
         {/* Component count for the section (task 3.1): the number of
             cards the section currently shows, so it follows the
-            search filter like the cards do. Shell chrome, so it takes
-            the shell border and the shell's secondary text color. */}
-        <Box
-          component="span"
+            search filter like the cards do. Restyled Nov 26, 2026 to
+            Karl's screenshot: a real MUI notification Badge anchored
+            to the title's top-right corner (MUI's own geometry: 20px
+            tall, 0 6px padding, 0.75rem medium text, translated 50%,
+            -50% from the corner). It is shell chrome, so its colors
+            come from the shell palette rather than MUI's grey: the
+            shell's muted secondary surface with primary text, which
+            reads as the screenshot's light grey pill with dark text
+            in light mode and as a muted dark pill with light text in
+            dark mode. */}
+        <Badge
+          badgeContent={entries.length}
+          color="default"
           sx={{
-            border: shellBorderForMode(activeMode),
-            borderRadius: 999,
-            color: 'text.secondary',
-            fontSize: 11,
-            lineHeight: '16px',
-            ml: 1,
-            px: '6px',
+            '& .MuiBadge-badge': {
+              backgroundColor: 'secondary.main',
+              color: 'text.primary',
+            },
           }}
         >
-          {entries.length}
-        </Box>
+          <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
+            {category}
+          </Typography>
+        </Badge>
         <CaretDownIcon
           size={16}
           style={{
