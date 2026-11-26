@@ -366,3 +366,27 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, 'zzzz-not-a-component')).toEqual([]);
   });
 });
+
+// Task 3.2: every card links to its component's MUI documentation
+// page. The URL slug follows the entry id, with one exception: Radio
+// Group's docs live on the Radio buttons page.
+describe('PREVIEW_COMPONENTS docs URLs (task 3.2)', () => {
+  it('gives every entry a well-formed MUI docs URL, unique per entry', () => {
+    const urls = PREVIEW_COMPONENTS.map((entry) => entry.docsUrl);
+    for (const url of urls) {
+      expect(url).toMatch(/^https:\/\/mui\.com\/material-ui\/react-[a-z-]+\/$/);
+    }
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it('points representative entries at their docs pages', () => {
+    const byId = new Map(PREVIEW_COMPONENTS.map((entry) => [entry.id, entry.docsUrl]));
+    expect(byId.get('button')).toBe('https://mui.com/material-ui/react-button/');
+    expect(byId.get('text-field')).toBe('https://mui.com/material-ui/react-text-field/');
+    expect(byId.get('radio-group')).toBe(
+      'https://mui.com/material-ui/react-radio-button/',
+    );
+    expect(byId.get('app-bar')).toBe('https://mui.com/material-ui/react-app-bar/');
+    expect(byId.get('tabs')).toBe('https://mui.com/material-ui/react-tabs/');
+  });
+});

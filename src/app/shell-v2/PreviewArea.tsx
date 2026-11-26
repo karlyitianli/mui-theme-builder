@@ -1,12 +1,13 @@
 import { useState, type ReactNode } from 'react';
 import { ArrowClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowClockwise';
+import { ArrowSquareOutIcon } from '@phosphor-icons/react/dist/csr/ArrowSquareOut';
 import { ArrowUUpLeftIcon } from '@phosphor-icons/react/dist/csr/ArrowUUpLeft';
 import { ArrowUUpRightIcon } from '@phosphor-icons/react/dist/csr/ArrowUUpRight';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { ExportIcon } from '@phosphor-icons/react/dist/csr/Export';
 import { MoonIcon } from '@phosphor-icons/react/dist/csr/Moon';
 import { SunIcon } from '@phosphor-icons/react/dist/csr/Sun';
-import { Box, Button, Card, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, IconButton, Link, Stack, Typography } from '@mui/material';
 
 import { GeneratedCodeDrawer } from '../../generator/GeneratedCodeDrawer';
 import { PreviewBoundary } from '../../preview/PreviewBoundary';
@@ -178,6 +179,9 @@ function PreviewTabs({ active, onChange }: PreviewTabsProps) {
 
 interface CardShellProps {
   children: ReactNode;
+  // Registry cards pass their MUI documentation URL (task 3.2); the
+  // Templates stubs pass none and get no link.
+  docsUrl?: string;
   title: string;
 }
 
@@ -186,8 +190,9 @@ interface CardShellProps {
 // PreviewProvider, so its surface (the project palette's paper), its
 // elevation, and its radius come from the edited theme through the
 // Phase 5 foundation defaults for MuiCard. The header row carries the
-// name only; cards are pure preview, so there is deliberately no edit
-// button (overrides are parked, Nov 25, 2026).
+// name and, for registry cards, a Docs link to the component's MUI
+// documentation page; cards are pure preview, so there is deliberately
+// no edit button (overrides are parked, Nov 25, 2026).
 //
 // Two things stay the shell's even here. The card's internal padding
 // is a fixed 16px rather than sx spacing units, because inside the
@@ -195,7 +200,7 @@ interface CardShellProps {
 // scale. And the hairline edge stays the shell border: the dark
 // defaults make the paper and page colors identical (#0a0a0a), so
 // without it the card's edge would vanish in dark mode.
-function CardShell({ children, title }: CardShellProps) {
+function CardShell({ children, docsUrl, title }: CardShellProps) {
   const { activeMode, project } = useEditorState();
 
   return (
@@ -207,9 +212,33 @@ function CardShell({ children, title }: CardShellProps) {
             p: '16px',
           }}
         >
-          <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
-            {title}
-          </Typography>
+          <Box sx={{ alignItems: 'center', display: 'flex' }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
+              {title}
+            </Typography>
+            {docsUrl && (
+              <Link
+                aria-label={`MUI documentation for ${title}`}
+                href={docsUrl}
+                rel="noreferrer"
+                sx={{
+                  alignItems: 'center',
+                  color: 'text.secondary',
+                  display: 'inline-flex',
+                  flexShrink: 0,
+                  fontSize: 12,
+                  gap: 0.5,
+                  lineHeight: '20px',
+                  marginLeft: 'auto',
+                }}
+                target="_blank"
+                underline="hover"
+              >
+                Docs
+                <ArrowSquareOutIcon size={12} />
+              </Link>
+            )}
+          </Box>
           <Box sx={{ mt: '16px' }}>{children}</Box>
         </Card>
       </PreviewProvider>
@@ -219,7 +248,7 @@ function CardShell({ children, title }: CardShellProps) {
 
 function PreviewCard({ entry }: { entry: PreviewComponentEntry }) {
   return (
-    <CardShell title={entry.name}>
+    <CardShell docsUrl={entry.docsUrl} title={entry.name}>
       <Box sx={{ bgcolor: 'background.default', color: 'text.primary' }}>
         {entry.render()}
       </Box>
@@ -235,6 +264,8 @@ interface CategorySectionProps {
 }
 
 function CategorySection({ category, collapsed, entries, onToggle }: CategorySectionProps) {
+  const { activeMode } = useEditorState();
+
   return (
     <Box>
       <Box
@@ -244,6 +275,24 @@ function CategorySection({ category, collapsed, entries, onToggle }: CategorySec
         <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
           {category}
         </Typography>
+        {/* Component count for the section (task 3.1): the number of
+            cards the section currently shows, so it follows the
+            search filter like the cards do. Shell chrome, so it takes
+            the shell border and the shell's secondary text color. */}
+        <Box
+          component="span"
+          sx={{
+            border: shellBorderForMode(activeMode),
+            borderRadius: 999,
+            color: 'text.secondary',
+            fontSize: 11,
+            lineHeight: '16px',
+            ml: 1,
+            px: '6px',
+          }}
+        >
+          {entries.length}
+        </Box>
         <CaretDownIcon
           size={16}
           style={{

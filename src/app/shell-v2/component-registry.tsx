@@ -126,6 +126,11 @@ import {
 
 export interface PreviewComponentEntry {
   category: string;
+  // The component's page in the MUI documentation. PreviewArea shows
+  // it as a Docs link in the card header (task 3.2). The slug follows
+  // the entry id except for Radio Group, whose docs page is the Radio
+  // buttons page (react-radio-button).
+  docsUrl: string;
   id: string;
   name: string;
   render: () => ReactNode;
@@ -141,12 +146,14 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     category: 'Inputs',
     id: 'autocomplete',
     name: 'Autocomplete',
+    docsUrl: 'https://mui.com/material-ui/react-autocomplete/',
     render: () => <AutocompleteDemo />,
   },
   {
     category: 'Inputs',
     id: 'button',
     name: 'Button',
+    docsUrl: 'https://mui.com/material-ui/react-button/',
     render: () => (
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Button variant="contained">Button</Button>
@@ -159,36 +166,42 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     category: 'Inputs',
     id: 'button-group',
     name: 'Button Group',
+    docsUrl: 'https://mui.com/material-ui/react-button-group/',
     render: () => <ButtonGroupDemo />,
   },
   {
     category: 'Inputs',
     id: 'checkbox',
     name: 'Checkbox',
+    docsUrl: 'https://mui.com/material-ui/react-checkbox/',
     render: () => <CheckboxDemo />,
   },
   {
     category: 'Inputs',
     id: 'floating-action-button',
     name: 'Floating Action Button',
+    docsUrl: 'https://mui.com/material-ui/react-floating-action-button/',
     render: () => <FabDemo />,
   },
   {
     category: 'Inputs',
     id: 'radio-group',
     name: 'Radio Group',
+    docsUrl: 'https://mui.com/material-ui/react-radio-button/',
     render: () => <RadioGroupDemo />,
   },
   {
     category: 'Inputs',
     id: 'rating',
     name: 'Rating',
+    docsUrl: 'https://mui.com/material-ui/react-rating/',
     render: () => <RatingDemo />,
   },
   {
     category: 'Inputs',
     id: 'select',
     name: 'Select',
+    docsUrl: 'https://mui.com/material-ui/react-select/',
     render: () => (
       <>
         <Typography sx={{ mb: 1 }} variant="body1">
@@ -207,18 +220,21 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     category: 'Inputs',
     id: 'slider',
     name: 'Slider',
+    docsUrl: 'https://mui.com/material-ui/react-slider/',
     render: () => <SliderDemo />,
   },
   {
     category: 'Inputs',
     id: 'switch',
     name: 'Switch',
+    docsUrl: 'https://mui.com/material-ui/react-switch/',
     render: () => <SwitchDemo />,
   },
   {
     category: 'Inputs',
     id: 'text-field',
     name: 'Text Field',
+    docsUrl: 'https://mui.com/material-ui/react-text-field/',
     render: () => (
       <>
         <Typography sx={{ mb: 1 }} variant="body1">
@@ -232,156 +248,182 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     category: 'Inputs',
     id: 'toggle-button',
     name: 'Toggle Button',
+    docsUrl: 'https://mui.com/material-ui/react-toggle-button/',
     render: () => <ToggleButtonDemo />,
   },
   {
     category: 'Data Display',
     id: 'avatar',
     name: 'Avatar',
+    docsUrl: 'https://mui.com/material-ui/react-avatar/',
     render: () => <AvatarDemo />,
   },
   {
     category: 'Data Display',
     id: 'badge',
     name: 'Badge',
+    docsUrl: 'https://mui.com/material-ui/react-badge/',
     render: () => <BadgeDemo />,
   },
   {
     category: 'Data Display',
     id: 'chip',
     name: 'Chip',
+    docsUrl: 'https://mui.com/material-ui/react-chip/',
     render: () => <ChipDemo />,
   },
   {
     category: 'Data Display',
     id: 'divider',
     name: 'Divider',
+    docsUrl: 'https://mui.com/material-ui/react-divider/',
     render: () => <DividerDemo />,
   },
   {
     category: 'Data Display',
     id: 'list',
     name: 'List',
+    docsUrl: 'https://mui.com/material-ui/react-list/',
     render: () => <ListDemo />,
   },
   {
     category: 'Data Display',
     id: 'table',
     name: 'Table',
+    docsUrl: 'https://mui.com/material-ui/react-table/',
     render: () => <TableDemo />,
   },
   {
     category: 'Data Display',
     id: 'tooltip',
     name: 'Tooltip',
+    docsUrl: 'https://mui.com/material-ui/react-tooltip/',
     render: () => <TooltipDemo />,
   },
   {
     category: 'Feedback',
     id: 'alert',
     name: 'Alert',
+    docsUrl: 'https://mui.com/material-ui/react-alert/',
     render: () => <AlertDemo />,
   },
   {
     category: 'Feedback',
     id: 'backdrop',
     name: 'Backdrop',
+    docsUrl: 'https://mui.com/material-ui/react-backdrop/',
     render: () => <BackdropDemo />,
   },
   {
     category: 'Feedback',
     id: 'dialog',
     name: 'Dialog',
+    docsUrl: 'https://mui.com/material-ui/react-dialog/',
     render: () => <DialogDemo />,
   },
   {
     category: 'Feedback',
     id: 'progress',
     name: 'Progress',
+    docsUrl: 'https://mui.com/material-ui/react-progress/',
     render: () => <ProgressDemo />,
   },
   {
     category: 'Feedback',
     id: 'skeleton',
     name: 'Skeleton',
+    docsUrl: 'https://mui.com/material-ui/react-skeleton/',
     render: () => <SkeletonDemo />,
   },
   {
     category: 'Feedback',
     id: 'snackbar',
     name: 'Snackbar',
+    docsUrl: 'https://mui.com/material-ui/react-snackbar/',
     render: () => <SnackbarDemo />,
   },
   {
     category: 'Surfaces',
     id: 'accordion',
     name: 'Accordion',
+    docsUrl: 'https://mui.com/material-ui/react-accordion/',
     render: () => <AccordionDemo />,
   },
   {
     category: 'Surfaces',
     id: 'app-bar',
     name: 'App Bar',
+    docsUrl: 'https://mui.com/material-ui/react-app-bar/',
     render: () => <AppBarDemo />,
   },
   {
     category: 'Surfaces',
     id: 'card',
     name: 'Card',
+    docsUrl: 'https://mui.com/material-ui/react-card/',
     render: () => <CardDemo />,
   },
   {
     category: 'Navigation',
     id: 'bottom-navigation',
     name: 'Bottom Navigation',
+    docsUrl: 'https://mui.com/material-ui/react-bottom-navigation/',
     render: () => <BottomNavigationDemo />,
   },
   {
     category: 'Navigation',
     id: 'breadcrumbs',
     name: 'Breadcrumbs',
+    docsUrl: 'https://mui.com/material-ui/react-breadcrumbs/',
     render: () => <BreadcrumbsDemo />,
   },
   {
     category: 'Navigation',
     id: 'drawer',
     name: 'Drawer',
+    docsUrl: 'https://mui.com/material-ui/react-drawer/',
     render: () => <DrawerDemo />,
   },
   {
     category: 'Navigation',
     id: 'link',
     name: 'Link',
+    docsUrl: 'https://mui.com/material-ui/react-link/',
     render: () => <LinkDemo />,
   },
   {
     category: 'Navigation',
     id: 'menu',
     name: 'Menu',
+    docsUrl: 'https://mui.com/material-ui/react-menu/',
     render: () => <MenuDemo />,
   },
   {
     category: 'Navigation',
     id: 'pagination',
     name: 'Pagination',
+    docsUrl: 'https://mui.com/material-ui/react-pagination/',
     render: () => <PaginationDemo />,
   },
   {
     category: 'Navigation',
     id: 'speed-dial',
     name: 'Speed Dial',
+    docsUrl: 'https://mui.com/material-ui/react-speed-dial/',
     render: () => <SpeedDialDemo />,
   },
   {
     category: 'Navigation',
     id: 'stepper',
     name: 'Stepper',
+    docsUrl: 'https://mui.com/material-ui/react-stepper/',
     render: () => <StepperDemo />,
   },
   {
     category: 'Navigation',
     id: 'tabs',
     name: 'Tabs',
+    docsUrl: 'https://mui.com/material-ui/react-tabs/',
     render: () => <TabsDemo />,
   },
 ];

@@ -291,6 +291,58 @@ describe('PreviewArea Navigation section', () => {
   });
 });
 
+describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => {
+  afterEach(() => cleanup());
+
+  it('shows a badge count of the components in each section header', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const counts: Array<[string, string]> = [
+      ['Inputs', '12'],
+      ['Data Display', '7'],
+      ['Feedback', '6'],
+      ['Surfaces', '3'],
+      ['Navigation', '9'],
+    ];
+    for (const [category, count] of counts) {
+      const header = screen.getByText(category).parentElement;
+      expect(header?.textContent).toContain(count);
+    }
+  });
+
+  it('counts the filtered cards while searching', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    fireEvent.change(screen.getByPlaceholderText('Search'), {
+      target: { value: 'chip' },
+    });
+    const header = screen.getByText('Data Display').parentElement;
+    expect(header?.textContent).toContain('1');
+  });
+
+  it('links each card header to the component\u2019s MUI documentation', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const buttonDocs = screen.getByRole('link', {
+      name: 'MUI documentation for Button',
+    });
+    expect(buttonDocs).toHaveAttribute(
+      'href',
+      'https://mui.com/material-ui/react-button/',
+    );
+    expect(buttonDocs).toHaveAttribute('target', '_blank');
+    // The one slug that does not follow the entry id.
+    expect(
+      screen.getByRole('link', { name: 'MUI documentation for Radio Group' }),
+    ).toHaveAttribute('href', 'https://mui.com/material-ui/react-radio-button/');
+  });
+
+  it('shows no docs links on the Templates tab', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Templates'));
+    expect(
+      screen.queryByRole('link', { name: /MUI documentation/ }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe('PreviewArea theme reflection (Phase 3 integration)', () => {
   afterEach(() => cleanup());
 
