@@ -1,7 +1,11 @@
 import {
+  DEFAULT_BREAKPOINTS,
   DEFAULT_CARD_BORDER_RADIUS,
   DEFAULT_SHADOWS,
   DEFAULT_SPACING,
+  DEFAULT_TRANSITION_DURATION,
+  DEFAULT_TRANSITION_EASING,
+  DEFAULT_Z_INDEX,
 } from '../foundation-defaults';
 import { CURRENT_SCHEMA_VERSION } from './project-version';
 import type { ThemeProject } from './theme-project.types';
@@ -15,11 +19,18 @@ export type ProjectMigrationResult =
 // shadows, no card radius, and possibly no spacing base unit. Fill those
 // with the shared locked defaults so a loaded project edits and exports
 // exactly what the panels show. Values a project already carries are
-// never overwritten, per key.
+// never overwritten, per key. The Other tab's groups (task 3.5,
+// breakpoints, transitions, z-index) fill the same way with MUI's
+// defaults, so a project saved before they existed gains exactly the
+// values its theme already resolved to.
 function withFoundationDefaults(project: ThemeProject): { project: ThemeProject; migrated: boolean } {
   const foundations = project.foundations ?? {};
   const shape = foundations.shape ?? {};
   const shadows = foundations.shadows ?? {};
+  const breakpoints = foundations.breakpoints ?? {};
+  const duration = foundations.transitions?.duration ?? {};
+  const easing = foundations.transitions?.easing ?? {};
+  const zIndex = foundations.zIndex ?? {};
 
   const needsSpacing = foundations.spacing === undefined;
   const needsCardRadius = shape.cardBorderRadius === undefined;
@@ -27,8 +38,23 @@ function withFoundationDefaults(project: ThemeProject): { project: ThemeProject;
   const needsShadows = Object.keys(filledShadows).some(
     (key) => shadows[key as keyof typeof shadows] === undefined,
   );
+  const filledBreakpoints = { ...DEFAULT_BREAKPOINTS, ...breakpoints };
+  const needsBreakpoints = Object.keys(filledBreakpoints).some(
+    (key) => breakpoints[key as keyof typeof breakpoints] === undefined,
+  );
+  const filledDuration = { ...DEFAULT_TRANSITION_DURATION, ...duration };
+  const filledEasing = { ...DEFAULT_TRANSITION_EASING, ...easing };
+  const needsTransitions =
+    Object.keys(filledDuration).some(
+      (key) => duration[key as keyof typeof duration] === undefined,
+    ) ||
+    Object.keys(filledEasing).some((key) => easing[key as keyof typeof easing] === undefined);
+  const filledZIndex = { ...DEFAULT_Z_INDEX, ...zIndex };
+  const needsZIndex = Object.keys(filledZIndex).some(
+    (key) => zIndex[key as keyof typeof zIndex] === undefined,
+  );
 
-  if (!needsSpacing && !needsCardRadius && !needsShadows) {
+  if (!needsSpacing && !needsCardRadius && !needsShadows && !needsBreakpoints && !needsTransitions && !needsZIndex) {
     return { project, migrated: false };
   }
 
@@ -44,6 +70,9 @@ function withFoundationDefaults(project: ThemeProject): { project: ThemeProject;
           ...(needsCardRadius ? { cardBorderRadius: DEFAULT_CARD_BORDER_RADIUS } : {}),
         },
         shadows: filledShadows,
+        breakpoints: filledBreakpoints,
+        transitions: { duration: filledDuration, easing: filledEasing },
+        zIndex: filledZIndex,
       },
     },
   };

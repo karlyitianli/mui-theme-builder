@@ -113,6 +113,24 @@ describe('the Default preset against a plain createTheme oracle', () => {
     });
   });
 
+  it('matches MUI breakpoints, transitions, and z-index (task 3.5)', () => {
+    const oracle = createTheme();
+    expect(theme.breakpoints.values).toEqual(oracle.breakpoints.values);
+    expect(theme.transitions.duration).toEqual(oracle.transitions.duration);
+    expect(theme.transitions.easing).toEqual(oracle.transitions.easing);
+    expect(theme.zIndex).toEqual(oracle.zIndex);
+    // Both presets store the MUI defaults for the three groups: for
+    // Default they are the point, for Black they keep the Other panel,
+    // the preview, and the export in agreement.
+    for (const createProject of [createDefaultProject, createMuiDefaultProject]) {
+      const foundations = createProject().foundations;
+      expect(foundations?.breakpoints).toEqual(oracle.breakpoints.values);
+      expect(foundations?.transitions?.duration).toEqual(oracle.transitions.duration);
+      expect(foundations?.transitions?.easing).toEqual(oracle.transitions.easing);
+      expect(foundations?.zIndex).toEqual(oracle.zIndex);
+    }
+  });
+
   it('matches MUI spacing, radius, and component default elevations', () => {
     const options = projectToThemeOptions(project);
     expect(options.spacing).toBe(8);

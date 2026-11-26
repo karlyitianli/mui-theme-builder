@@ -3,7 +3,11 @@ import type { ThemeOptions } from '@mui/material/styles';
 import type { ThemeProject } from '../domain/project';
 import {
   DEFAULT_CARD_BORDER_RADIUS,
+  resolveBreakpoints,
   resolveShadows,
+  resolveTransitionDuration,
+  resolveTransitionEasing,
+  resolveZIndex,
 } from '../domain/foundation-defaults';
 import { externalLabelComponents } from './external-label-components';
 import { DropdownIcon } from './dropdown-icon';
@@ -87,6 +91,18 @@ export function projectToThemeOptions(project: ThemeProject): ThemeOptions {
     },
     shape: { borderRadius: foundations?.shape?.borderRadius ?? 6 },
     ...(foundations?.spacing === undefined ? {} : { spacing: foundations.spacing }),
+    // The Other tab's groups (task 3.5). Both factories and migration
+    // store the full groups (MUI's defaults until edited), and the
+    // resolvers fill any key a sparse project omits, so the options
+    // always carry all three blocks and the panel, the preview, and
+    // the export agree. Breakpoints emit values only: the unit and
+    // step stay at MUI's defaults, as in the project model.
+    breakpoints: { values: resolveBreakpoints(foundations?.breakpoints) },
+    transitions: {
+      duration: resolveTransitionDuration(foundations?.transitions?.duration),
+      easing: resolveTransitionEasing(foundations?.transitions?.easing),
+    },
+    zIndex: resolveZIndex(foundations?.zIndex),
     typography:
       foundations?.typography === undefined
         ? shadcnTypography

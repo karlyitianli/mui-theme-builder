@@ -1,5 +1,11 @@
 import type { ThemeProject, ThemePresetId } from '../domain/project';
-import type { ShadowSettings } from '../domain/foundation-defaults';
+import type {
+  BreakpointSettings,
+  ShadowSettings,
+  TransitionDurationSettings,
+  TransitionEasingSettings,
+  ZIndexSettings,
+} from '../domain/foundation-defaults';
 import type { ButtonSettings } from '../domain/components/button.types';
 import type { SelectSettings } from '../domain/components/select.types';
 import type { TextFieldSettings } from '../domain/components/text-field.types';
@@ -69,6 +75,10 @@ export type EditorAction =
   | { type: 'set-spacing'; value: number }
   | { type: 'set-shadow-elevation'; target: keyof ShadowSettings; value: number }
   | { type: 'set-shadows'; shadows: Required<ShadowSettings> }
+  | { type: 'set-breakpoint'; key: keyof BreakpointSettings; value: number }
+  | { type: 'set-transition-duration'; key: keyof TransitionDurationSettings; value: number }
+  | { type: 'set-transition-easing'; key: keyof TransitionEasingSettings; value: string }
+  | { type: 'set-z-index'; key: keyof ZIndexSettings; value: number }
   | { type: 'set-button-settings'; settings: ButtonSettings }
   | { type: 'set-text-field-settings'; settings: TextFieldSettings }
   | { type: 'set-select-settings'; settings: SelectSettings }

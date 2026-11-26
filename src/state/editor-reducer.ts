@@ -62,6 +62,9 @@ function resetSection(project: ThemeProject, section: EditorSection, mode: 'ligh
       delete foundations.spacing;
       delete foundations.interactions;
       delete foundations.shadows;
+      delete foundations.breakpoints;
+      delete foundations.transitions;
+      delete foundations.zIndex;
     }
 
     return {
@@ -241,6 +244,54 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         ...state.project,
         foundations: { ...state.project.foundations, shadows: { ...action.shadows } },
       });
+    case 'set-breakpoint': {
+      if (state.project.foundations?.breakpoints?.[action.key] === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        foundations: {
+          ...state.project.foundations,
+          breakpoints: { ...state.project.foundations?.breakpoints, [action.key]: action.value },
+        },
+      });
+    }
+    case 'set-transition-duration': {
+      const transitions = state.project.foundations?.transitions;
+      if (transitions?.duration?.[action.key] === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        foundations: {
+          ...state.project.foundations,
+          transitions: {
+            ...transitions,
+            duration: { ...transitions?.duration, [action.key]: action.value },
+          },
+        },
+      });
+    }
+    case 'set-transition-easing': {
+      const transitions = state.project.foundations?.transitions;
+      if (transitions?.easing?.[action.key] === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        foundations: {
+          ...state.project.foundations,
+          transitions: {
+            ...transitions,
+            easing: { ...transitions?.easing, [action.key]: action.value },
+          },
+        },
+      });
+    }
+    case 'set-z-index': {
+      if (state.project.foundations?.zIndex?.[action.key] === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        foundations: {
+          ...state.project.foundations,
+          zIndex: { ...state.project.foundations?.zIndex, [action.key]: action.value },
+        },
+      });
+    }
     case 'set-spacing':
       if (state.project.foundations?.spacing === action.value) return state;
       return commitProject(state, {

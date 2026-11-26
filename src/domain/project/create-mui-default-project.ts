@@ -1,3 +1,9 @@
+import {
+  DEFAULT_BREAKPOINTS,
+  DEFAULT_TRANSITION_DURATION,
+  DEFAULT_TRANSITION_EASING,
+  DEFAULT_Z_INDEX,
+} from '../foundation-defaults';
 import { BUILDER_VERSION, CURRENT_SCHEMA_VERSION, TARGET_MUI_VERSION } from './project-version';
 import type { ThemeProjectV1 } from './theme-project.types';
 
@@ -87,6 +93,16 @@ export function createMuiDefaultProject(now = new Date()): ThemeProjectV1 {
       // Paper at 1, OutlinedInput has no shadow (0), and a Menu's
       // paper sits at 8.
       shadows: { global: 1, button: 2, card: 1, input: 0, menu: 8 },
+      // The Other tab's groups (task 3.5) at MUI's defaults, which is
+      // what this preset stores for every group: the breakpoint
+      // values, the transition durations and easing curves, and the
+      // z-index scale, each verified against the createTheme oracle.
+      breakpoints: { ...DEFAULT_BREAKPOINTS },
+      transitions: {
+        duration: { ...DEFAULT_TRANSITION_DURATION },
+        easing: { ...DEFAULT_TRANSITION_EASING },
+      },
+      zIndex: { ...DEFAULT_Z_INDEX },
       typography: {
         font: {
           family: 'Roboto',

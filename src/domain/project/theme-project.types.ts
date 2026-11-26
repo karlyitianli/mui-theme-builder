@@ -1,7 +1,12 @@
 import type { ButtonSettings } from '../components/button.types';
 import type { SelectSettings } from '../components/select.types';
 import type { TextFieldSettings } from '../components/text-field.types';
-import type { ShadowSettings } from '../foundation-defaults';
+import type {
+  BreakpointSettings,
+  ShadowSettings,
+  TransitionSettings,
+  ZIndexSettings,
+} from '../foundation-defaults';
 import type { PaletteSettings } from '../palette.types';
 import type { TypographySettings } from '../typography.types';
 import type { CssLengthValue } from '../value.types';
@@ -25,6 +30,9 @@ export interface ThemeProjectV1 {
     spacing?: number;
     typography?: TypographySettings;
     shadows?: ShadowSettings;
+    breakpoints?: BreakpointSettings;
+    transitions?: TransitionSettings;
+    zIndex?: ZIndexSettings;
     interactions?: {
       disableRipple?: boolean;
     };

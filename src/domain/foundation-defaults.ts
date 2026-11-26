@@ -45,3 +45,116 @@ export const DEFAULT_SHADOWS: Required<ShadowSettings> = {
 export function resolveShadows(shadows?: ShadowSettings): Required<ShadowSettings> {
   return { ...DEFAULT_SHADOWS, ...shadows };
 }
+
+// The Other tab's three foundation groups (task 3.5, Nov 26, 2026):
+// breakpoints, transitions, and z-index. Karl decided these values get
+// one shared Other tab after Shadows rather than tabs of their own.
+// Their defaults are MUI's own, verified against a plain createTheme
+// oracle on the installed MUI 9.3.1 (the same oracle check the Default
+// preset's values went through). Both presets store these defaults:
+// for the Default preset they are the point, and for Black they keep
+// the panel, the preview, and the export in agreement, the precedent
+// the Nov 26, 2026 spacing fix set. Migration fills any key an older
+// project never stored, per key, exactly like shadows above.
+//
+// Breakpoints carry values only: the unit and step stay at MUI's
+// defaults and are not part of the model.
+
+export interface BreakpointSettings {
+  xs?: number;
+  sm?: number;
+  md?: number;
+  lg?: number;
+  xl?: number;
+}
+
+export const DEFAULT_BREAKPOINTS: Required<BreakpointSettings> = {
+  xs: 0,
+  sm: 600,
+  md: 900,
+  lg: 1200,
+  xl: 1536,
+};
+
+export function resolveBreakpoints(
+  breakpoints?: BreakpointSettings,
+): Required<BreakpointSettings> {
+  return { ...DEFAULT_BREAKPOINTS, ...breakpoints };
+}
+
+export interface TransitionDurationSettings {
+  shortest?: number;
+  shorter?: number;
+  short?: number;
+  standard?: number;
+  complex?: number;
+  enteringScreen?: number;
+  leavingScreen?: number;
+}
+
+export interface TransitionEasingSettings {
+  easeInOut?: string;
+  easeOut?: string;
+  easeIn?: string;
+  sharp?: string;
+}
+
+export interface TransitionSettings {
+  duration?: TransitionDurationSettings;
+  easing?: TransitionEasingSettings;
+}
+
+export const DEFAULT_TRANSITION_DURATION: Required<TransitionDurationSettings> = {
+  shortest: 150,
+  shorter: 200,
+  short: 250,
+  standard: 300,
+  complex: 375,
+  enteringScreen: 225,
+  leavingScreen: 195,
+};
+
+export const DEFAULT_TRANSITION_EASING: Required<TransitionEasingSettings> = {
+  easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
+  easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+  sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+};
+
+export function resolveTransitionDuration(
+  duration?: TransitionDurationSettings,
+): Required<TransitionDurationSettings> {
+  return { ...DEFAULT_TRANSITION_DURATION, ...duration };
+}
+
+export function resolveTransitionEasing(
+  easing?: TransitionEasingSettings,
+): Required<TransitionEasingSettings> {
+  return { ...DEFAULT_TRANSITION_EASING, ...easing };
+}
+
+export interface ZIndexSettings {
+  mobileStepper?: number;
+  fab?: number;
+  speedDial?: number;
+  appBar?: number;
+  drawer?: number;
+  modal?: number;
+  snackbar?: number;
+  tooltip?: number;
+}
+
+export const DEFAULT_Z_INDEX: Required<ZIndexSettings> = {
+  mobileStepper: 1000,
+  fab: 1050,
+  speedDial: 1050,
+  appBar: 1100,
+  drawer: 1200,
+  modal: 1300,
+  snackbar: 1400,
+  tooltip: 1500,
+};
+
+export function resolveZIndex(zIndex?: ZIndexSettings): Required<ZIndexSettings> {
+  return { ...DEFAULT_Z_INDEX, ...zIndex };
+}

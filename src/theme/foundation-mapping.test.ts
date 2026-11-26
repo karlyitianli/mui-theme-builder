@@ -1,6 +1,10 @@
+import { createTheme } from '@mui/material/styles';
 import { describe, expect, it } from 'vitest';
 
-import { defaultProjectFixture } from '../fixtures/theme-project.fixtures';
+import {
+  customizedProjectFixture,
+  defaultProjectFixture,
+} from '../fixtures/theme-project.fixtures';
 import { createInitialEditorState, editorReducer } from '../state/editor-reducer';
 import { DropdownIcon } from './dropdown-icon';
 import { dropdownIconElement } from './dropdown-icon-element';
@@ -74,6 +78,73 @@ describe('projectToThemeOptions foundation shadows and card radius (Phase 5)', (
     const options = projectToThemeOptions(state.project);
     const card = options.components?.MuiCard as { defaultProps?: { elevation?: number } };
     expect(card.defaultProps?.elevation).toBe(5);
+  });
+});
+
+// Task 3.5 (Nov 26, 2026): foundations.breakpoints,
+// foundations.transitions, and foundations.zIndex (the model homes for
+// the Other tab) map into the theme options the preview and the
+// exporter consume. Both factories store MUI's defaults for the three
+// groups, so a fresh project's options carry them verbatim; the values
+// below are checked against a plain createTheme oracle on the
+// installed MUI, the same check the Default preset's values went
+// through.
+describe('projectToThemeOptions Other foundations (task 3.5)', () => {
+  it('maps the stored MUI defaults for all three groups', () => {
+    const options = projectToThemeOptions(defaultProjectFixture);
+    const oracle = createTheme();
+    expect(options.breakpoints?.values).toEqual(oracle.breakpoints.values);
+    expect(options.transitions?.duration).toEqual(oracle.transitions.duration);
+    expect(options.transitions?.easing).toEqual(oracle.transitions.easing);
+    expect(options.zIndex).toEqual(oracle.zIndex);
+  });
+
+  it('fills a sparse project\u2019s missing groups with the MUI defaults', () => {
+    // The customized fixture predates the model homes: its foundations
+    // carry none of the three groups.
+    const options = projectToThemeOptions(customizedProjectFixture);
+    const oracle = createTheme();
+    expect(options.breakpoints?.values).toEqual(oracle.breakpoints.values);
+    expect(options.transitions?.duration).toEqual(oracle.transitions.duration);
+    expect(options.transitions?.easing).toEqual(oracle.transitions.easing);
+    expect(options.zIndex).toEqual(oracle.zIndex);
+  });
+
+  it('fills only the missing keys of a partial group', () => {
+    const project = {
+      ...defaultProjectFixture,
+      foundations: {
+        ...defaultProjectFixture.foundations,
+        breakpoints: { md: 1000 },
+        zIndex: { modal: 2000 },
+      },
+    };
+    const options = projectToThemeOptions(project);
+    expect(options.breakpoints?.values).toEqual({ xs: 0, sm: 600, md: 1000, lg: 1200, xl: 1536 });
+    expect(options.zIndex?.modal).toBe(2000);
+    expect(options.zIndex?.tooltip).toBe(1500);
+  });
+
+  it('Other edits through the reducer appear in the mapped theme options', () => {
+    let state = createInitialEditorState();
+    state = editorReducer(state, { type: 'set-breakpoint', key: 'md', value: 1000 });
+    state = editorReducer(state, { type: 'set-transition-duration', key: 'standard', value: 450 });
+    state = editorReducer(state, {
+      type: 'set-transition-easing',
+      key: 'easeOut',
+      value: 'cubic-bezier(0.1, 0, 0.3, 1)',
+    });
+    state = editorReducer(state, { type: 'set-z-index', key: 'tooltip', value: 1600 });
+    const options = projectToThemeOptions(state.project);
+    expect(options.breakpoints?.values?.md).toBe(1000);
+    expect(options.transitions?.duration?.standard).toBe(450);
+    expect(options.transitions?.easing?.easeOut).toBe('cubic-bezier(0.1, 0, 0.3, 1)');
+    expect(options.zIndex?.tooltip).toBe(1600);
+    // Untouched keys keep their stored defaults, and the edits are
+    // undoable like every other token edit.
+    expect(options.breakpoints?.values?.lg).toBe(1200);
+    const undone = editorReducer(state, { type: 'undo' });
+    expect(projectToThemeOptions(undone.project).zIndex?.tooltip).toBe(1500);
   });
 });
 

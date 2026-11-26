@@ -65,6 +65,36 @@ function validateColorSchemes(value: unknown, errors: string[]): boolean {
   return errors.length === 0;
 }
 
+// The Other tab's transitions group (task 3.5): a duration record of
+// finite numbers and an easing record of cubic-bezier strings, each
+// with only MUI's keys.
+function validateTransitions(value: unknown, errors: string[]): boolean {
+  if (value === undefined) return true;
+  if (!isRecord(value) || !hasOnlyKeys(value, ['duration', 'easing'])) {
+    errors.push('foundations.transitions must contain only duration and easing.');
+    return false;
+  }
+  if (
+    value.duration !== undefined &&
+    (!isRecord(value.duration) ||
+      !hasOnlyKeys(value.duration, ['shortest', 'shorter', 'short', 'standard', 'complex', 'enteringScreen', 'leavingScreen']) ||
+      !Object.values(value.duration).every((entry) => isOptionalNumber(entry)))
+  ) {
+    errors.push('foundations.transitions.duration must contain only numeric durations.');
+    return false;
+  }
+  if (
+    value.easing !== undefined &&
+    (!isRecord(value.easing) ||
+      !hasOnlyKeys(value.easing, ['easeInOut', 'easeOut', 'easeIn', 'sharp']) ||
+      !Object.values(value.easing).every((entry) => isOptionalString(entry)))
+  ) {
+    errors.push('foundations.transitions.easing must contain only easing strings.');
+    return false;
+  }
+  return true;
+}
+
 export function validateThemeProject(value: unknown): ProjectValidationResult {
   const errors: string[] = [];
 
@@ -86,7 +116,7 @@ export function validateThemeProject(value: unknown): ProjectValidationResult {
   validateColorSchemes(value.colorSchemes, errors);
 
   if (value.foundations !== undefined) {
-    if (!isRecord(value.foundations) || !hasOnlyKeys(value.foundations, ['shape', 'spacing', 'typography', 'interactions', 'shadows']) || !isSparseJsonValue(value.foundations)) {
+    if (!isRecord(value.foundations) || !hasOnlyKeys(value.foundations, ['shape', 'spacing', 'typography', 'interactions', 'shadows', 'breakpoints', 'transitions', 'zIndex']) || !isSparseJsonValue(value.foundations)) {
       errors.push('foundations contains an unsupported field or value.');
     } else if (!isOptionalNumber(value.foundations.spacing)) {
       errors.push('foundations.spacing must be a finite number.');
@@ -97,6 +127,22 @@ export function validateThemeProject(value: unknown): ProjectValidationResult {
         !Object.values(value.foundations.shadows).every((entry) => isOptionalNumber(entry)))
     ) {
       errors.push('foundations.shadows must contain only numeric elevations.');
+    } else if (
+      value.foundations.breakpoints !== undefined &&
+      (!isRecord(value.foundations.breakpoints) ||
+        !hasOnlyKeys(value.foundations.breakpoints, ['xs', 'sm', 'md', 'lg', 'xl']) ||
+        !Object.values(value.foundations.breakpoints).every((entry) => isOptionalNumber(entry)))
+    ) {
+      errors.push('foundations.breakpoints must contain only numeric values.');
+    } else if (!validateTransitions(value.foundations.transitions, errors)) {
+      // validateTransitions pushed the specific error.
+    } else if (
+      value.foundations.zIndex !== undefined &&
+      (!isRecord(value.foundations.zIndex) ||
+        !hasOnlyKeys(value.foundations.zIndex, ['mobileStepper', 'fab', 'speedDial', 'appBar', 'drawer', 'modal', 'snackbar', 'tooltip']) ||
+        !Object.values(value.foundations.zIndex).every((entry) => isOptionalNumber(entry)))
+    ) {
+      errors.push('foundations.zIndex must contain only numeric values.');
     }
   }
 
