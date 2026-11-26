@@ -1,15 +1,15 @@
 # Technical PRD: MUI Theme Builder
 
-**Status:** Draft for review  
+**Status:** Living document. Updated retroactively on Nov 26, 2026 to match the shipped code and the decisions recorded in the decision log (section 21). For current milestone and task status, see STATUS.md.  
 **Owner:** Product / Engineering  
-**Last updated:** 2026-08-26  
-**Target:** MVP — local-first, MUI v9
+**Last updated:** 2026-11-26  
+**Target:** Shipped MVP, local-first, MUI v9
 
 ## 1. Executive summary
 
 MUI Theme Builder is a browser-based visual editor that enables a non-developer to configure the look and feel of the MUI component library without writing code. Users manipulate design tokens and supported component styles through forms and direct previews, then export a deterministic, type-safe `theme.tsx` file for integration by a frontend engineer.
 
-The MVP focuses on one designer locally creating light and dark themes concurrently for Button, TextField, and Select, then producing technically valid MUI v9 theme configuration. It does not generate an application, edit application-specific components, or replace the engineer review step.
+As shipped, the builder lets one designer create light and dark themes concurrently by editing global tokens, previewing the result live across 37 MUI components, and producing technically valid MUI v9 theme configuration. Deep component defaults remain scoped to Button, TextField, and Select; their dedicated editors are the main remaining milestone (M6 in STATUS.md). It does not generate an application, edit application-specific components, or replace the engineer review step.
 
 ### Confirmed product decisions
 
@@ -20,10 +20,11 @@ The MVP focuses on one designer locally creating light and dark themes concurren
 | Primary user       | Product designer with limited coding experience, building the tool through a vibe-coding workflow |
 | Storage            | Entirely local; no account, backend, or cloud collaboration                                       |
 | Import             | Import builder-owned JSON only; do not parse arbitrary TypeScript                                 |
-| Initial components | Button, TextField, and Select                                                                     |
+| Initial components | Button, TextField, and Select for deep component defaults; the live preview covers 37 components in five categories |
 | Modes              | Edit light and dark color schemes concurrently in one project                                     |
-| Starting point     | Unmodified out-of-the-box MUI defaults                                                            |
-| Fonts              | Curated Google Fonts selection and weight configuration                                           |
+| Spacing base       | 4px base unit; density is expressed as base-unit presets (3px, 4px, 5px)                          |
+| Starting point     | A shadcn-style baseline theme, exposed as the preset named Default; token edits layer on top of it |
+| Fonts              | Curated Google Fonts selection and weight configuration; the builder's own interface always uses Inter |
 | Accessibility      | Not an MVP feature; the builder itself should still use accessible MUI defaults                   |
 | Export             | One `theme.tsx` containing both schemes, plus font-loading and integration instructions           |
 
@@ -106,12 +107,12 @@ When maintaining a shared visual system, I want global tokens and component exce
 
 ### 7.1 Project lifecycle
 
-- Create a project from the default MUI theme.
+- Create a project from the Default preset (the shadcn-style baseline theme).
 - Name and rename a project.
 - Autosave an editable, versioned project document to browser storage (IndexedDB preferred; localStorage is acceptable only if the document remains small).
 - Import a previously exported builder configuration file.
 - Export both `theme.tsx` and a builder-owned JSON configuration file.
-- Reset the full theme or a selected section to MUI defaults.
+- Reset the full theme to the Default preset, with confirmation when edit history is non-empty.
 - Undo and redo changes within the current editing session.
 
 Cloud accounts, collaboration, and server persistence are excluded unless required by the answers in section 18.
@@ -120,13 +121,14 @@ Cloud accounts, collaboration, and server persistence are excluded unless requir
 
 - Concurrent light and dark color schemes using the MUI v9 `colorSchemes` API. A mode selector changes the active preview without hiding or discarding the other scheme.
 - Palette roles: primary, secondary, error, warning, info, success, background, text, divider, and action states.
-- Color inputs through picker, hex/RGB entry, and validated values.
+- Each semantic color (primary, secondary, error, warning, info, success) carries main, light, and dark values per scheme. Light and dark derive automatically from main until the user pins them; pinned values can be reset to auto.
+- Color inputs through a picker with hex entry and validated values.
 - Typography: curated Google Font family, selected font weights, base size, weights, line heights, letter spacing, and supported MUI variants.
 - Google Fonts preview loading through a generated `fonts.googleapis.com/css2` stylesheet URL; retain a safe system-font fallback while the network font is unavailable.
-- Shape: global border radius.
-- Spacing: base spacing unit with a preview of its effect.
-- Breakpoints: display and export in MVP; editing is proposed as post-MVP due to its cross-cutting impact.
-- Shadows: select and edit supported elevation values using structured controls.
+- Shape: global border radius (6px default) with Button, Card, and Input radius overrides.
+- Spacing: base spacing unit (4px default) with a preview of its effect; density presets set the base unit to 3px, 4px, or 5px.
+- Breakpoints: out of scope. The builder does not display, edit, or export breakpoint changes (decided Nov 23, 2026).
+- Shadows: select and edit supported elevation values using structured controls. Defaults are the Medium preset: global 2, Button 2, Card 1, Input 0.
 
 
 
@@ -137,6 +139,8 @@ MVP supports only the following components deeply:
 - Button
 - TextField, including its underlying input and label states surfaced through the TextField user experience
 - Select, including its menu-open preview state and MenuItem appearance where affected by inherited tokens
+
+Status as of Nov 26, 2026: the dedicated per-component editors described in this section have not been built. What ships today is theme-level component defaults for these three components, prescribed in the theme adapters, plus token editing that affects every component. The editors remain planned as milestone M6 (see STATUS.md), and per-component overrides were parked on Nov 25, 2026 until almost everything else is built.
 
 For each supported component, expose applicable controls for:
 
@@ -150,12 +154,12 @@ The product must clearly distinguish inherited token values from explicit compon
 
 ### 7.4 Preview
 
-- Render all supported components against the active in-memory theme.
-- Provide component gallery and focused-component views.
+- Render 37 components across five categories (Inputs, Data Display, Feedback, Surfaces, Navigation) against the active in-memory theme.
+- Provide a component gallery with category sections and live search. Focused-component views were not built.
 - Let users switch common props, variants, sizes, and states without changing exported defaults.
 - Preview light and dark canvases where both modes exist.
-- Include representative compositions such as a form, settings panel, and card layout to reveal cross-component consistency.
-- Provide desktop and mobile-width viewports.
+- A Templates tab holds four composition stubs (Sign up, Dashboard, Marketing, Checkout) that are not built yet; representative compositions remain future work.
+- Viewport switching was not built; the preview uses the available window width.
 - Isolate preview failures so an invalid edit cannot crash the editor shell.
 
 
@@ -164,13 +168,14 @@ The product must clearly distinguish inherited token values from explicit compon
 
 - Generate one formatted `theme.tsx` using the MUI v9 `colorSchemes` API with both light and dark schemes.
 - Include imports, `createTheme`, global theme options, component `defaultProps`, `styleOverrides`, and `variants` as needed.
-- Omit values that are unchanged from defaults to keep output concise.
+- Omit unset token values. The baseline component configuration is always part of the output, because the exported theme must reproduce the builder's starting point on its own.
 - Produce stable key ordering and formatting so the same configuration yields the same output.
-- Add a short generated-file header containing builder version and target MUI version, but no user-identifying data.
+- The file opens with the imports it needs, including `@phosphor-icons/react` for the dropdown icon; no builder or version header is emitted.
 - Allow copy-to-clipboard and file download.
 - Display code before export and identify validation errors that block export.
 - When a Google Font is selected, show and copy the required HTML `<link rel="preconnect">` and stylesheet tags separately from `theme.tsx`; set the exported `typography.fontFamily` and selected weights accordingly.
 - Provide concise integration instructions for `ThemeProvider`, mode switching, `CssBaseline`, and font-loading tags; do not modify the consumer's application.
+- Note in the export view that exported themes require `@phosphor-icons/react` in the consuming project for the Select and Autocomplete dropdown icon.
 
 
 
@@ -185,18 +190,18 @@ The product must clearly distinguish inherited token values from explicit compon
 - Hosting, deployment, package publishing, or automatic pull requests.
 - Guaranteed compatibility with multiple MUI major versions from one project.
 - Automated accessibility or WCAG theme analysis.
-- Components beyond Button, TextField, and Select, including MUI X.
+- Deep component editing beyond Button, TextField, and Select, including MUI X. Preview coverage is not editing; the preview renders 37 components.
 - Uploaded or self-hosted font files.
 
 
 
 ## 9. Core user flow
 
-1. User opens the builder and starts from the supported MUI default theme.
+1. User opens the builder and starts from the Default preset (the shadcn-style baseline theme).
 2. User edits global tokens using labeled, constrained controls.
 3. Preview updates immediately and highlights affected components.
-4. User selects a component and optionally adds explicit overrides.
-5. User inspects variants, states, compositions, modes, and viewport sizes.
+4. User watches the component preview update across categories; the shipped builder has no per-component override step.
+5. User inspects variants, states, and modes in the preview.
 6. Builder reports blocking validation errors and non-blocking accessibility or maintainability warnings.
 7. User reviews generated code.
 8. User downloads `theme.tsx` and the editable configuration JSON.
@@ -269,8 +274,8 @@ Implementation decisions:
 - React `useReducer` for canonical project mutations and Context only where deeply nested editor sections need shared access.
 - Small handwritten runtime validators for imported JSON and restored browser data; TypeScript remains the internal source of truth.
 - IndexedDB via a small typed wrapper for autosave; no backend.
-- Prettier with a fixed configuration for generated output.
-- No UI testing framework in the initial MVP. Add Vitest later only if pure transformation regressions become difficult to catch through compilation and manual checks.
+- A handwritten deterministic emitter for generated output; no Prettier dependency.
+- Vitest with Testing Library from the first phase, as a characterization suite written before the new shell; 207 tests as of Nov 26, 2026.
 - No Web Worker until measured interaction latency requires one.
 
 
@@ -336,7 +341,7 @@ Google Fonts support is included with a constrained implementation:
 2. Allow one primary family in MVP and expose only weights actually available for that family.
 3. Construct a canonical CSS2 stylesheet URL, encode family names correctly, and sort/deduplicate weights.
 4. Add the stylesheet to the running preview document and remove the previous link after the new font loads or times out.
-5. Keep a fallback stack such as `"Inter", "Roboto", "Helvetica", "Arial", sans-serif` so offline preview remains usable.
+5. Keep a per-family fallback stack so offline preview remains usable. In the shipped catalog, most families fall back to Arial and sans-serif; Merriweather falls back to Georgia and serif.
 6. Export `typography.fontFamily` in `theme.tsx` and present the Google Fonts `<link>` tags as a separate copyable integration snippet.
 7. Show an “Internet required for font preview” status. Project editing and theme export must continue offline.
 
@@ -344,13 +349,12 @@ The font catalog should initially include Roboto plus roughly 10 designer-friend
 
 ## 12. UX and information architecture
 
-Proposed desktop layout:
+Shipped desktop layout. The original proposal (left navigation, center preview, right contextual inspector) was not built; the shipped layout is token-first, in the style of tweakcn:
 
-- Left: navigation for global tokens and components.
-- Center: interactive preview with gallery/composition toggle.
-- Right: contextual property inspector.
-- Bottom drawer or tab: generated code, warnings, and export.
-- Persistent top bar: project name, mode, viewport, undo/redo, save status, and export.
+- Left: token panel with five tabs (Color, Typography, Spacing, Radius, Shadows), drag-resizable with persisted width. There is no right inspector panel.
+- Center: component preview with Components and Templates tabs, category sections, and live search.
+- Top bar: preset name and dots, light/dark toggle, undo/redo, reset, and export. Generated code opens in a drawer from the export action.
+- The builder's own chrome uses a fixed, insulated theme; token edits apply only inside the preview cards (see the decision log, Nov 25, 2026).
 
 Requirements for non-developer usability:
 
@@ -387,13 +391,13 @@ No analytics or telemetry is included in MVP. Usability findings come from manua
 
 ### Lean verification strategy
 
-The MVP does not require a general-purpose UI, end-to-end, or visual-regression testing framework. Verification should concentrate on the failure with the highest handoff cost: generating invalid MUI code.
+Verification concentrates on the failure with the highest handoff cost: generating invalid MUI code. A Vitest suite (207 tests as of Nov 26, 2026) covers the project model, adapters, generator snapshots, and shell behavior, alongside the compile checks below. There is still no end-to-end or visual-regression framework; visual defects are caught by manual review of the rendered app.
 
 - Run strict TypeScript checking, ESLint, and a production Vite build before each milestone is considered complete.
 - Generate representative `theme.tsx` fixtures and compile them against the pinned TypeScript and MUI v9 dependencies.
 - Manually exercise a short browser checklist covering editing, light/dark switching, reset, undo/redo, reload, JSON round trip, font failure, and download.
-- Keep pure adapters, validators, and generators free of React and browser APIs so Vitest can be added later without refactoring.
-- Add Vitest only when a real regression demonstrates that build checks and manual verification are insufficient.
+- Keep pure adapters, validators, and generators free of React and browser APIs so they stay directly testable.
+- Vitest was added at the start of the shell rebuild (Phase 0) as a characterization suite, reversing the original plan to defer it; keep new behavior covered as it lands.
 - Add Playwright or visual snapshots only after repeated manual release checks become costly; neither is an MVP dependency.
 
 
@@ -415,6 +419,8 @@ MVP is ready when:
 ## 17. Detailed implementation plan
 
 This plan is ordered for one product designer using an AI coding assistant. Each milestone ends in a working, testable slice. Do not begin with a generic property-panel framework; prove the end-to-end data path with real controls first, then extract patterns after Button and TextField expose the actual repetition.
+
+**Execution note (Nov 26, 2026):** The build did not follow this milestone list literally. It was executed as phases M0 to M7 plus polish batches, tracked in STATUS.md, which is the plan of record. The main divergences: Vitest was added at the start rather than deferred; the application shell was rebuilt once and the original shell was removed (M7 in STATUS.md); the preview grew to 37 components while the component editors in Milestone 6 below remain unbuilt and are now milestone M6 in STATUS.md; output formatting uses a handwritten emitter, not Prettier; and the AGENTS.md proposed in Milestone 0 was not created. The list below is retained as the original plan.
 
 ### Milestone 0: repository and quality baseline
 
@@ -540,7 +546,7 @@ For each component:
 - Convert the project into a small generator-specific intermediate representation.
 - Emit one `theme.tsx` with `createTheme`, `cssVariables`, light/dark `colorSchemes`, shared typography/shape/spacing, and supported component overrides.
 - Omit unset/default values and use stable ordering.
-- Format with a pinned Prettier configuration.
+- Format deterministically with the handwritten emitter; no Prettier.
 - Display read-only code with copy and download actions.
 - Display separate integration snippets for font `<link>` tags, `ThemeProvider`, `CssBaseline`, and mode switching.
 - Add golden snapshots and compile generated fixtures with `tsc` against installed MUI v9 types.
@@ -616,7 +622,7 @@ These choices are intentionally non-blocking; use the defaults below unless user
 - **Font catalog size:** begin with 11 curated families; do not build font search against the full remote catalog.
 - **Component scheme behavior:** keep component overrides shared and drive mode differences through palette tokens.
 - **Project count:** autosave one active project; users create backups through JSON download.
-- **Deployment:** local dev/build only for MVP. Static hosting can be added later without changing the data model.
+- **Deployment:** the builder is deployed as a static site on GitHub Pages at https://karls.design/mui-theme-builder/. Hosting does not change the data model; all project data stays in the browser.
 
 
 
@@ -646,3 +652,18 @@ These choices are intentionally non-blocking; use the defaults below unless user
 - Custom component registration and organization-owned presets.
 - GitHub pull request or package publishing workflow.
 - AI-assisted theme creation constrained to the same validated project schema.
+
+## 21. Decision log
+
+Decisions that changed the product after the original draft of this document, with the reason where one was recorded. Milestone and task status live in STATUS.md.
+
+- **Nov 23, 2026:** Layout is token-first, like tweakcn: a left panel with five token tabs and the component preview in the center. There is no right components panel.
+- **Nov 23, 2026:** Spacing base unit is 4px. This supersedes an 8px confirmation made earlier the same day.
+- **Nov 23, 2026:** Radius is 6px by default globally, with Button, Card, and Input overrides. Shadows use the Medium preset: global 2, Button 2, Card 1, Input 0.
+- **Nov 23, 2026:** Typography, spacing, radius, and shadows are shared across light and dark; only colors split by scheme. Breakpoints are out of scope.
+- **Nov 25, 2026:** Component overrides are parked until almost everything else is built. Component defaults are theme-level and prescribed.
+- **Nov 25, 2026:** Shell insulation: token edits never restyle the builder's own shell, color included. An earlier same-day exception for the palette was reversed. The shell has a fixed theme, and the edited theme applies only inside preview cards.
+- **Nov 25, 2026:** The Number Field card is omitted; the component does not exist in @mui/material 9.3.1.
+- **Nov 25, 2026:** Phosphor icons replace MUI icons for dropdowns, Alert severities and close, and the Chip delete icon, in the preview and in exported themes.
+- **Nov 25, 2026:** Preview cards removed: Transfer List, Icon, Typography, and Paper. 37 cards remain.
+- **Nov 26, 2026:** STATUS.md is the plan of record. This PRD is updated retroactively and kept as a living document with this log.
