@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ThemeProject } from '../../domain/project';
 import { defaultProjectFixture } from '../../fixtures/theme-project.fixtures';
 import { projectToThemeOptions } from '../project-to-theme-options';
 import { buttonSettingsToMui } from './button-adapter';
@@ -47,7 +48,7 @@ describe('textFieldSettingsToMui defaultProps omission', () => {
 
 describe('merged theme options keep earlier defaultProps (task 1.2)', () => {
   it('keeps the baseline and foundation MuiButton defaultProps when Button settings carry none', () => {
-    const project = {
+    const project: ThemeProject = {
       ...defaultProjectFixture,
       components: {
         ...defaultProjectFixture.components,
@@ -75,7 +76,7 @@ describe('merged theme options keep earlier defaultProps (task 1.2)', () => {
   });
 
   it('merges Button settings defaultProps alongside the earlier blocks', () => {
-    const project = {
+    const project: ThemeProject = {
       ...defaultProjectFixture,
       components: {
         ...defaultProjectFixture.components,
@@ -98,7 +99,7 @@ describe('merged theme options keep earlier defaultProps (task 1.2)', () => {
   });
 
   it('keeps the external-label MuiTextField defaultProps when TextField settings carry none', () => {
-    const project = {
+    const project: ThemeProject = {
       ...defaultProjectFixture,
       components: {
         ...defaultProjectFixture.components,
@@ -121,7 +122,7 @@ describe('merged theme options keep earlier defaultProps (task 1.2)', () => {
   });
 
   it('merges TextField settings defaultProps alongside the external-label block', () => {
-    const project = {
+    const project: ThemeProject = {
       ...defaultProjectFixture,
       components: {
         ...defaultProjectFixture.components,
