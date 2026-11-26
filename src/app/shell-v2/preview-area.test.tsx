@@ -309,16 +309,16 @@ describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => 
     }
   });
 
-  it('renders the count as an MUI notification badge anchored to the section title', { timeout: 20000 }, () => {
+  it('renders the count as an inline badge pill immediately after the section title', { timeout: 20000 }, () => {
     renderPreviewArea();
-    // The Nov 26, 2026 restyle: the count is a real MuiBadge anchored
-    // to the title's top-right corner, not an inline pill beside it.
+    // The Nov 26, 2026 restyle with Karl's placement correction: the
+    // count keeps the notification-badge look but sits inline right
+    // after the category name, where the original 3.1 pill sat, not
+    // anchored over the title's corner like a notification badge.
     const title = screen.getByText('Inputs');
-    const badgeRoot = title.closest('.MuiBadge-root');
-    expect(badgeRoot).not.toBeNull();
-    const badge = badgeRoot?.querySelector('.MuiBadge-badge');
-    expect(badge?.textContent).toBe('12');
-    expect(badge?.className).toContain('MuiBadge-anchorOriginTopRightRectangular');
+    expect(title.closest('.MuiBadge-root')).toBeNull();
+    const pill = title.nextElementSibling;
+    expect(pill?.textContent).toBe('12');
   });
 
   it('counts the filtered cards while searching', { timeout: 20000 }, () => {

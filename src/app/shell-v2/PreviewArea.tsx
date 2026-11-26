@@ -7,7 +7,7 @@ import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { ExportIcon } from '@phosphor-icons/react/dist/csr/Export';
 import { MoonIcon } from '@phosphor-icons/react/dist/csr/Moon';
 import { SunIcon } from '@phosphor-icons/react/dist/csr/Sun';
-import { Badge, Box, Button, Card, IconButton, Link, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, IconButton, Link, Stack, Typography } from '@mui/material';
 
 import { GeneratedCodeDrawer } from '../../generator/GeneratedCodeDrawer';
 import { PreviewBoundary } from '../../preview/PreviewBoundary';
@@ -272,30 +272,42 @@ function CategorySection({ category, collapsed, entries, onToggle }: CategorySec
       >
         {/* Component count for the section (task 3.1): the number of
             cards the section currently shows, so it follows the
-            search filter like the cards do. Restyled Nov 26, 2026 to
-            Karl's screenshot: a real MUI notification Badge anchored
-            to the title's top-right corner (MUI's own geometry: 20px
-            tall, 0 6px padding, 0.75rem medium text, translated 50%,
-            -50% from the corner). It is shell chrome, so its colors
-            come from the shell palette rather than MUI's grey: the
-            shell's muted secondary surface with primary text, which
-            reads as the screenshot's light grey pill with dark text
-            in light mode and as a muted dark pill with light text in
-            dark mode. */}
-        <Badge
-          badgeContent={entries.length}
-          color="default"
-          sx={{
-            '& .MuiBadge-badge': {
-              backgroundColor: 'secondary.main',
-              color: 'text.primary',
-            },
-          }}
-        >
+            search filter like the cards do. Styled Nov 26, 2026 to
+            Karl's screenshot of an MUI notification badge (fully
+            rounded pill, 20px tall, min-width 20px, 0 6px padding,
+            0.75rem medium text), but placed inline immediately after
+            the category name, where the original 3.1 pill sat, not
+            anchored over the title's corner like a notification
+            badge; Karl corrected the placement the same day. It is
+            shell chrome, so its colors come from the shell palette:
+            the shell's muted secondary surface with primary text,
+            which reads as the screenshot's light grey pill with dark
+            text in light mode and as a muted dark pill with light
+            text in dark mode. */}
+        <Box sx={{ alignItems: 'center', display: 'flex', gap: 1 }}>
           <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
             {category}
           </Typography>
-        </Badge>
+          <Box
+            component="span"
+            sx={{
+              alignItems: 'center',
+              backgroundColor: 'secondary.main',
+              borderRadius: '10px',
+              color: 'text.primary',
+              display: 'inline-flex',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              height: '20px',
+              justifyContent: 'center',
+              lineHeight: 1,
+              minWidth: '20px',
+              padding: '0 6px',
+            }}
+          >
+            {entries.length}
+          </Box>
+        </Box>
         <CaretDownIcon
           size={16}
           style={{
