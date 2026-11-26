@@ -135,6 +135,22 @@ export const shadcnComponents = {
   MuiMenuItem: {
     styleOverrides: { root: { minHeight: 32, borderRadius: 4, fontSize: 14, margin: '2px 4px' } },
   },
+  // The Autocomplete dropdown is a Popper holding a plain Paper, not a
+  // Menu, so the MuiMenu paper treatment above never reaches it: left
+  // alone it renders with no border and only the Paper elevation shadow
+  // (the foundation's global elevation), which reads as flat against
+  // the page. Karl flagged the mismatch from the live preview (Nov 25,
+  // 2026); the paper slot gets the same border, radius, and shadow as
+  // the Menu paper so both dropdowns read the same.
+  MuiAutocomplete: {
+    styleOverrides: {
+      paper: {
+        border: '1px solid var(--mui-palette-divider)',
+        borderRadius: 6,
+        boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
+      },
+    },
+  },
   MuiTooltip: {
     styleOverrides: { tooltip: { borderRadius: 5, fontSize: 12 } },
   },

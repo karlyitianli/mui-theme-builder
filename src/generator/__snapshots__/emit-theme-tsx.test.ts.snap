@@ -273,6 +273,20 @@ export const theme = createTheme({
         },
       },
     },
+    MuiAutocomplete: {
+      styleOverrides: {
+        paper: {
+          border: '1px solid var(--mui-palette-divider)',
+          borderRadius: 6,
+          boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
+        },
+      },
+      defaultProps: {
+        fullWidth: true,
+        size: 'small',
+        popupIcon: createElement(DropdownIcon),
+      },
+    },
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
@@ -286,13 +300,6 @@ export const theme = createTheme({
         fullWidth: true,
         size: 'small',
         variant: 'outlined',
-      },
-    },
-    MuiAutocomplete: {
-      defaultProps: {
-        fullWidth: true,
-        size: 'small',
-        popupIcon: createElement(DropdownIcon),
       },
     },
     MuiCard: {
@@ -582,6 +589,20 @@ export const theme = createTheme({
         },
       },
     },
+    MuiAutocomplete: {
+      styleOverrides: {
+        paper: {
+          border: '1px solid var(--mui-palette-divider)',
+          borderRadius: 6,
+          boxShadow: '0 8px 24px rgb(0 0 0 / 0.12)',
+        },
+      },
+      defaultProps: {
+        fullWidth: true,
+        size: 'small',
+        popupIcon: createElement(DropdownIcon),
+      },
+    },
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
@@ -595,13 +616,6 @@ export const theme = createTheme({
         fullWidth: true,
         size: 'small',
         variant: 'outlined',
-      },
-    },
-    MuiAutocomplete: {
-      defaultProps: {
-        fullWidth: true,
-        size: 'small',
-        popupIcon: createElement(DropdownIcon),
       },
     },
     MuiCard: {

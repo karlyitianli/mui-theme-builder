@@ -6,12 +6,13 @@ import {
   PREVIEW_COMPONENTS,
 } from './component-registry';
 
-// The registry carries the full MUI Inputs list in alphabetical order
-// by MUI display name (Karl, Nov 25, 2026). The one gap against the
-// 14-name MUI list is Number Field: the installed @mui/material
+// The registry carries MUI's Inputs components in alphabetical order
+// by MUI display name (Karl, Nov 25, 2026), with two gaps against the
+// 14-name MUI list. Number Field: the installed @mui/material
 // (9.3.1) does not export a NumberField component, so its card is
 // omitted until the MUI version provides one (see the registry header
-// comment). The sequence below is the 14-name list minus Number Field.
+// comment). Transfer List: Karl removed its card (Nov 25, 2026). The
+// sequence below is the 14-name list minus those two.
 const EXPECTED_INPUT_NAMES = [
   'Autocomplete',
   'Button',
@@ -25,7 +26,6 @@ const EXPECTED_INPUT_NAMES = [
   'Switch',
   'Text Field',
   'Toggle Button',
-  'Transfer List',
 ];
 
 const EXPECTED_INPUT_IDS = [
@@ -41,23 +41,21 @@ const EXPECTED_INPUT_IDS = [
   'switch',
   'text-field',
   'toggle-button',
-  'transfer-list',
 ];
 
-// The Data Display category carries MUI's nine Data Display components
-// in alphabetical order by MUI display name. All nine are exported by
-// the installed @mui/material (9.3.1, checked against the runtime
-// exports), so unlike Inputs this list has no omission.
+// The Data Display category carries MUI's Data Display components in
+// alphabetical order by MUI display name, minus Icon and Typography,
+// whose cards Karl removed (Nov 25, 2026). The seven that remain are
+// all exported by the installed @mui/material (9.3.1, checked against
+// the runtime exports).
 const EXPECTED_DATA_DISPLAY_NAMES = [
   'Avatar',
   'Badge',
   'Chip',
   'Divider',
-  'Icon',
   'List',
   'Table',
   'Tooltip',
-  'Typography',
 ];
 
 const EXPECTED_DATA_DISPLAY_IDS = [
@@ -65,11 +63,9 @@ const EXPECTED_DATA_DISPLAY_IDS = [
   'badge',
   'chip',
   'divider',
-  'icon',
   'list',
   'table',
   'tooltip',
-  'typography',
 ];
 
 // The Feedback category carries MUI's six Feedback components in
@@ -96,13 +92,14 @@ const EXPECTED_FEEDBACK_IDS = [
   'snackbar',
 ];
 
-// The Surfaces category carries MUI's four Surfaces components in
-// alphabetical order by MUI display name. All four are exported by
-// the installed @mui/material (9.3.1, checked against the runtime
-// exports), so this list has no omission either.
-const EXPECTED_SURFACES_NAMES = ['Accordion', 'App Bar', 'Card', 'Paper'];
+// The Surfaces category carries MUI's Surfaces components in
+// alphabetical order by MUI display name, minus Paper, whose card
+// Karl removed (Nov 25, 2026). The three that remain are all exported
+// by the installed @mui/material (9.3.1, checked against the runtime
+// exports).
+const EXPECTED_SURFACES_NAMES = ['Accordion', 'App Bar', 'Card'];
 
-const EXPECTED_SURFACES_IDS = ['accordion', 'app-bar', 'card', 'paper'];
+const EXPECTED_SURFACES_IDS = ['accordion', 'app-bar', 'card'];
 
 // The Navigation category carries MUI's nine Navigation components
 // in alphabetical order by MUI display name. All nine are exported
@@ -332,20 +329,22 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'TABLE').map((entry) => entry.name),
     ).toEqual(['Table']);
-    // 'list' spans the Inputs Transfer List and the Data Display List,
-    // in registry order.
+    // 'list' matched the Inputs Transfer List as well until Karl
+    // removed that card; now only the Data Display List matches.
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'list').map((entry) => entry.name),
-    ).toEqual(['Transfer List', 'List']);
+    ).toEqual(['List']);
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'alert').map((entry) => entry.name),
     ).toEqual(['Alert']);
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'PROGRESS').map((entry) => entry.name),
     ).toEqual(['Progress']);
+    // 'paper' matched the Surfaces Paper card until Karl removed it;
+    // no remaining name contains it.
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'paper').map((entry) => entry.name),
-    ).toEqual(['Paper']);
+    ).toEqual([]);
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'CARD').map((entry) => entry.name),
     ).toEqual(['Card']);

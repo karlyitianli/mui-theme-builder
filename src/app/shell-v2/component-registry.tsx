@@ -27,12 +27,10 @@ import {
   DividerDemo,
   DrawerDemo,
   FabDemo,
-  IconDemo,
   LinkDemo,
   ListDemo,
   MenuDemo,
   PaginationDemo,
-  PaperDemo,
   ProgressDemo,
   RadioGroupDemo,
   RatingDemo,
@@ -46,8 +44,6 @@ import {
   TabsDemo,
   ToggleButtonDemo,
   TooltipDemo,
-  TransferListDemo,
-  TypographyDemo,
 } from './component-demos';
 
 // Component registry for the v2 shell preview area.
@@ -58,26 +54,25 @@ import {
 // real MUI components; PreviewArea wraps each card in the preview theme,
 // so the examples always reflect the current project.
 //
-// The Inputs category carries the full MUI Inputs list (Karl, Nov 25,
+// The Inputs category carries MUI's Inputs list (Karl, Nov 25,
 // 2026, guided by https://mui.com/material-ui/all-components/), in
-// alphabetical order by MUI's display names. One exception: Number
-// Field is omitted because the installed @mui/material (9.3.1) does not
-// export a NumberField component anywhere (checked the package's type
-// definitions, its export subpaths, and the runtime export), and no
-// other installed package provides one; it joins the list when the MUI
-// version does. Cards are pure preview: per-component overrides are
+// alphabetical order by MUI's display names, with two gaps. Number
+// Field is omitted because the installed @mui/material (9.3.1) does
+// not export a NumberField component anywhere (checked the package's
+// type definitions, its export subpaths, and the runtime export), and
+// no other installed package provides one; it joins the list when the
+// MUI version does. Transfer List was in the list and Karl removed it
+// (Nov 25, 2026). Cards are pure preview: per-component overrides are
 // parked (Karl, Nov 25, 2026), so there is no edit affordance on a
 // card, and all interaction state is local to each card's demo
 // component (in component-demos.tsx).
 //
 // The Data Display category follows Inputs with MUI's Data Display
-// list, again alphabetical: Avatar, Badge, Chip, Divider, Icon, List,
-// Table, Tooltip, Typography. All nine are exported by the installed
-// @mui/material (9.3.1, verified against the runtime exports), so the
-// category has no omissions. One demo note: the Icon card passes an
-// inline SVG as the Icon's child, a usage the component supports,
-// because the app loads no ligature icon font for the component's
-// text form (see IconDemo in component-demos.tsx).
+// list, again alphabetical, minus two removals by Karl (Nov 25,
+// 2026): Icon and Typography. What remains is Avatar, Badge, Chip,
+// Divider, List, Table, Tooltip. All seven are exported by the
+// installed @mui/material (9.3.1, verified against the runtime
+// exports).
 //
 // The Feedback category follows Data Display with MUI's Feedback
 // list, again alphabetical: Alert, Backdrop, Dialog, Progress,
@@ -96,13 +91,13 @@ import {
 // component-demos.tsx).
 //
 // The Surfaces category follows Feedback with MUI's Surfaces list,
-// again alphabetical: Accordion, App Bar, Card, Paper. All four are
+// again alphabetical, minus one removal by Karl (Nov 25, 2026):
+// Paper. What remains is Accordion, App Bar, Card. All three are
 // exported by the installed @mui/material (9.3.1, verified against
-// the runtime exports), so this category has no omissions either.
-// Two demo notes. App Bar is a full-width top bar by nature; the
-// demo renders it position="static" at the card's width, a
-// contained sample bar rather than a bar fixed across the app. And
-// the Card demo is a full composed MUI Card (header, media,
+// the runtime exports). One demo note. App Bar is a full-width top
+// bar by nature; the demo renders it position="static" at the card's
+// width, a contained sample bar rather than a bar fixed across the
+// app. And the Card demo is a full composed MUI Card (header, media,
 // content, actions) nested inside the registry's own preview card
 // chrome; it uses the outlined variant so the two cards read as
 // separate surfaces (see the Surfaces demos in
@@ -240,12 +235,6 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     render: () => <ToggleButtonDemo />,
   },
   {
-    category: 'Inputs',
-    id: 'transfer-list',
-    name: 'Transfer List',
-    render: () => <TransferListDemo />,
-  },
-  {
     category: 'Data Display',
     id: 'avatar',
     name: 'Avatar',
@@ -271,12 +260,6 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
   },
   {
     category: 'Data Display',
-    id: 'icon',
-    name: 'Icon',
-    render: () => <IconDemo />,
-  },
-  {
-    category: 'Data Display',
     id: 'list',
     name: 'List',
     render: () => <ListDemo />,
@@ -292,12 +275,6 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     id: 'tooltip',
     name: 'Tooltip',
     render: () => <TooltipDemo />,
-  },
-  {
-    category: 'Data Display',
-    id: 'typography',
-    name: 'Typography',
-    render: () => <TypographyDemo />,
   },
   {
     category: 'Feedback',
@@ -352,12 +329,6 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     id: 'card',
     name: 'Card',
     render: () => <CardDemo />,
-  },
-  {
-    category: 'Surfaces',
-    id: 'paper',
-    name: 'Paper',
-    render: () => <PaperDemo />,
   },
   {
     category: 'Navigation',

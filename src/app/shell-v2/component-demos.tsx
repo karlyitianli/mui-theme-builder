@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode, type SyntheticEvent } from 'react';
+import { useEffect, useState, type ComponentProps, type ReactNode, type SyntheticEvent } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -35,7 +35,6 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
-  Icon,
   IconButton,
   LinearProgress,
   Link,
@@ -46,7 +45,6 @@ import {
   Menu,
   MenuItem,
   Pagination,
-  Paper,
   Radio,
   RadioGroup,
   Rating,
@@ -76,12 +74,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { type SxProps, type Theme } from '@mui/material/styles';
 import { BellIcon } from '@phosphor-icons/react/dist/csr/Bell';
-import { CaretDoubleLeftIcon } from '@phosphor-icons/react/dist/csr/CaretDoubleLeft';
-import { CaretDoubleRightIcon } from '@phosphor-icons/react/dist/csr/CaretDoubleRight';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
-import { CaretLeftIcon } from '@phosphor-icons/react/dist/csr/CaretLeft';
-import { CaretRightIcon } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/csr/CheckCircle';
 import { ClockCounterClockwiseIcon } from '@phosphor-icons/react/dist/csr/ClockCounterClockwise';
 import { CopyIcon } from '@phosphor-icons/react/dist/csr/Copy';
 import { DotsThreeVerticalIcon } from '@phosphor-icons/react/dist/csr/DotsThreeVertical';
@@ -90,6 +86,7 @@ import { FloppyDiskIcon } from '@phosphor-icons/react/dist/csr/FloppyDisk';
 import { FolderIcon } from '@phosphor-icons/react/dist/csr/Folder';
 import { HeartIcon } from '@phosphor-icons/react/dist/csr/Heart';
 import { HouseIcon } from '@phosphor-icons/react/dist/csr/House';
+import { InfoIcon } from '@phosphor-icons/react/dist/csr/Info';
 import { ListIcon } from '@phosphor-icons/react/dist/csr/List';
 import { MapPinIcon } from '@phosphor-icons/react/dist/csr/MapPin';
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/csr/PaperPlaneTilt';
@@ -98,7 +95,9 @@ import { PrinterIcon } from '@phosphor-icons/react/dist/csr/Printer';
 import { ShareNetworkIcon } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { TrashIcon } from '@phosphor-icons/react/dist/csr/Trash';
 import { TrayIcon } from '@phosphor-icons/react/dist/csr/Tray';
+import { WarningIcon } from '@phosphor-icons/react/dist/csr/Warning';
 import { XIcon } from '@phosphor-icons/react/dist/csr/X';
+import { XCircleIcon } from '@phosphor-icons/react/dist/csr/XCircle';
 
 // Demo components for the preview registry's cards (see
 // component-registry.tsx). Each demo owns its interaction state
@@ -263,123 +262,6 @@ export function ToggleButtonDemo() {
   );
 }
 
-// A compact working Transfer List (the MUI docs pattern, trimmed to a
-// card): two checkbox lists with move-all and move-checked buttons,
-// all state local to the card.
-export function TransferListDemo() {
-  const labels = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'];
-  const [checked, setChecked] = useState<readonly number[]>([]);
-  const [left, setLeft] = useState<readonly number[]>([0, 1, 2]);
-  const [right, setRight] = useState<readonly number[]>([3, 4]);
-
-  const leftChecked = checked.filter((value) => left.includes(value));
-  const rightChecked = checked.filter((value) => right.includes(value));
-
-  const handleToggle = (value: number) => () => {
-    setChecked((current) =>
-      current.includes(value)
-        ? current.filter((candidate) => candidate !== value)
-        : [...current, value],
-    );
-  };
-
-  const handleAllRight = () => {
-    setRight((current) => [...current, ...left]);
-    setLeft([]);
-  };
-
-  const handleCheckedRight = () => {
-    setRight((current) => [...current, ...leftChecked]);
-    setLeft((current) => current.filter((value) => !leftChecked.includes(value)));
-    setChecked((current) =>
-      current.filter((value) => !leftChecked.includes(value)),
-    );
-  };
-
-  const handleCheckedLeft = () => {
-    setLeft((current) => [...current, ...rightChecked]);
-    setRight((current) =>
-      current.filter((value) => !rightChecked.includes(value)),
-    );
-    setChecked((current) =>
-      current.filter((value) => !rightChecked.includes(value)),
-    );
-  };
-
-  const handleAllLeft = () => {
-    setLeft((current) => [...current, ...right]);
-    setRight([]);
-  };
-
-  const listFor = (items: readonly number[]) => (
-    <List dense sx={{ flex: 1, minWidth: 0, overflow: 'auto', py: 0 }}>
-      {items.map((value) => (
-        <ListItemButton key={value} onClick={handleToggle(value)} sx={{ px: 1 }}>
-          <ListItemIcon sx={{ minWidth: 32 }}>
-            <Checkbox
-              checked={checked.includes(value)}
-              disableRipple
-              edge="start"
-              size="small"
-              tabIndex={-1}
-            />
-          </ListItemIcon>
-          <ListItemText primary={labels[value]} />
-        </ListItemButton>
-      ))}
-    </List>
-  );
-
-  return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-      {listFor(left)}
-      <Stack spacing={0.5}>
-        <Button
-          aria-label="Move all right"
-          disabled={left.length === 0}
-          onClick={handleAllRight}
-          size="small"
-          sx={{ minWidth: 0, px: 0.5 }}
-          variant="outlined"
-        >
-          <CaretDoubleRightIcon size={16} />
-        </Button>
-        <Button
-          aria-label="Move selected right"
-          disabled={leftChecked.length === 0}
-          onClick={handleCheckedRight}
-          size="small"
-          sx={{ minWidth: 0, px: 0.5 }}
-          variant="outlined"
-        >
-          <CaretRightIcon size={16} />
-        </Button>
-        <Button
-          aria-label="Move selected left"
-          disabled={rightChecked.length === 0}
-          onClick={handleCheckedLeft}
-          size="small"
-          sx={{ minWidth: 0, px: 0.5 }}
-          variant="outlined"
-        >
-          <CaretLeftIcon size={16} />
-        </Button>
-        <Button
-          aria-label="Move all left"
-          disabled={right.length === 0}
-          onClick={handleAllLeft}
-          size="small"
-          sx={{ minWidth: 0, px: 0.5 }}
-          variant="outlined"
-        >
-          <CaretDoubleLeftIcon size={16} />
-        </Button>
-      </Stack>
-      {listFor(right)}
-    </Stack>
-  );
-}
-
 // Data Display demos, in the same style as the Inputs demos above:
 // canonical variants per component, interaction state local to the
 // card where the component has a meaningful interaction.
@@ -436,6 +318,10 @@ export function ChipDemo() {
       />
       {deletable.map((chip) => (
         <Chip
+          // Karl (Nov 25, 2026): the delete glyph is the Phosphor X,
+          // at 22px, the size MUI's own delete icon rendered at (the
+          // Chip deleteIcon styles set fontSize 22 on the glyph).
+          deleteIcon={<XIcon size={22} />}
           key={chip.key}
           label={chip.label}
           onDelete={() =>
@@ -461,37 +347,6 @@ export function DividerDemo() {
         <Divider flexItem orientation="vertical" />
         <Typography variant="body2">Right</Typography>
       </Stack>
-    </Stack>
-  );
-}
-
-// MUI's Icon renders ligature text from an icon font, and the app
-// loads no ligature font; the demo instead passes an inline SVG as
-// the child, a usage the component also supports, and varies its
-// fontSize and color props across the row.
-function StarSvg() {
-  return (
-    <svg aria-hidden="true" fill="currentColor" height="1em" viewBox="0 0 24 24" width="1em">
-      <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-    </svg>
-  );
-}
-
-export function IconDemo() {
-  return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-      <Icon fontSize="small">
-        <StarSvg />
-      </Icon>
-      <Icon>
-        <StarSvg />
-      </Icon>
-      <Icon color="primary" fontSize="large">
-        <StarSvg />
-      </Icon>
-      <Icon color="disabled" fontSize="large">
-        <StarSvg />
-      </Icon>
     </Stack>
   );
 }
@@ -569,19 +424,6 @@ export function TooltipDemo() {
   );
 }
 
-export function TypographyDemo() {
-  return (
-    <Stack spacing={0.5}>
-      <Typography variant="h5">h5 heading</Typography>
-      <Typography variant="subtitle1">subtitle1 text</Typography>
-      <Typography variant="body1">body1 text</Typography>
-      <Typography variant="body2">body2 text</Typography>
-      <Typography variant="caption">caption text</Typography>
-      <Typography variant="overline">overline text</Typography>
-    </Stack>
-  );
-}
-
 // Feedback demos, in the same style as the categories above:
 // canonical variants per component, interaction state local to the
 // card where the component has a meaningful interaction.
@@ -625,15 +467,74 @@ function OverlayStage({
   );
 }
 
+// Karl (Nov 25, 2026): in dark mode the overlay demos' trigger
+// buttons are hard to see, because the outlined button's background
+// is the paper color, which on the demos' dark stage reads as
+// near-black on near-black. In dark mode only, the three trigger
+// buttons (Show backdrop, Open dialog, Open snackbar) render white
+// with dark text so they read clearly against the stage; light mode
+// keeps the outlined default untouched. The gate is the theme's
+// applyStyles, which keys off the same data attribute that flips
+// the preview's color scheme. (The preview theme's JS palette
+// cannot report the scheme on screen: every value is a CSS
+// variable, so palette.mode stays on the base scheme.) The text
+// color references the background variable, so it tracks the
+// scheme's page color (near-black in the default dark scheme).
+// Presentation only: no theme default changes.
+const stageTriggerSx: SxProps<Theme> = (theme) =>
+  theme.applyStyles('dark', {
+    backgroundColor: '#fff',
+    borderColor: '#fff',
+    color: 'var(--mui-palette-background-default)',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      borderColor: 'rgba(255, 255, 255, 0.85)',
+      color: 'var(--mui-palette-background-default)',
+    },
+  });
+
+// Karl (Nov 25, 2026): the Alert demo's icons are Phosphor, not MUI.
+// Each severity maps to its Phosphor counterpart at 22px, the size
+// MUI's own severity glyphs rendered at (the Alert icon slot sets
+// fontSize 22 and MUI's default mapping icons inherit it). Phosphor
+// glyphs fill with currentColor, so MUI's per-severity icon coloring
+// keeps working unchanged.
+const ALERT_ICON_MAPPING = {
+  error: <XCircleIcon size={22} />,
+  info: <InfoIcon size={22} />,
+  success: <CheckCircleIcon size={22} />,
+  warning: <WarningIcon size={22} />,
+};
+
+// The Alert close icon as a component for MUI v9's closeIcon slot,
+// which renders its icon with SvgIcon-shaped props. Following the
+// DropdownIcon pattern: every prop forwards to the glyph and only
+// the size is pinned, 20px, the size MUI's small close glyph
+// rendered at.
+function AlertCloseIcon(props: ComponentProps<typeof XIcon>) {
+  return <XIcon {...props} size={20} />;
+}
+
 export function AlertDemo() {
   const [successOpen, setSuccessOpen] = useState(true);
   return (
     <Stack spacing={1.5}>
-      <Alert severity="error">This is an error Alert.</Alert>
-      <Alert severity="warning">This is a warning Alert.</Alert>
-      <Alert severity="info">This is an info Alert.</Alert>
+      <Alert iconMapping={ALERT_ICON_MAPPING} severity="error">
+        This is an error Alert.
+      </Alert>
+      <Alert iconMapping={ALERT_ICON_MAPPING} severity="warning">
+        This is a warning Alert.
+      </Alert>
+      <Alert iconMapping={ALERT_ICON_MAPPING} severity="info">
+        This is an info Alert.
+      </Alert>
       {successOpen && (
-        <Alert onClose={() => setSuccessOpen(false)} severity="success">
+        <Alert
+          iconMapping={ALERT_ICON_MAPPING}
+          onClose={() => setSuccessOpen(false)}
+          severity="success"
+          slots={{ closeIcon: AlertCloseIcon }}
+        >
           This is a success Alert.
         </Alert>
       )}
@@ -645,7 +546,7 @@ export function BackdropDemo() {
   const [open, setOpen] = useState(false);
   return (
     <OverlayStage>
-      <Button onClick={() => setOpen(true)} variant="outlined">
+      <Button onClick={() => setOpen(true)} sx={stageTriggerSx} variant="outlined">
         Show backdrop
       </Button>
       <Backdrop
@@ -665,7 +566,7 @@ export function DialogDemo() {
   const close = () => setOpen(false);
   return (
     <OverlayStage stageRef={setStage}>
-      <Button onClick={() => setOpen(true)} variant="outlined">
+      <Button onClick={() => setOpen(true)} sx={stageTriggerSx} variant="outlined">
         Open dialog
       </Button>
       <Dialog
@@ -764,7 +665,7 @@ export function SnackbarDemo() {
   const [open, setOpen] = useState(false);
   return (
     <OverlayStage>
-      <Button onClick={() => setOpen(true)} variant="outlined">
+      <Button onClick={() => setOpen(true)} sx={stageTriggerSx} variant="outlined">
         Open snackbar
       </Button>
       <Snackbar
@@ -901,29 +802,6 @@ export function CardDemo() {
         <Button size="small">Learn more</Button>
       </CardActions>
     </Card>
-  );
-}
-
-export function PaperDemo() {
-  const elevations = [0, 1, 3, 6];
-  const squareSx = {
-    alignItems: 'center',
-    display: 'flex',
-    height: 72,
-    justifyContent: 'center',
-    width: 72,
-  };
-  return (
-    <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap' }}>
-      {elevations.map((elevation) => (
-        <Paper elevation={elevation} key={elevation} sx={squareSx}>
-          <Typography variant="caption">{elevation}</Typography>
-        </Paper>
-      ))}
-      <Paper sx={squareSx} variant="outlined">
-        <Typography variant="caption">Outlined</Typography>
-      </Paper>
-    </Stack>
   );
 }
 

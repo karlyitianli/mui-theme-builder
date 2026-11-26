@@ -48,7 +48,6 @@ describe('PreviewArea (Phase 3)', () => {
       'Switch',
       'Text Field',
       'Toggle Button',
-      'Transfer List',
     ]) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
@@ -116,11 +115,9 @@ describe('PreviewArea Data Display section', () => {
       'Badge',
       'Chip',
       'Divider',
-      'Icon',
       'List',
       'Table',
       'Tooltip',
-      'Typography',
     ]) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
@@ -206,17 +203,19 @@ describe('PreviewArea Surfaces section', () => {
       feedbackHeader.compareDocumentPosition(surfacesHeader) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    for (const name of ['Accordion', 'App Bar', 'Card', 'Paper']) {
+    for (const name of ['Accordion', 'App Bar', 'Card']) {
       expect(screen.getByText(name)).toBeInTheDocument();
     }
   });
 
   it('filters across all four categories through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
+    // The probe used to be 'paper' for the Paper card; Karl removed
+    // that card, so 'card' (the Surfaces Card) is the probe now.
     fireEvent.change(screen.getByPlaceholderText('Search'), {
-      target: { value: 'paper' },
+      target: { value: 'card' },
     });
-    expect(screen.getByText('Paper')).toBeInTheDocument();
+    expect(screen.getByText('Card')).toBeInTheDocument();
     expect(screen.getByText('Surfaces')).toBeInTheDocument();
     // No Inputs, Data Display, or Feedback entry matches, so those
     // sections drop out.
@@ -230,10 +229,10 @@ describe('PreviewArea Surfaces section', () => {
   it('collapses and expands the Surfaces section from its header', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Surfaces'));
-    expect(screen.queryByText('Paper')).not.toBeInTheDocument();
+    expect(screen.queryByText('Card')).not.toBeInTheDocument();
     expect(screen.getByText('Alert')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Surfaces'));
-    expect(screen.getByText('Paper')).toBeInTheDocument();
+    expect(screen.getByText('Card')).toBeInTheDocument();
   });
 });
 
@@ -279,14 +278,14 @@ describe('PreviewArea Navigation section', () => {
     expect(screen.queryByText('Feedback')).not.toBeInTheDocument();
     expect(screen.queryByText('Surfaces')).not.toBeInTheDocument();
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
-    expect(screen.queryByText('Paper')).not.toBeInTheDocument();
+    expect(screen.queryByText('Card')).not.toBeInTheDocument();
   });
 
   it('collapses and expands the Navigation section from its header', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.click(screen.getByText('Navigation'));
     expect(screen.queryByText('Pagination')).not.toBeInTheDocument();
-    expect(screen.getByText('Paper')).toBeInTheDocument();
+    expect(screen.getByText('Card')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Navigation'));
     expect(screen.getByText('Pagination')).toBeInTheDocument();
   });

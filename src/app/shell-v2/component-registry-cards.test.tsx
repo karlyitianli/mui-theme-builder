@@ -8,6 +8,8 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { defaultProjectFixture } from '../../fixtures/theme-project.fixtures';
+import { PreviewProvider } from '../../preview/PreviewProvider';
 import { PREVIEW_COMPONENTS } from './component-registry';
 
 // Render and interaction smoke tests for the cards added when the
@@ -87,16 +89,6 @@ describe('Inputs preview cards', () => {
     );
   });
 
-  it('Transfer List renders both lists with their starting items', () => {
-    const { container } = renderEntry('transfer-list');
-    const lists = container.querySelectorAll('ul');
-    expect(lists).toHaveLength(2);
-    expect(within(lists[0] as HTMLElement).getByText('Item 1')).toBeInTheDocument();
-    expect(within(lists[0] as HTMLElement).getByText('Item 3')).toBeInTheDocument();
-    expect(within(lists[1] as HTMLElement).getByText('Item 4')).toBeInTheDocument();
-    expect(within(lists[1] as HTMLElement).getByText('Item 5')).toBeInTheDocument();
-  });
-
   it('toggling the Off switch turns it on', () => {
     renderEntry('switch');
     const offSwitch = screen.getByRole('switch', { name: 'Off' });
@@ -105,16 +97,6 @@ describe('Inputs preview cards', () => {
     expect(offSwitch).toBeChecked();
   });
 
-  it('Transfer List moves a checked item to the other list', () => {
-    const { container } = renderEntry('transfer-list');
-    fireEvent.click(screen.getByText('Item 1'));
-    fireEvent.click(screen.getByRole('button', { name: 'Move selected right' }));
-    const lists = container.querySelectorAll('ul');
-    expect(
-      within(lists[0] as HTMLElement).queryByText('Item 1'),
-    ).not.toBeInTheDocument();
-    expect(within(lists[1] as HTMLElement).getByText('Item 1')).toBeInTheDocument();
-  });
 });
 
 // Render and interaction smoke tests for the Data Display cards added
@@ -153,6 +135,20 @@ describe('Data Display preview cards', () => {
     expect(screen.getByText('Removable')).toBeInTheDocument();
   });
 
+  it('Chip delete icons are the Phosphor X at the MUI glyph size', () => {
+    const { container } = renderEntry('chip');
+    const deleteIcons = container.querySelectorAll('.MuiChip-deleteIcon');
+    expect(deleteIcons).toHaveLength(2);
+    for (const icon of deleteIcons) {
+      // Phosphor glyphs draw on a 256 viewBox (MUI's sit on 24) and
+      // Karl's swap pins them at 22px, the size MUI's delete icon
+      // rendered at.
+      expect(icon.getAttribute('viewBox')).toBe('0 0 256 256');
+      expect(icon.getAttribute('width')).toBe('22');
+      expect(icon.classList.contains('MuiSvgIcon-root')).toBe(false);
+    }
+  });
+
   it('clicking the Clickable chip marks it with the primary color', () => {
     renderEntry('chip');
     const chip = screen.getByText('Clickable').closest('.MuiChip-root') as HTMLElement;
@@ -166,15 +162,6 @@ describe('Data Display preview cards', () => {
     expect(screen.getAllByRole('separator')).toHaveLength(3);
     expect(screen.getByText('Above the divider')).toBeInTheDocument();
     expect(screen.getByText('Center')).toBeInTheDocument();
-  });
-
-  it('Icon renders four icons, each holding an SVG', () => {
-    const { container } = renderEntry('icon');
-    const icons = container.querySelectorAll('.MuiIcon-root');
-    expect(icons).toHaveLength(4);
-    for (const icon of icons) {
-      expect(icon.querySelector('svg')).not.toBeNull();
-    }
   });
 
   it('List renders three items with the first selected', () => {
@@ -219,15 +206,6 @@ describe('Data Display preview cards', () => {
     expect(tooltip).toHaveTextContent('Delete');
   });
 
-  it('Typography renders the variant samples', () => {
-    renderEntry('typography');
-    expect(screen.getByRole('heading', { name: 'h5 heading' })).toBeInTheDocument();
-    expect(screen.getByText('subtitle1 text')).toBeInTheDocument();
-    expect(screen.getByText('body1 text')).toBeInTheDocument();
-    expect(screen.getByText('body2 text')).toBeInTheDocument();
-    expect(screen.getByText('caption text')).toBeInTheDocument();
-    expect(screen.getByText('overline text')).toBeInTheDocument();
-  });
 });
 
 // Render and interaction smoke tests for the Feedback cards added
@@ -248,6 +226,30 @@ describe('Feedback preview cards', () => {
     ]) {
       expect(screen.getByText(text)).toBeInTheDocument();
     }
+  });
+
+  it('Alert icons are Phosphor glyphs, severity and close alike', () => {
+    const { container } = renderEntry('alert');
+    // No MUI SvgIcon anywhere in the demo: the severity icons come
+    // from the iconMapping and the close glyph from the closeIcon
+    // slot Karl asked to swap.
+    expect(container.querySelectorAll('.MuiSvgIcon-root')).toHaveLength(0);
+    for (const alert of screen.getAllByRole('alert')) {
+      const icon = alert.querySelector('.MuiAlert-icon svg');
+      expect(icon).not.toBeNull();
+      // Phosphor glyphs draw on a 256 viewBox (MUI's sit on 24), at
+      // 22px, the size MUI's severity icons rendered at.
+      expect(icon?.getAttribute('viewBox')).toBe('0 0 256 256');
+      expect(icon?.getAttribute('width')).toBe('22');
+    }
+    const success = screen
+      .getByText('This is a success Alert.')
+      .closest('.MuiAlert-root') as HTMLElement;
+    const closeIcon = within(success)
+      .getByRole('button', { name: 'Close' })
+      .querySelector('svg');
+    expect(closeIcon?.getAttribute('viewBox')).toBe('0 0 256 256');
+    expect(closeIcon?.getAttribute('width')).toBe('20');
   });
 
   it('closing the success Alert removes only it', () => {
@@ -404,14 +406,6 @@ describe('Surfaces preview cards', () => {
     expect(favorite).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('Paper renders the elevation variants and an outlined paper', () => {
-    const { container } = renderEntry('paper');
-    expect(container.querySelectorAll('.MuiPaper-root')).toHaveLength(5);
-    expect(container.querySelector('.MuiPaper-outlined')).not.toBeNull();
-    for (const label of ['0', '1', '3', '6', 'Outlined']) {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    }
-  });
 });
 
 // Render and interaction smoke tests for the Navigation cards added
@@ -602,5 +596,114 @@ describe('Navigation preview cards', () => {
     );
     expect(screen.getByText('Item Three panel.')).toBeInTheDocument();
     expect(screen.queryByText('Item One panel.')).not.toBeInTheDocument();
+  });
+});
+
+// Checks that need the real preview theme rather than MUI's default
+// theme (which the card tests above render under): the overlay
+// trigger buttons' dark-mode treatment and the Autocomplete dropdown
+// paper's border and shadow, both of which live in the app's theme
+// and demo styling (Karl, Nov 25, 2026). The CSS extraction follows
+// preview-card.test.tsx.
+function documentStyles(): string {
+  return Array.from(document.querySelectorAll('style'))
+    .map((element) => element.textContent ?? '')
+    .join('\n');
+}
+
+function rulesFor(element: Element): string {
+  const css = documentStyles();
+  return (element.className?.split(' ') ?? [])
+    .filter((cls) => cls.startsWith('css-'))
+    .map((cls) => {
+      const match = css.match(new RegExp(`\\.${cls}\\{[^}]*\\}`));
+      return match?.[0] ?? '';
+    })
+    .join('\n');
+}
+
+describe('Preview theme treatments', () => {
+  afterEach(() => cleanup());
+
+  function renderThemed(id: string, mode: 'light' | 'dark') {
+    const entry = PREVIEW_COMPONENTS.find((candidate) => candidate.id === id);
+    if (!entry) throw new Error(`registry is missing the ${id} entry`);
+    return render(
+      <PreviewProvider mode={mode} project={defaultProjectFixture}>
+        <>{entry.render()}</>
+      </PreviewProvider>,
+    );
+  }
+
+  // The dark treatment is an applyStyles('dark', ...) rule: in the
+  // generated CSS it appears as a rule scoped to the [data-dark]
+  // color-scheme selector for the button's sx class. jsdom does not
+  // run the attribute cascade, so the assertion targets that rule
+  // rather than a computed style.
+  function darkRulesFor(element: Element): string {
+    const classes = (element.className?.split(' ') ?? []).filter((cls) =>
+      cls.startsWith('css-'),
+    );
+    const rules: string[] = [];
+    for (const match of documentStyles().matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+      const [, selector = '', body = ''] = match;
+      if (
+        selector.includes('[data-dark]') &&
+        classes.some((cls) => selector.includes(`.${cls}`))
+      ) {
+        rules.push(body);
+      }
+    }
+    return rules.join('\n');
+  }
+
+  it('overlay trigger buttons carry a white dark-scheme style', () => {
+    const triggers = [
+      ['backdrop', 'Show backdrop'],
+      ['dialog', 'Open dialog'],
+      ['snackbar', 'Open snackbar'],
+    ] as const;
+    for (const [id, name] of triggers) {
+      const { unmount } = renderThemed(id, 'dark');
+      const button = screen.getByRole('button', { name });
+      expect(darkRulesFor(button)).toContain('background-color:#fff');
+      unmount();
+    }
+  });
+
+  it('overlay trigger buttons get no white style under the plain light theme', () => {
+    // The cards above render under MUI's default (light, non-vars)
+    // theme, where applyStyles('dark', ...) resolves to nothing:
+    // light rendering keeps the outlined default exactly.
+    renderEntry('backdrop');
+    const button = screen.getByRole('button', { name: 'Show backdrop' });
+    expect(rulesFor(button)).not.toContain('background-color:#fff');
+    expect(darkRulesFor(button)).toBe('');
+  });
+
+  it('Autocomplete dropdown paper carries the Select menu paper border and shadow', () => {
+    renderThemed('autocomplete', 'light');
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    const autocompletePaper = screen.getByRole('listbox').closest('.MuiPaper-root');
+    expect(autocompletePaper).not.toBeNull();
+    const autocompleteRules = rulesFor(autocompletePaper as Element);
+    cleanup();
+
+    renderThemed('select', 'light');
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    const menuPaper = screen.getByRole('listbox').closest('.MuiPaper-root');
+    expect(menuPaper).not.toBeNull();
+    const menuRules = rulesFor(menuPaper as Element);
+
+    // The treatment the Select menu gets from the baseline's MuiMenu
+    // paper override; the Autocomplete paper must carry the same two
+    // declarations.
+    for (const declaration of [
+      'border:1px solid var(--mui-palette-divider)',
+      'box-shadow:0 8px 24px rgb(0 0 0 / 0.12)',
+    ]) {
+      expect(menuRules).toContain(declaration);
+      expect(autocompleteRules).toContain(declaration);
+    }
   });
 });
