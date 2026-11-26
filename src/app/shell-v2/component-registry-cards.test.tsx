@@ -109,3 +109,116 @@ describe('Inputs preview cards', () => {
     expect(within(lists[1] as HTMLElement).getByText('Item 1')).toBeInTheDocument();
   });
 });
+
+// Render and interaction smoke tests for the Data Display cards added
+// after Inputs (Karl, Nov 25, 2026), in the same style as above.
+describe('Data Display preview cards', () => {
+  afterEach(() => cleanup());
+
+  it('Avatar renders a group with a surplus and the three shape variants', () => {
+    const { container } = renderEntry('avatar');
+    // Group: three letter avatars plus the surplus avatar. Variants
+    // row: circular, rounded, and square letter avatars.
+    expect(container.querySelectorAll('.MuiAvatar-root')).toHaveLength(7);
+    expect(screen.getByText('+2')).toBeInTheDocument();
+    expect(screen.getAllByText('K')).toHaveLength(2);
+  });
+
+  it('Badge renders a count, a dot, and a capped count', () => {
+    const { container } = renderEntry('badge');
+    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getByText('99+')).toBeInTheDocument();
+    expect(container.querySelector('.MuiBadge-dot')).not.toBeNull();
+  });
+
+  it('Chip renders filled, outlined, clickable, and deletable chips', () => {
+    renderEntry('chip');
+    for (const label of ['Filled', 'Outlined', 'Clickable', 'Deletable', 'Removable']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+  });
+
+  it('deleting a Chip removes only that chip', () => {
+    renderEntry('chip');
+    const chip = screen.getByText('Deletable').closest('.MuiChip-root') as HTMLElement;
+    fireEvent.click(chip.querySelector('.MuiChip-deleteIcon') as Element);
+    expect(screen.queryByText('Deletable')).not.toBeInTheDocument();
+    expect(screen.getByText('Removable')).toBeInTheDocument();
+  });
+
+  it('clicking the Clickable chip marks it with the primary color', () => {
+    renderEntry('chip');
+    const chip = screen.getByText('Clickable').closest('.MuiChip-root') as HTMLElement;
+    expect(chip.className).not.toContain('MuiChip-colorPrimary');
+    fireEvent.click(chip);
+    expect(chip.className).toContain('MuiChip-colorPrimary');
+  });
+
+  it('Divider renders horizontal, text, and vertical separators', () => {
+    renderEntry('divider');
+    expect(screen.getAllByRole('separator')).toHaveLength(3);
+    expect(screen.getByText('Above the divider')).toBeInTheDocument();
+    expect(screen.getByText('Center')).toBeInTheDocument();
+  });
+
+  it('Icon renders four icons, each holding an SVG', () => {
+    const { container } = renderEntry('icon');
+    const icons = container.querySelectorAll('.MuiIcon-root');
+    expect(icons).toHaveLength(4);
+    for (const icon of icons) {
+      expect(icon.querySelector('svg')).not.toBeNull();
+    }
+  });
+
+  it('List renders three items with the first selected', () => {
+    renderEntry('list');
+    for (const label of ['Inbox', 'Sent', 'Drafts']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(screen.getByText('Inbox').closest('.MuiListItemButton-root')?.className).toContain(
+      'Mui-selected',
+    );
+    expect(
+      screen.getByText('Sent').closest('.MuiListItemButton-root')?.className,
+    ).not.toContain('Mui-selected');
+  });
+
+  it('clicking a List item moves the selection to it', () => {
+    renderEntry('list');
+    fireEvent.click(screen.getByText('Sent'));
+    expect(screen.getByText('Sent').closest('.MuiListItemButton-root')?.className).toContain(
+      'Mui-selected',
+    );
+    expect(
+      screen.getByText('Inbox').closest('.MuiListItemButton-root')?.className,
+    ).not.toContain('Mui-selected');
+  });
+
+  it('Table renders its header and rows', () => {
+    renderEntry('table');
+    expect(
+      screen.getByRole('columnheader', { name: 'Dessert (100g serving)' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Calories' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Frozen yoghurt' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: '159' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Cupcake' })).toBeInTheDocument();
+  });
+
+  it('Tooltip shows its title when the wrapped control is hovered', async () => {
+    renderEntry('tooltip');
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'Delete' }));
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent('Delete');
+  });
+
+  it('Typography renders the variant samples', () => {
+    renderEntry('typography');
+    expect(screen.getByRole('heading', { name: 'h5 heading' })).toBeInTheDocument();
+    expect(screen.getByText('subtitle1 text')).toBeInTheDocument();
+    expect(screen.getByText('body1 text')).toBeInTheDocument();
+    expect(screen.getByText('body2 text')).toBeInTheDocument();
+    expect(screen.getByText('caption text')).toBeInTheDocument();
+    expect(screen.getByText('overline text')).toBeInTheDocument();
+  });
+});

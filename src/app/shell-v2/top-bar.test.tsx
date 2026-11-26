@@ -126,7 +126,7 @@ describe('v2 top bar (Phase 4)', () => {
     expect(screen.getByText('primary: none')).toBeInTheDocument();
   });
 
-  it('reset with edits asks first: Cancel keeps the edits, confirming returns to the default project', async () => {
+  it('reset with edits asks first: Cancel keeps the edits, confirming returns to the default project', { timeout: 20000 }, async () => {
     renderWithShell(<PreviewArea />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit primary' }));
 

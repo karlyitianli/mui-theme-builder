@@ -12,7 +12,7 @@ import {
 // (9.3.1) does not export a NumberField component, so its card is
 // omitted until the MUI version provides one (see the registry header
 // comment). The sequence below is the 14-name list minus Number Field.
-const EXPECTED_NAMES = [
+const EXPECTED_INPUT_NAMES = [
   'Autocomplete',
   'Button',
   'Button Group',
@@ -28,7 +28,7 @@ const EXPECTED_NAMES = [
   'Transfer List',
 ];
 
-const EXPECTED_IDS = [
+const EXPECTED_INPUT_IDS = [
   'autocomplete',
   'button',
   'button-group',
@@ -44,21 +44,53 @@ const EXPECTED_IDS = [
   'transfer-list',
 ];
 
+// The Data Display category carries MUI's nine Data Display components
+// in alphabetical order by MUI display name. All nine are exported by
+// the installed @mui/material (9.3.1, checked against the runtime
+// exports), so unlike Inputs this list has no omission.
+const EXPECTED_DATA_DISPLAY_NAMES = [
+  'Avatar',
+  'Badge',
+  'Chip',
+  'Divider',
+  'Icon',
+  'List',
+  'Table',
+  'Tooltip',
+  'Typography',
+];
+
+const EXPECTED_DATA_DISPLAY_IDS = [
+  'avatar',
+  'badge',
+  'chip',
+  'divider',
+  'icon',
+  'list',
+  'table',
+  'tooltip',
+  'typography',
+];
+
+const inputsEntries = () =>
+  PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Inputs');
+const dataDisplayEntries = () =>
+  PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Data Display');
+
 describe('PREVIEW_COMPONENTS (Inputs registry)', () => {
   it('contains the MUI Inputs components in alphabetical order, all in Inputs', () => {
-    expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual(EXPECTED_NAMES);
-    expect(PREVIEW_COMPONENTS.map((entry) => entry.id)).toEqual(EXPECTED_IDS);
-    for (const entry of PREVIEW_COMPONENTS) {
+    expect(inputsEntries().map((entry) => entry.name)).toEqual(EXPECTED_INPUT_NAMES);
+    expect(inputsEntries().map((entry) => entry.id)).toEqual(EXPECTED_INPUT_IDS);
+    for (const entry of inputsEntries()) {
       expect(entry.category).toBe('Inputs');
       expect(typeof entry.render).toBe('function');
     }
   });
 
-  it('groups into a single Inputs group with all entries in order', () => {
+  it('groups Inputs first with all its entries in order', () => {
     const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
-    expect(groups).toHaveLength(1);
     expect(groups[0].category).toBe('Inputs');
-    expect(groups[0].entries.map((entry) => entry.name)).toEqual(EXPECTED_NAMES);
+    expect(groups[0].entries.map((entry) => entry.name)).toEqual(EXPECTED_INPUT_NAMES);
   });
 
   it('groups an empty list into no groups', () => {
@@ -66,13 +98,40 @@ describe('PREVIEW_COMPONENTS (Inputs registry)', () => {
   });
 });
 
+describe('PREVIEW_COMPONENTS (Data Display registry)', () => {
+  it('contains the MUI Data Display components in alphabetical order, all in Data Display', () => {
+    expect(dataDisplayEntries().map((entry) => entry.name)).toEqual(
+      EXPECTED_DATA_DISPLAY_NAMES,
+    );
+    expect(dataDisplayEntries().map((entry) => entry.id)).toEqual(
+      EXPECTED_DATA_DISPLAY_IDS,
+    );
+    for (const entry of dataDisplayEntries()) {
+      expect(entry.category).toBe('Data Display');
+      expect(typeof entry.render).toBe('function');
+    }
+  });
+
+  it('places Data Display after Inputs as the second group', () => {
+    expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual([
+      ...EXPECTED_INPUT_NAMES,
+      ...EXPECTED_DATA_DISPLAY_NAMES,
+    ]);
+    const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
+    expect(groups.map((group) => group.category)).toEqual(['Inputs', 'Data Display']);
+    expect(groups[1].entries.map((entry) => entry.name)).toEqual(
+      EXPECTED_DATA_DISPLAY_NAMES,
+    );
+  });
+});
+
 describe('filterPreviewComponents (preview search)', () => {
   it('returns everything for an empty or blank query', () => {
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '')).toHaveLength(
-      EXPECTED_NAMES.length,
+      EXPECTED_INPUT_NAMES.length + EXPECTED_DATA_DISPLAY_NAMES.length,
     );
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '   ')).toHaveLength(
-      EXPECTED_NAMES.length,
+      EXPECTED_INPUT_NAMES.length + EXPECTED_DATA_DISPLAY_NAMES.length,
     );
   });
 
@@ -86,6 +145,20 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'Select').map((entry) => entry.name),
     ).toEqual(['Select']);
+  });
+
+  it('matches across both categories', () => {
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'chip').map((entry) => entry.name),
+    ).toEqual(['Chip']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'TABLE').map((entry) => entry.name),
+    ).toEqual(['Table']);
+    // 'list' spans the Inputs Transfer List and the Data Display List,
+    // in registry order.
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'list').map((entry) => entry.name),
+    ).toEqual(['Transfer List', 'List']);
   });
 
   it('returns an empty list for a nonsense query', () => {

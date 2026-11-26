@@ -11,15 +11,24 @@ import {
 
 import {
   AutocompleteDemo,
+  AvatarDemo,
+  BadgeDemo,
   ButtonGroupDemo,
   CheckboxDemo,
+  ChipDemo,
+  DividerDemo,
   FabDemo,
+  IconDemo,
+  ListDemo,
   RadioGroupDemo,
   RatingDemo,
   SliderDemo,
   SwitchDemo,
+  TableDemo,
   ToggleButtonDemo,
+  TooltipDemo,
   TransferListDemo,
+  TypographyDemo,
 } from './component-demos';
 
 // Component registry for the v2 shell preview area.
@@ -41,6 +50,15 @@ import {
 // parked (Karl, Nov 25, 2026), so there is no edit affordance on a
 // card, and all interaction state is local to each card's demo
 // component (in component-demos.tsx).
+//
+// The Data Display category follows Inputs with MUI's Data Display
+// list, again alphabetical: Avatar, Badge, Chip, Divider, Icon, List,
+// Table, Tooltip, Typography. All nine are exported by the installed
+// @mui/material (9.3.1, verified against the runtime exports), so the
+// category has no omissions. One demo note: the Icon card passes an
+// inline SVG as the Icon's child, a usage the component supports,
+// because the app loads no ligature icon font for the component's
+// text form (see IconDemo in component-demos.tsx).
 
 export interface PreviewComponentEntry {
   category: string;
@@ -157,6 +175,60 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     id: 'transfer-list',
     name: 'Transfer List',
     render: () => <TransferListDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'avatar',
+    name: 'Avatar',
+    render: () => <AvatarDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'badge',
+    name: 'Badge',
+    render: () => <BadgeDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'chip',
+    name: 'Chip',
+    render: () => <ChipDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'divider',
+    name: 'Divider',
+    render: () => <DividerDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'icon',
+    name: 'Icon',
+    render: () => <IconDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'list',
+    name: 'List',
+    render: () => <ListDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'table',
+    name: 'Table',
+    render: () => <TableDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'tooltip',
+    name: 'Tooltip',
+    render: () => <TooltipDemo />,
+  },
+  {
+    category: 'Data Display',
+    id: 'typography',
+    name: 'Typography',
+    render: () => <TypographyDemo />,
   },
 ];
 

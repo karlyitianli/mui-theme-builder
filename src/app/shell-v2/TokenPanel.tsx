@@ -16,6 +16,7 @@ import {
   resolveSemanticColors,
   type ResolvedSemanticColor,
 } from '../../theme/create-runtime-theme';
+import { PANEL_WIDTH_DEFAULT } from './panel-width';
 import { PillTab, SearchBox } from './primitives';
 import { shellBorderForMode } from './shell-border';
 import { ColorPicker } from './ColorPicker';
@@ -291,9 +292,10 @@ function TokenTabList({
 
   return (
     <Box sx={{ flexShrink: 0, height: 52, overflow: 'hidden', position: 'relative' }}>
-      {/* The tab row overflows the 320px panel; it scrolls horizontally
-          (scrollbar hidden) so every tab stays reachable, and a gradient
-          fade sits above each edge that still has tabs hidden behind it. */}
+      {/* The tab row overflows the panel at its narrower widths; it
+          scrolls horizontally (scrollbar hidden) so every tab stays
+          reachable, and a gradient fade sits above each edge that
+          still has tabs hidden behind it. */}
       <Box
         data-testid="token-tab-scroller"
         onScroll={updateFades}
@@ -583,7 +585,7 @@ function ColorSection({
   );
 }
 
-export function TokenPanel() {
+export function TokenPanel({ width = PANEL_WIDTH_DEFAULT }: { width?: number }) {
   const { activeMode, project } = useEditorState();
   const [activeTab, setActiveTab] = useState<TokenTab>('Color');
   const [query, setQuery] = useState('');
@@ -651,7 +653,7 @@ export function TokenPanel() {
         flexShrink: 0,
         height: '100%',
         overflow: 'hidden',
-        width: 320,
+        width,
       }}
     >
       <PresetRow mode={activeMode} />

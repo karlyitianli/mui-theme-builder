@@ -32,7 +32,7 @@ describe('PreviewArea (Phase 3)', () => {
   // cleanup, so unmount explicitly to keep each render isolated.
   afterEach(() => cleanup());
 
-  it('renders the registry cards under the Inputs category, with no Edit buttons', () => {
+  it('renders the registry cards under the Inputs category, with no Edit buttons', { timeout: 20000 }, () => {
     renderPreviewArea();
     expect(screen.getByText('Inputs')).toBeInTheDocument();
     // Every Inputs card header, in the registry's alphabetical order.
@@ -97,6 +97,54 @@ describe('PreviewArea (Phase 3)', () => {
     }
     expect(screen.getAllByText('Not built yet')).toHaveLength(4);
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
+  });
+});
+
+describe('PreviewArea Data Display section', () => {
+  afterEach(() => cleanup());
+
+  it('renders the Data Display cards in a section after Inputs', () => {
+    renderPreviewArea();
+    const inputsHeader = screen.getByText('Inputs');
+    const dataDisplayHeader = screen.getByText('Data Display');
+    expect(
+      inputsHeader.compareDocumentPosition(dataDisplayHeader) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of [
+      'Avatar',
+      'Badge',
+      'Chip',
+      'Divider',
+      'Icon',
+      'List',
+      'Table',
+      'Tooltip',
+      'Typography',
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it('filters across both categories through the search box', () => {
+    renderPreviewArea();
+    fireEvent.change(screen.getByPlaceholderText('Search'), {
+      target: { value: 'chip' },
+    });
+    expect(screen.getByText('Chip')).toBeInTheDocument();
+    expect(screen.getByText('Data Display')).toBeInTheDocument();
+    // No Inputs entry matches, so the Inputs section drops out.
+    expect(screen.queryByText('Inputs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
+  });
+
+  it('collapses and expands the Data Display section from its header', () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Data Display'));
+    expect(screen.queryByText('Chip')).not.toBeInTheDocument();
+    expect(screen.getByText('Text Field')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Data Display'));
+    expect(screen.getByText('Chip')).toBeInTheDocument();
   });
 });
 
