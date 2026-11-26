@@ -15,3 +15,11 @@ export function shellBorderForMode(mode: PreviewMode): string {
     ? '1px solid rgba(255, 255, 255, 0.16)'
     : '1px solid rgba(0, 0, 0, 0.1)';
 }
+
+// The color the left panel's resize edge turns while the edge is
+// hovered, focused, or dragged (Karl, Nov 25, 2026): a bright blue,
+// Material blue 500, so the whole edge reads as the active control.
+// The edge used to show a small grip pill in its middle instead; that
+// is gone, and this is the one place the blue is defined, so the
+// handle in NewShell.tsx names it rather than repeating the literal.
+export const SHELL_RESIZE_EDGE_ACTIVE_COLOR = '#2196f3';

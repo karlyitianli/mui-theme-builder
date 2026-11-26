@@ -12,6 +12,7 @@ import {
   storePanelWidth,
 } from './panel-width';
 import { PreviewArea } from './PreviewArea';
+import { SHELL_RESIZE_EDGE_ACTIVE_COLOR } from './shell-border';
 import { createShellTheme } from './shell-theme';
 import { TokenPanel } from './TokenPanel';
 
@@ -112,9 +113,17 @@ export function NewShell() {
       >
         <Box sx={{ flexShrink: 0, position: 'relative', width: panelWidth }}>
           <TokenPanel width={panelWidth} />
-          {/* Drag handle straddling the panel's right border. The grip
-              pill stays invisible until the handle is hovered, focused,
-              or being dragged, so the chrome is unchanged at rest. */}
+          {/* Drag handle straddling the panel's right border. The
+              handle itself is invisible at rest; hovering, focusing,
+              or dragging it turns the whole edge bright blue, via the
+              ::before line below (Karl, Nov 25, 2026). The line sits
+              exactly over the panel's 1px right border: the handle
+              spans 5px to either side of the edge, and the border is
+              the last 1px inside the panel, so it starts 4px into the
+              handle. While a drag runs, the dragging state holds the
+              blue even when the pointer leaves the handle, until
+              pointerup. The grip pill the edge used to show in its
+              middle is gone in every state. */}
           <Box
             aria-label="Resize token panel"
             aria-orientation="vertical"
@@ -126,37 +135,32 @@ export function NewShell() {
             onPointerDown={handlePointerDown}
             role="separator"
             sx={{
-              alignItems: 'center',
               bottom: 0,
               cursor: 'col-resize',
-              display: 'flex',
-              justifyContent: 'center',
               position: 'absolute',
               right: -5,
               top: 0,
               touchAction: 'none',
               width: 10,
               zIndex: 3,
-              '& .panel-resize-grip': {
-                opacity: dragging ? 1 : 0,
+              '&::before': {
+                backgroundColor: dragging
+                  ? SHELL_RESIZE_EDGE_ACTIVE_COLOR
+                  : 'transparent',
+                content: '""',
+                left: 4,
+                pointerEvents: 'none',
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                width: 1,
               },
-              '&:hover .panel-resize-grip, &:focus-visible .panel-resize-grip': {
-                opacity: 1,
+              '&:hover::before, &:focus-visible::before': {
+                backgroundColor: SHELL_RESIZE_EDGE_ACTIVE_COLOR,
               },
             }}
             tabIndex={0}
-          >
-            <Box
-              className="panel-resize-grip"
-              sx={{
-                bgcolor: dragging ? 'text.secondary' : 'divider',
-                borderRadius: 999,
-                height: 56,
-                transition: 'opacity 120ms ease',
-                width: 4,
-              }}
-            />
-          </Box>
+          />
         </Box>
         <PreviewArea />
       </Box>
