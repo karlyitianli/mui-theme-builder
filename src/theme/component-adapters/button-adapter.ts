@@ -8,7 +8,11 @@ export function buttonSettingsToMui(settings?: ButtonSettings): ThemeOptions['co
 
   return {
     MuiButton: {
-      defaultProps: settings.defaultProps,
+      // Omit the key entirely when unset: mergeThemeComponents deep-merges
+      // per key, and an explicit undefined here would erase the baseline
+      // and foundation blocks' MuiButton defaultProps (size, variant, and
+      // the foundation's disableElevation from the shadow settings).
+      ...(settings.defaultProps === undefined ? {} : { defaultProps: settings.defaultProps }),
       styleOverrides: {
         root: {
           ...(style?.textTransform === undefined ? {} : { textTransform: style.textTransform }),

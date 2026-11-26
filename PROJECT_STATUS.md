@@ -2,7 +2,7 @@
 
 **Last updated:** Nov 26, 2026
 
-**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 216 tests passing
+**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 224 tests passing
 
 ## Maintenance rule
 
@@ -74,6 +74,7 @@ This file is the plan of record for the project. Read it before starting work on
 - Fresh-project spacing agreement fixed (Nov 26, 2026): the default project now stores its spacing base, so panel, preview, and export agree; the characterization test that pinned the omission now asserts the stored value
 - Nov 26, 2026 decisions implemented: density presets redefined (Compact 4px, Comfortable 8px default, Spacious 12px); shadows re-based to global none with per-component elevations (Button 2, Card 1, Input 0, Menu 8, new); preset Default renamed Black and a true MUI Default preset added (values checked against a createTheme oracle); new projects start on Black
 - Preset identity is session state only: saved and imported projects store values, not which preset they came from, and both presets share the builder's component baseline by design
+- Adapter defaultProps fix (task 1.2, Nov 26, 2026): the button and text-field adapters now omit defaultProps when the settings carry none, matching the select adapter, so a style-only Button or TextField setting no longer erases the baseline, foundation, and external-label defaultProps in the deep merge; pinned by new adapter tests at the adapter level and in the merged theme options
 
 ## Open tasks
 
@@ -82,7 +83,6 @@ Effort estimates are rough. Small means a single small change, Medium means a fo
 ### Component editing
 
 - [ ] 1.1 Phase 6 component defaults editors for Button, TextField, and Select (Effort: Large). Not started.
-- [ ] 1.2 Fix the button and text-field adapters' unconditional defaultProps emission (Effort: Small). They emit defaultProps unconditionally and can erase foundation defaults in the deep merge; the select adapter is already fixed.
 - [ ] 1.3 Decide what shell should be, and what components are editable (Effort: Small). A decision that gates the inspector and overrides work.
 - [ ] 1.4 Inspector from tweakcn, very interesting concept (Effort: Large). Component overrides and the inspector were parked on Nov 25, 2026, until almost everything else is built; component defaults are theme-level and prescribed in the meantime. tweakcn's inspector is the reference for this thread.
 - [ ] 1.5 Typography model cannot express textTransform (Effort: Small). Found Nov 26, 2026: the MUI Default preset's Button and Overline variants are uppercase in real MUI, but the model has no textTransform field, so the preset cannot reproduce them. Decide whether to add the field.

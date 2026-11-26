@@ -8,7 +8,11 @@ export function textFieldSettingsToMui(settings?: TextFieldSettings): ThemeOptio
 
   return {
     MuiTextField: {
-      defaultProps: settings.defaultProps,
+      // Omit the key entirely when unset: mergeThemeComponents deep-merges
+      // per key, and an explicit undefined here would erase the
+      // external-label block's MuiTextField defaultProps (fullWidth,
+      // size, and variant).
+      ...(settings.defaultProps === undefined ? {} : { defaultProps: settings.defaultProps }),
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
