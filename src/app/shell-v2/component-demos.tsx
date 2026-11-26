@@ -1,13 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
+  Alert,
   Autocomplete,
   Avatar,
   AvatarGroup,
+  Backdrop,
   Badge,
+  Box,
   Button,
   ButtonGroup,
   Checkbox,
   Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Fab,
   FormControl,
@@ -15,6 +24,7 @@ import {
   FormLabel,
   Icon,
   IconButton,
+  LinearProgress,
   List,
   ListItemButton,
   ListItemIcon,
@@ -22,7 +32,9 @@ import {
   Radio,
   RadioGroup,
   Rating,
+  Skeleton,
   Slider,
+  Snackbar,
   Stack,
   Switch,
   Table,
@@ -47,6 +59,7 @@ import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/csr/PaperPlaneTil
 import { PlusIcon } from '@phosphor-icons/react/dist/csr/Plus';
 import { TrashIcon } from '@phosphor-icons/react/dist/csr/Trash';
 import { TrayIcon } from '@phosphor-icons/react/dist/csr/Tray';
+import { XIcon } from '@phosphor-icons/react/dist/csr/X';
 
 // Demo components for the preview registry's cards (see
 // component-registry.tsx). Each demo owns its interaction state
@@ -527,5 +540,219 @@ export function TypographyDemo() {
       <Typography variant="caption">caption text</Typography>
       <Typography variant="overline">overline text</Typography>
     </Stack>
+  );
+}
+
+// Feedback demos, in the same style as the categories above:
+// canonical variants per component, interaction state local to the
+// card where the component has a meaningful interaction.
+//
+// Backdrop, Dialog, and Snackbar are overlays. Each demo opens the
+// real component from a button, contained in a fixed-height stage
+// inside its card so the overlay covers the stage, never the whole
+// app. Backdrop renders inline in this MUI version (it is a plain
+// fixed-position div, no portal), so an absolute position scopes it
+// to the stage. Dialog portals by design, so its container prop is
+// pointed at the stage element: the modal is appended into the
+// stage, its absolute root fills the stage, and the modal manager's
+// aria-hiding stays inside the stage too. Snackbar renders in place
+// and is absolutely positioned in the stage the same way. All three
+// still sit in the card's React tree, so they render under the
+// card's preview theme like everything else here.
+
+function OverlayStage({
+  children,
+  stageRef,
+}: {
+  children: ReactNode;
+  stageRef?: (element: HTMLDivElement | null) => void;
+}) {
+  return (
+    <Box
+      ref={stageRef}
+      sx={{
+        alignItems: 'center',
+        bgcolor: 'action.hover',
+        borderRadius: 1,
+        display: 'flex',
+        height: 176,
+        justifyContent: 'center',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+export function AlertDemo() {
+  const [successOpen, setSuccessOpen] = useState(true);
+  return (
+    <Stack spacing={1.5}>
+      <Alert severity="error">This is an error Alert.</Alert>
+      <Alert severity="warning">This is a warning Alert.</Alert>
+      <Alert severity="info">This is an info Alert.</Alert>
+      {successOpen && (
+        <Alert onClose={() => setSuccessOpen(false)} severity="success">
+          This is a success Alert.
+        </Alert>
+      )}
+    </Stack>
+  );
+}
+
+export function BackdropDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <OverlayStage>
+      <Button onClick={() => setOpen(true)} variant="outlined">
+        Show backdrop
+      </Button>
+      <Backdrop
+        onClick={() => setOpen(false)}
+        open={open}
+        sx={{ position: 'absolute', zIndex: 1 }}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </OverlayStage>
+  );
+}
+
+export function DialogDemo() {
+  const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const close = () => setOpen(false);
+  return (
+    <OverlayStage stageRef={setStage}>
+      <Button onClick={() => setOpen(true)} variant="outlined">
+        Open dialog
+      </Button>
+      <Dialog
+        container={stage ?? undefined}
+        onClose={close}
+        open={open}
+        slotProps={{
+          paper: { sx: { m: 1, maxHeight: 'calc(100% - 16px)' } },
+        }}
+        sx={{ position: 'absolute' }}
+      >
+        <DialogTitle>Dialog title</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This dialog is contained in its preview card.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={close}>Cancel</Button>
+          <Button onClick={close}>OK</Button>
+        </DialogActions>
+      </Dialog>
+    </OverlayStage>
+  );
+}
+
+export function ProgressDemo() {
+  const [progress, setProgress] = useState(0);
+
+  // The determinate indicators advance on a timer, the MUI docs
+  // pattern; the interval is local to the card and cleared on
+  // unmount.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((previous) => (previous >= 100 ? 0 : previous + 10));
+    }, 800);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={2.5} sx={{ alignItems: 'center' }}>
+        <CircularProgress aria-label="Circular progress, indeterminate" />
+        <Box sx={{ display: 'inline-flex', position: 'relative' }}>
+          <CircularProgress
+            aria-label="Circular progress, determinate"
+            value={progress}
+            variant="determinate"
+          />
+          <Box
+            sx={{
+              alignItems: 'center',
+              bottom: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              left: 0,
+              position: 'absolute',
+              right: 0,
+              top: 0,
+            }}
+          >
+            <Typography color="text.secondary" variant="caption">
+              {`${Math.round(progress)}%`}
+            </Typography>
+          </Box>
+        </Box>
+        <CircularProgress aria-label="Circular progress, secondary" color="secondary" />
+      </Stack>
+      <LinearProgress aria-label="Linear progress, indeterminate" />
+      <LinearProgress
+        aria-label="Linear progress, determinate"
+        value={progress}
+        variant="determinate"
+      />
+    </Stack>
+  );
+}
+
+export function SkeletonDemo() {
+  return (
+    <Stack spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <Skeleton height={40} variant="circular" width={40} />
+        <Skeleton sx={{ flex: 1 }} variant="text" />
+      </Stack>
+      <Skeleton variant="text" />
+      <Skeleton height={56} variant="rectangular" />
+      <Skeleton animation="wave" height={40} variant="rounded" />
+    </Stack>
+  );
+}
+
+export function SnackbarDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <OverlayStage>
+      <Button onClick={() => setOpen(true)} variant="outlined">
+        Open snackbar
+      </Button>
+      <Snackbar
+        action={
+          <>
+            <Button color="secondary" onClick={() => setOpen(false)} size="small">
+              Undo
+            </Button>
+            <IconButton
+              aria-label="Close"
+              color="inherit"
+              onClick={() => setOpen(false)}
+              size="small"
+            >
+              <XIcon size={18} />
+            </IconButton>
+          </>
+        }
+        anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+        autoHideDuration={6000}
+        message="Note archived"
+        onClose={(_, reason) => {
+          if (reason !== 'clickaway') setOpen(false);
+        }}
+        open={open}
+        sx={{ position: 'absolute' }}
+      />
+    </OverlayStage>
   );
 }

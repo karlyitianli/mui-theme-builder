@@ -10,19 +10,25 @@ import {
 } from '@mui/material';
 
 import {
+  AlertDemo,
   AutocompleteDemo,
   AvatarDemo,
+  BackdropDemo,
   BadgeDemo,
   ButtonGroupDemo,
   CheckboxDemo,
   ChipDemo,
+  DialogDemo,
   DividerDemo,
   FabDemo,
   IconDemo,
   ListDemo,
+  ProgressDemo,
   RadioGroupDemo,
   RatingDemo,
+  SkeletonDemo,
   SliderDemo,
+  SnackbarDemo,
   SwitchDemo,
   TableDemo,
   ToggleButtonDemo,
@@ -59,6 +65,22 @@ import {
 // inline SVG as the Icon's child, a usage the component supports,
 // because the app loads no ligature icon font for the component's
 // text form (see IconDemo in component-demos.tsx).
+//
+// The Feedback category follows Data Display with MUI's Feedback
+// list, again alphabetical: Alert, Backdrop, Dialog, Progress,
+// Skeleton, Snackbar. All six are exported by the installed
+// @mui/material (9.3.1, verified against the runtime exports), so
+// this category has no omissions either. Two demo notes. Progress is
+// MUI's grouping name for CircularProgress and LinearProgress; there
+// is no single Progress component, so the card shows both. And
+// Backdrop, Dialog, and Snackbar are overlays: each demo opens the
+// real component inside a fixed-height stage in its card (Backdrop
+// positioned absolutely over the stage, Dialog through its
+// container prop pointed at the stage, Snackbar positioned
+// absolutely in the stage), so an open overlay covers its card's
+// stage, never the whole app, while still rendering under the
+// card's preview theme (see the Feedback demos in
+// component-demos.tsx).
 
 export interface PreviewComponentEntry {
   category: string;
@@ -229,6 +251,42 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     id: 'typography',
     name: 'Typography',
     render: () => <TypographyDemo />,
+  },
+  {
+    category: 'Feedback',
+    id: 'alert',
+    name: 'Alert',
+    render: () => <AlertDemo />,
+  },
+  {
+    category: 'Feedback',
+    id: 'backdrop',
+    name: 'Backdrop',
+    render: () => <BackdropDemo />,
+  },
+  {
+    category: 'Feedback',
+    id: 'dialog',
+    name: 'Dialog',
+    render: () => <DialogDemo />,
+  },
+  {
+    category: 'Feedback',
+    id: 'progress',
+    name: 'Progress',
+    render: () => <ProgressDemo />,
+  },
+  {
+    category: 'Feedback',
+    id: 'skeleton',
+    name: 'Skeleton',
+    render: () => <SkeletonDemo />,
+  },
+  {
+    category: 'Feedback',
+    id: 'snackbar',
+    name: 'Snackbar',
+    render: () => <SnackbarDemo />,
   },
 ];
 

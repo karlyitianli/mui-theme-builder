@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { PREVIEW_COMPONENTS } from './component-registry';
@@ -220,5 +227,106 @@ describe('Data Display preview cards', () => {
     expect(screen.getByText('body2 text')).toBeInTheDocument();
     expect(screen.getByText('caption text')).toBeInTheDocument();
     expect(screen.getByText('overline text')).toBeInTheDocument();
+  });
+});
+
+// Render and interaction smoke tests for the Feedback cards added
+// after Data Display (Karl, Nov 25, 2026), in the same style as
+// above. The three overlays (Backdrop, Dialog, Snackbar) open inside
+// their card's stage; the tests open and close each one there.
+describe('Feedback preview cards', () => {
+  afterEach(() => cleanup());
+
+  it('Alert renders the four severity variants', () => {
+    renderEntry('alert');
+    expect(screen.getAllByRole('alert')).toHaveLength(4);
+    for (const text of [
+      'This is an error Alert.',
+      'This is a warning Alert.',
+      'This is an info Alert.',
+      'This is a success Alert.',
+    ]) {
+      expect(screen.getByText(text)).toBeInTheDocument();
+    }
+  });
+
+  it('closing the success Alert removes only it', () => {
+    renderEntry('alert');
+    const success = screen
+      .getByText('This is a success Alert.')
+      .closest('.MuiAlert-root') as HTMLElement;
+    fireEvent.click(within(success).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByText('This is a success Alert.')).not.toBeInTheDocument();
+    expect(screen.getByText('This is an error Alert.')).toBeInTheDocument();
+    expect(screen.getAllByRole('alert')).toHaveLength(3);
+  });
+
+  it('Backdrop opens over the card stage and closes when clicked', async () => {
+    const { container } = renderEntry('backdrop');
+    const backdrop = container.querySelector('.MuiBackdrop-root') as HTMLElement;
+    // The closed backdrop stays mounted, held invisible by its fade.
+    expect(backdrop).not.toBeNull();
+    expect(backdrop.style.visibility).toBe('hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'Show backdrop' }));
+    await waitFor(() => expect(backdrop.style.opacity).toBe('1'), { timeout: 3000 });
+    expect(backdrop.style.visibility).not.toBe('hidden');
+    // The spinner rides inside the backdrop.
+    expect(backdrop.querySelector('.MuiCircularProgress-root')).not.toBeNull();
+    fireEvent.click(backdrop);
+    await waitFor(() => expect(backdrop.style.visibility).toBe('hidden'), {
+      timeout: 3000,
+    });
+  });
+
+  it('Dialog opens contained in the card and closes from its actions', async () => {
+    renderEntry('dialog');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open dialog' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Dialog title')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('This dialog is contained in its preview card.'),
+    ).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(
+      () => expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+  });
+
+  it('Progress renders circular and linear indicators, determinate and indeterminate', () => {
+    renderEntry('progress');
+    expect(screen.getAllByRole('progressbar')).toHaveLength(5);
+    const determinate = screen.getByRole('progressbar', {
+      name: 'Circular progress, determinate',
+    });
+    const value = Number(determinate.getAttribute('aria-valuenow'));
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(value).toBeLessThanOrEqual(100);
+    const indeterminate = screen.getByRole('progressbar', {
+      name: 'Linear progress, indeterminate',
+    });
+    expect(indeterminate).not.toHaveAttribute('aria-valuenow');
+  });
+
+  it('Skeleton renders the text, circular, rectangular, and rounded variants', () => {
+    const { container } = renderEntry('skeleton');
+    expect(container.querySelectorAll('.MuiSkeleton-root')).toHaveLength(5);
+    expect(container.querySelectorAll('.MuiSkeleton-text')).toHaveLength(2);
+    expect(container.querySelector('.MuiSkeleton-circular')).not.toBeNull();
+    expect(container.querySelector('.MuiSkeleton-rectangular')).not.toBeNull();
+    expect(container.querySelector('.MuiSkeleton-rounded')).not.toBeNull();
+  });
+
+  it('Snackbar opens from its button and closes from its close action', async () => {
+    renderEntry('snackbar');
+    expect(screen.queryByText('Note archived')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open snackbar' }));
+    expect(await screen.findByText('Note archived')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(
+      () => expect(screen.queryByText('Note archived')).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
   });
 });

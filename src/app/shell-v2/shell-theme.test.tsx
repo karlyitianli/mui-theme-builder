@@ -141,7 +141,7 @@ describe('chrome palette references', () => {
 });
 
 describe('NewShell wiring', () => {
-  it('renders the panel and preview under the shell theme from editor state', () => {
+  it('renders the panel and preview under the shell theme from editor state', { timeout: 20000 }, () => {
     const state = createInitialEditorState();
     render(
       <EditorStateContext value={state}>

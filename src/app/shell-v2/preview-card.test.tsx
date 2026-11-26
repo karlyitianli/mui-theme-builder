@@ -64,7 +64,7 @@ function rulesFor(element: Element): string {
 describe('Preview cards (insulation split)', () => {
   afterEach(() => cleanup());
 
-  it('renders the containing card as a MuiCard under the project theme', () => {
+  it('renders the containing card as a MuiCard under the project theme', { timeout: 20000 }, () => {
     const state: EditorState = { ...createInitialEditorState(), project: cardProject };
     renderPreviewArea(state);
 

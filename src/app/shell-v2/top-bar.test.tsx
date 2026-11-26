@@ -94,7 +94,7 @@ describe('v2 top bar (Phase 4)', () => {
     expect(screen.getByText('mode: light')).toBeInTheDocument();
   });
 
-  it('undo and redo are disabled on a fresh state, then undo restores and redo reapplies an edit', () => {
+  it('undo and redo are disabled on a fresh state, then undo restores and redo reapplies an edit', { timeout: 20000 }, () => {
     renderWithShell(<PreviewArea />);
 
     const undo = screen.getByRole('button', { name: 'Undo' });

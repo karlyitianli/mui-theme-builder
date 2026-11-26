@@ -148,6 +148,53 @@ describe('PreviewArea Data Display section', () => {
   });
 });
 
+describe('PreviewArea Feedback section', () => {
+  afterEach(() => cleanup());
+
+  it('renders the Feedback cards in a section after Data Display', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const dataDisplayHeader = screen.getByText('Data Display');
+    const feedbackHeader = screen.getByText('Feedback');
+    expect(
+      dataDisplayHeader.compareDocumentPosition(feedbackHeader) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of [
+      'Alert',
+      'Backdrop',
+      'Dialog',
+      'Progress',
+      'Skeleton',
+      'Snackbar',
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it('filters across all three categories through the search box', () => {
+    renderPreviewArea();
+    fireEvent.change(screen.getByPlaceholderText('Search'), {
+      target: { value: 'alert' },
+    });
+    expect(screen.getByText('Alert')).toBeInTheDocument();
+    expect(screen.getByText('Feedback')).toBeInTheDocument();
+    // No Inputs or Data Display entry matches, so both sections drop out.
+    expect(screen.queryByText('Inputs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Data Display')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
+    expect(screen.queryByText('Chip')).not.toBeInTheDocument();
+  });
+
+  it('collapses and expands the Feedback section from its header', () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Feedback'));
+    expect(screen.queryByText('Alert')).not.toBeInTheDocument();
+    expect(screen.getByText('Chip')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Feedback'));
+    expect(screen.getByText('Alert')).toBeInTheDocument();
+  });
+});
+
 describe('PreviewArea theme reflection (Phase 3 integration)', () => {
   afterEach(() => cleanup());
 

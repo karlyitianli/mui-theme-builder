@@ -72,10 +72,36 @@ const EXPECTED_DATA_DISPLAY_IDS = [
   'typography',
 ];
 
+// The Feedback category carries MUI's six Feedback components in
+// alphabetical order by MUI display name. All six are exported by
+// the installed @mui/material (9.3.1, checked against the runtime
+// exports), so this list has no omission either. (Progress is MUI's
+// grouping name for CircularProgress and LinearProgress; there is
+// no single Progress component to export.)
+const EXPECTED_FEEDBACK_NAMES = [
+  'Alert',
+  'Backdrop',
+  'Dialog',
+  'Progress',
+  'Skeleton',
+  'Snackbar',
+];
+
+const EXPECTED_FEEDBACK_IDS = [
+  'alert',
+  'backdrop',
+  'dialog',
+  'progress',
+  'skeleton',
+  'snackbar',
+];
+
 const inputsEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Inputs');
 const dataDisplayEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Data Display');
+const feedbackEntries = () =>
+  PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Feedback');
 
 describe('PREVIEW_COMPONENTS (Inputs registry)', () => {
   it('contains the MUI Inputs components in alphabetical order, all in Inputs', () => {
@@ -113,25 +139,58 @@ describe('PREVIEW_COMPONENTS (Data Display registry)', () => {
   });
 
   it('places Data Display after Inputs as the second group', () => {
-    expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual([
-      ...EXPECTED_INPUT_NAMES,
-      ...EXPECTED_DATA_DISPLAY_NAMES,
-    ]);
+    expect(
+      PREVIEW_COMPONENTS.slice(
+        0,
+        EXPECTED_INPUT_NAMES.length + EXPECTED_DATA_DISPLAY_NAMES.length,
+      ).map((entry) => entry.name),
+    ).toEqual([...EXPECTED_INPUT_NAMES, ...EXPECTED_DATA_DISPLAY_NAMES]);
     const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
-    expect(groups.map((group) => group.category)).toEqual(['Inputs', 'Data Display']);
+    expect(groups[0].category).toBe('Inputs');
+    expect(groups[1].category).toBe('Data Display');
     expect(groups[1].entries.map((entry) => entry.name)).toEqual(
       EXPECTED_DATA_DISPLAY_NAMES,
     );
   });
 });
 
+describe('PREVIEW_COMPONENTS (Feedback registry)', () => {
+  it('contains the MUI Feedback components in alphabetical order, all in Feedback', () => {
+    expect(feedbackEntries().map((entry) => entry.name)).toEqual(EXPECTED_FEEDBACK_NAMES);
+    expect(feedbackEntries().map((entry) => entry.id)).toEqual(EXPECTED_FEEDBACK_IDS);
+    for (const entry of feedbackEntries()) {
+      expect(entry.category).toBe('Feedback');
+      expect(typeof entry.render).toBe('function');
+    }
+  });
+
+  it('places Feedback after Data Display as the third group', () => {
+    expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual([
+      ...EXPECTED_INPUT_NAMES,
+      ...EXPECTED_DATA_DISPLAY_NAMES,
+      ...EXPECTED_FEEDBACK_NAMES,
+    ]);
+    const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
+    expect(groups.map((group) => group.category)).toEqual([
+      'Inputs',
+      'Data Display',
+      'Feedback',
+    ]);
+    expect(groups[2].entries.map((entry) => entry.name)).toEqual(EXPECTED_FEEDBACK_NAMES);
+  });
+});
+
 describe('filterPreviewComponents (preview search)', () => {
   it('returns everything for an empty or blank query', () => {
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '')).toHaveLength(
-      EXPECTED_INPUT_NAMES.length + EXPECTED_DATA_DISPLAY_NAMES.length,
+      EXPECTED_INPUT_NAMES.length +
+        EXPECTED_DATA_DISPLAY_NAMES.length +
+        EXPECTED_FEEDBACK_NAMES.length,
     );
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '   ')).toHaveLength(
-      EXPECTED_INPUT_NAMES.length + EXPECTED_DATA_DISPLAY_NAMES.length,
+      EXPECTED_INPUT_NAMES.length +
+        EXPECTED_DATA_DISPLAY_NAMES.length +
+        EXPECTED_FEEDBACK_NAMES.length,
     );
   });
 
@@ -147,7 +206,7 @@ describe('filterPreviewComponents (preview search)', () => {
     ).toEqual(['Select']);
   });
 
-  it('matches across both categories', () => {
+  it('matches across categories', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'chip').map((entry) => entry.name),
     ).toEqual(['Chip']);
@@ -159,6 +218,12 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'list').map((entry) => entry.name),
     ).toEqual(['Transfer List', 'List']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'alert').map((entry) => entry.name),
+    ).toEqual(['Alert']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'PROGRESS').map((entry) => entry.name),
+    ).toEqual(['Progress']);
   });
 
   it('returns an empty list for a nonsense query', () => {
