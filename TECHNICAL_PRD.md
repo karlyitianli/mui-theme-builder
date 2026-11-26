@@ -132,7 +132,7 @@ Cloud accounts, collaboration, and server persistence are excluded unless requir
 
 
 
-### 7.3 Component customization
+### 7.3 Component customization (In progress)
 
 MVP supports only the following components deeply:
 
