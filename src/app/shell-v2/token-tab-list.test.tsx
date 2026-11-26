@@ -112,6 +112,20 @@ describe('TokenPanel tab row (fades and click reveal)', () => {
     expect(screen.getByText('Type specimens')).toBeInTheDocument();
   });
 
+  it('scrolls the row when the sixth tab (Other) is partially hidden and clicked', () => {
+    renderPanel();
+    const scroller = screen.getByTestId('token-tab-scroller');
+    const scrollBy = stubScrollBy(scroller);
+    stubRect(scroller, 0, 320);
+    const otherTab = screen.getByText('Other');
+    stubRect(otherTab, 470, 545);
+    fireEvent.click(otherTab);
+    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollBy).toHaveBeenCalledWith({ behavior: 'smooth', left: 225 });
+    // The click still activates the tab.
+    expect(screen.getByText('Breakpoints')).toBeInTheDocument();
+  });
+
   it('does not scroll when a fully visible tab is clicked', () => {
     renderPanel();
     const scroller = screen.getByTestId('token-tab-scroller');

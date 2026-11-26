@@ -2,7 +2,7 @@
 
 **Last updated:** Nov 26, 2026
 
-**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 230 tests passing
+**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 246 tests passing
 
 ## Maintenance rule
 
@@ -76,6 +76,7 @@ This file is the plan of record for the project. Read it before starting work on
 - Preset identity is session state only: saved and imported projects store values, not which preset they came from, and both presets share the builder's component baseline by design
 - Adapter defaultProps fix (task 1.2, Nov 26, 2026): the button and text-field adapters now omit defaultProps when the settings carry none, matching the select adapter, so a style-only Button or TextField setting no longer erases the baseline, foundation, and external-label defaultProps in the deep merge; pinned by new adapter tests at the adapter level and in the merged theme options
 - Preview section counts and docs links (tasks 3.1 and 3.2, Nov 26, 2026): each category header in the preview carries a badge with the number of cards it currently shows (the count follows the search filter), and each registry card header carries a Docs link to the component's MUI documentation page (the registry stores the URL per entry; Radio Group's points at the Radio buttons page); Templates stubs have no link
+- Other tab for breakpoints, transitions, and z-index (task 3.5, Nov 26, 2026): the three groups join the project model (foundations.breakpoints, foundations.transitions with duration and easing, foundations.zIndex) with MUI's defaults stored by both presets and filled into older projects by migration per key; the theme mapping emits all three groups so panel, preview, and export agree, and the exporter snapshots gained exactly those blocks at the MUI defaults; the new Other tab after Shadows edits them with typed numeric fields (breakpoints, durations, z-index; clamped, non-numeric entries ignored) and text fields for the easing curves, every edit one undoable reducer action
 
 ## Open tasks
 
@@ -99,7 +100,6 @@ Effort estimates are rough. Small means a single small change, Medium means a fo
 
 - [ ] 3.3 Color palette browser with official MUI color tokens (Effort: Medium). Karl clarified on Nov 26, 2026 with a tweakcn screenshot: next to each color field, a button opens a searchable palette browser of officially supported MUI color tokens and their names (the @mui/material/colors palette: families such as red, blue, grey with their numbered shades), the way tweakcn's button opens the official Tailwind v4 tokens. Picking a named swatch sets the field's color value.
 - [ ] 3.4 Make it mobile responsive a la tweakcn (Effort: Large).
-- [ ] 3.5 Other tab for breakpoints, transitions, and z-index (Effort: Medium). Added Nov 26, 2026: these theme values get a new Other tab after Shadows in the token panel, rather than tabs of their own.
 - [ ] 3.6 Complete the Color panel palette: grey ramp and action colors (Effort: Medium). Added Nov 26, 2026: add a Grey section (50 to 900) and an Action section (active, hover, selected, disabled and their opacities) per scheme, wired like the existing palette groups.
 
 ### Quality and correctness

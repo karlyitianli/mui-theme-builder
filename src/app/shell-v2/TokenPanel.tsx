@@ -27,15 +27,16 @@ import { shellBorderForMode } from './shell-border';
 import { ColorPicker } from './ColorPicker';
 import { ResetProjectDialog } from './reset-project-dialog';
 import { useProjectReset } from './use-project-reset';
+import { OtherPanel } from './OtherPanel';
 import { RadiusPanel } from './RadiusPanel';
 import { ShadowsPanel } from './ShadowsPanel';
 import { SpacingPanel } from './SpacingPanel';
 import { TypographyPanel } from './TypographyPanel';
 
 // Left panel of the v2 shell, from Figma frame 358:10: preset row on top,
-// then the token tab list (Color, Typography, Spacing, Radius, Shadows)
-// and the active tab's panel (frames 294:152, 294:298, 294:444, 294:590
-// for the Phase 2 tabs).
+// then the token tab list (Color, Typography, Spacing, Radius, Shadows,
+// and Other, added for task 3.5) and the active tab's panel (frames
+// 294:152, 294:298, 294:444, 294:590 for the Phase 2 tabs).
 //
 // The panels read the existing editor state so they show the current
 // project's values, with the same fallback values the old shell's
@@ -174,7 +175,7 @@ function buildColorSections(
   ];
 }
 
-const tokenTabs = ['Color', 'Typography', 'Spacing', 'Radius', 'Shadows'] as const;
+const tokenTabs = ['Color', 'Typography', 'Spacing', 'Radius', 'Shadows', 'Other'] as const;
 type TokenTab = (typeof tokenTabs)[number];
 
 // The preset selector (Phase 4, two presets since Nov 26, 2026): it
@@ -718,6 +719,11 @@ export function TokenPanel({ width = PANEL_WIDTH_DEFAULT }: { width?: number }) 
         {activeTab === 'Shadows' && (
           <Box sx={{ mt: 1.5 }}>
             <ShadowsPanel />
+          </Box>
+        )}
+        {activeTab === 'Other' && (
+          <Box sx={{ mt: 1.5 }}>
+            <OtherPanel />
           </Box>
         )}
       </Box>
