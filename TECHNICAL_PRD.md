@@ -1,6 +1,6 @@
 # Technical PRD: MUI Theme Builder
 
-**Status:** Living document. Updated retroactively on Nov 26, 2026 to match the shipped code and the decisions recorded in the decision log (section 21). For current milestone and task status, see STATUS.md.  
+**Status:** Living document. Updated retroactively on Nov 26, 2026 to match the shipped code and the decisions recorded in the decision log (section 21). For current milestone and task status, see PROJECT_STATUS.md.  
 **Owner:** Product / Engineering  
 **Last updated:** 2026-11-26  
 **Target:** Shipped MVP, local-first, MUI v9
@@ -9,7 +9,7 @@
 
 MUI Theme Builder is a browser-based visual editor that enables a non-developer to configure the look and feel of the MUI component library without writing code. Users manipulate design tokens and supported component styles through forms and direct previews, then export a deterministic, type-safe `theme.tsx` file for integration by a frontend engineer.
 
-As shipped, the builder lets one designer create light and dark themes concurrently by editing global tokens, previewing the result live across 37 MUI components, and producing technically valid MUI v9 theme configuration. Deep component defaults remain scoped to Button, TextField, and Select; their dedicated editors are the main remaining milestone (M6 in STATUS.md). It does not generate an application, edit application-specific components, or replace the engineer review step.
+As shipped, the builder lets one designer create light and dark themes concurrently by editing global tokens, previewing the result live across 37 MUI components, and producing technically valid MUI v9 theme configuration. Deep component defaults remain scoped to Button, TextField, and Select; their dedicated editors are the main remaining milestone (M6 in PROJECT_STATUS.md). It does not generate an application, edit application-specific components, or replace the engineer review step.
 
 ### Confirmed product decisions
 
@@ -140,7 +140,7 @@ MVP supports only the following components deeply:
 - TextField, including its underlying input and label states surfaced through the TextField user experience
 - Select, including its menu-open preview state and MenuItem appearance where affected by inherited tokens
 
-Status as of Nov 26, 2026: the dedicated per-component editors described in this section have not been built. What ships today is theme-level component defaults for these three components, prescribed in the theme adapters, plus token editing that affects every component. The editors remain planned as milestone M6 (see STATUS.md), and per-component overrides were parked on Nov 25, 2026 until almost everything else is built.
+Status as of Nov 26, 2026: the dedicated per-component editors described in this section have not been built. What ships today is theme-level component defaults for these three components, prescribed in the theme adapters, plus token editing that affects every component. The editors remain planned as milestone M6 (see PROJECT_STATUS.md), and per-component overrides were parked on Nov 25, 2026 until almost everything else is built.
 
 For each supported component, expose applicable controls for:
 
@@ -420,7 +420,7 @@ MVP is ready when:
 
 This plan is ordered for one product designer using an AI coding assistant. Each milestone ends in a working, testable slice. Do not begin with a generic property-panel framework; prove the end-to-end data path with real controls first, then extract patterns after Button and TextField expose the actual repetition.
 
-**Execution note (Nov 26, 2026):** The build did not follow this milestone list literally. It was executed as phases M0 to M7 plus polish batches, tracked in STATUS.md, which is the plan of record. The main divergences: Vitest was added at the start rather than deferred; the application shell was rebuilt once and the original shell was removed (M7 in STATUS.md); the preview grew to 37 components while the component editors in Milestone 6 below remain unbuilt and are now milestone M6 in STATUS.md; output formatting uses a handwritten emitter, not Prettier; and the AGENTS.md proposed in Milestone 0 was not created. The list below is retained as the original plan.
+**Execution note (Nov 26, 2026):** The build did not follow this milestone list literally. It was executed as phases M0 to M7 plus polish batches, tracked in PROJECT_STATUS.md, which is the plan of record. The main divergences: Vitest was added at the start rather than deferred; the application shell was rebuilt once and the original shell was removed (M7 in PROJECT_STATUS.md); the preview grew to 37 components while the component editors in Milestone 6 below remain unbuilt and are now milestone M6 in PROJECT_STATUS.md; output formatting uses a handwritten emitter, not Prettier; and the AGENTS.md proposed in Milestone 0 was not created. The list below is retained as the original plan.
 
 ### Milestone 0: repository and quality baseline
 
@@ -655,7 +655,7 @@ These choices are intentionally non-blocking; use the defaults below unless user
 
 ## 21. Decision log
 
-Decisions that changed the product after the original draft of this document, with the reason where one was recorded. Milestone and task status live in STATUS.md.
+Decisions that changed the product after the original draft of this document, with the reason where one was recorded. Milestone and task status live in PROJECT_STATUS.md.
 
 - **Nov 23, 2026:** Layout is token-first, like tweakcn: a left panel with five token tabs and the component preview in the center. There is no right components panel.
 - **Nov 23, 2026:** Spacing base unit is 4px. This supersedes an 8px confirmation made earlier the same day.
@@ -666,4 +666,4 @@ Decisions that changed the product after the original draft of this document, wi
 - **Nov 25, 2026:** The Number Field card is omitted; the component does not exist in @mui/material 9.3.1.
 - **Nov 25, 2026:** Phosphor icons replace MUI icons for dropdowns, Alert severities and close, and the Chip delete icon, in the preview and in exported themes.
 - **Nov 25, 2026:** Preview cards removed: Transfer List, Icon, Typography, and Paper. 37 cards remain.
-- **Nov 26, 2026:** STATUS.md is the plan of record. This PRD is updated retroactively and kept as a living document with this log.
+- **Nov 26, 2026:** PROJECT_STATUS.md is the plan of record. This PRD is updated retroactively and kept as a living document with this log.

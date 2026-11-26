@@ -70,5 +70,5 @@ The export view also provides the font-loading tags and ThemeProvider integratio
 
 ## Documentation
 
-- [STATUS.md](./STATUS.md): milestones, completed work, and open tasks. This is the plan of record.
+- [PROJECT_STATUS.md](./PROJECT_STATUS.md): milestones, completed work, and open tasks. This is the plan of record.
 - [TECHNICAL_PRD.md](./TECHNICAL_PRD.md): product requirements and technical design, including the decision log.
