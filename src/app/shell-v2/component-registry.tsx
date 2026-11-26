@@ -10,12 +10,15 @@ import {
 } from '@mui/material';
 
 import {
+  AccordionDemo,
   AlertDemo,
+  AppBarDemo,
   AutocompleteDemo,
   AvatarDemo,
   BackdropDemo,
   BadgeDemo,
   ButtonGroupDemo,
+  CardDemo,
   CheckboxDemo,
   ChipDemo,
   DialogDemo,
@@ -23,6 +26,7 @@ import {
   FabDemo,
   IconDemo,
   ListDemo,
+  PaperDemo,
   ProgressDemo,
   RadioGroupDemo,
   RatingDemo,
@@ -80,6 +84,19 @@ import {
 // absolutely in the stage), so an open overlay covers its card's
 // stage, never the whole app, while still rendering under the
 // card's preview theme (see the Feedback demos in
+// component-demos.tsx).
+//
+// The Surfaces category follows Feedback with MUI's Surfaces list,
+// again alphabetical: Accordion, App Bar, Card, Paper. All four are
+// exported by the installed @mui/material (9.3.1, verified against
+// the runtime exports), so this category has no omissions either.
+// Two demo notes. App Bar is a full-width top bar by nature; the
+// demo renders it position="static" at the card's width, a
+// contained sample bar rather than a bar fixed across the app. And
+// the Card demo is a full composed MUI Card (header, media,
+// content, actions) nested inside the registry's own preview card
+// chrome; it uses the outlined variant so the two cards read as
+// separate surfaces (see the Surfaces demos in
 // component-demos.tsx).
 
 export interface PreviewComponentEntry {
@@ -287,6 +304,30 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     id: 'snackbar',
     name: 'Snackbar',
     render: () => <SnackbarDemo />,
+  },
+  {
+    category: 'Surfaces',
+    id: 'accordion',
+    name: 'Accordion',
+    render: () => <AccordionDemo />,
+  },
+  {
+    category: 'Surfaces',
+    id: 'app-bar',
+    name: 'App Bar',
+    render: () => <AppBarDemo />,
+  },
+  {
+    category: 'Surfaces',
+    id: 'card',
+    name: 'Card',
+    render: () => <CardDemo />,
+  },
+  {
+    category: 'Surfaces',
+    id: 'paper',
+    name: 'Paper',
+    render: () => <PaperDemo />,
   },
 ];
 

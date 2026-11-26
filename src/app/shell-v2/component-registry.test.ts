@@ -96,12 +96,22 @@ const EXPECTED_FEEDBACK_IDS = [
   'snackbar',
 ];
 
+// The Surfaces category carries MUI's four Surfaces components in
+// alphabetical order by MUI display name. All four are exported by
+// the installed @mui/material (9.3.1, checked against the runtime
+// exports), so this list has no omission either.
+const EXPECTED_SURFACES_NAMES = ['Accordion', 'App Bar', 'Card', 'Paper'];
+
+const EXPECTED_SURFACES_IDS = ['accordion', 'app-bar', 'card', 'paper'];
+
 const inputsEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Inputs');
 const dataDisplayEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Data Display');
 const feedbackEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Feedback');
+const surfacesEntries = () =>
+  PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Surfaces');
 
 describe('PREVIEW_COMPONENTS (Inputs registry)', () => {
   it('contains the MUI Inputs components in alphabetical order, all in Inputs', () => {
@@ -165,18 +175,51 @@ describe('PREVIEW_COMPONENTS (Feedback registry)', () => {
   });
 
   it('places Feedback after Data Display as the third group', () => {
+    expect(
+      PREVIEW_COMPONENTS.slice(
+        0,
+        EXPECTED_INPUT_NAMES.length +
+          EXPECTED_DATA_DISPLAY_NAMES.length +
+          EXPECTED_FEEDBACK_NAMES.length,
+      ).map((entry) => entry.name),
+    ).toEqual([
+      ...EXPECTED_INPUT_NAMES,
+      ...EXPECTED_DATA_DISPLAY_NAMES,
+      ...EXPECTED_FEEDBACK_NAMES,
+    ]);
+    const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
+    expect(groups[0].category).toBe('Inputs');
+    expect(groups[1].category).toBe('Data Display');
+    expect(groups[2].category).toBe('Feedback');
+    expect(groups[2].entries.map((entry) => entry.name)).toEqual(EXPECTED_FEEDBACK_NAMES);
+  });
+});
+
+describe('PREVIEW_COMPONENTS (Surfaces registry)', () => {
+  it('contains the MUI Surfaces components in alphabetical order, all in Surfaces', () => {
+    expect(surfacesEntries().map((entry) => entry.name)).toEqual(EXPECTED_SURFACES_NAMES);
+    expect(surfacesEntries().map((entry) => entry.id)).toEqual(EXPECTED_SURFACES_IDS);
+    for (const entry of surfacesEntries()) {
+      expect(entry.category).toBe('Surfaces');
+      expect(typeof entry.render).toBe('function');
+    }
+  });
+
+  it('places Surfaces after Feedback as the fourth group', () => {
     expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual([
       ...EXPECTED_INPUT_NAMES,
       ...EXPECTED_DATA_DISPLAY_NAMES,
       ...EXPECTED_FEEDBACK_NAMES,
+      ...EXPECTED_SURFACES_NAMES,
     ]);
     const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
     expect(groups.map((group) => group.category)).toEqual([
       'Inputs',
       'Data Display',
       'Feedback',
+      'Surfaces',
     ]);
-    expect(groups[2].entries.map((entry) => entry.name)).toEqual(EXPECTED_FEEDBACK_NAMES);
+    expect(groups[3].entries.map((entry) => entry.name)).toEqual(EXPECTED_SURFACES_NAMES);
   });
 });
 
@@ -185,12 +228,14 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '')).toHaveLength(
       EXPECTED_INPUT_NAMES.length +
         EXPECTED_DATA_DISPLAY_NAMES.length +
-        EXPECTED_FEEDBACK_NAMES.length,
+        EXPECTED_FEEDBACK_NAMES.length +
+        EXPECTED_SURFACES_NAMES.length,
     );
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '   ')).toHaveLength(
       EXPECTED_INPUT_NAMES.length +
         EXPECTED_DATA_DISPLAY_NAMES.length +
-        EXPECTED_FEEDBACK_NAMES.length,
+        EXPECTED_FEEDBACK_NAMES.length +
+        EXPECTED_SURFACES_NAMES.length,
     );
   });
 
@@ -224,6 +269,12 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'PROGRESS').map((entry) => entry.name),
     ).toEqual(['Progress']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'paper').map((entry) => entry.name),
+    ).toEqual(['Paper']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'CARD').map((entry) => entry.name),
+    ).toEqual(['Card']);
   });
 
   it('returns an empty list for a nonsense query', () => {

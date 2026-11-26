@@ -1,6 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
+  AppBar,
   Autocomplete,
   Avatar,
   AvatarGroup,
@@ -9,6 +13,11 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  CardMedia,
   Checkbox,
   Chip,
   CircularProgress,
@@ -29,6 +38,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Paper,
   Radio,
   RadioGroup,
   Rating,
@@ -44,6 +54,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Toolbar,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
@@ -52,11 +63,16 @@ import {
 import { BellIcon } from '@phosphor-icons/react/dist/csr/Bell';
 import { CaretDoubleLeftIcon } from '@phosphor-icons/react/dist/csr/CaretDoubleLeft';
 import { CaretDoubleRightIcon } from '@phosphor-icons/react/dist/csr/CaretDoubleRight';
+import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
 import { CaretLeftIcon } from '@phosphor-icons/react/dist/csr/CaretLeft';
 import { CaretRightIcon } from '@phosphor-icons/react/dist/csr/CaretRight';
+import { DotsThreeVerticalIcon } from '@phosphor-icons/react/dist/csr/DotsThreeVertical';
 import { FileIcon } from '@phosphor-icons/react/dist/csr/File';
+import { HeartIcon } from '@phosphor-icons/react/dist/csr/Heart';
+import { ListIcon } from '@phosphor-icons/react/dist/csr/List';
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/csr/PaperPlaneTilt';
 import { PlusIcon } from '@phosphor-icons/react/dist/csr/Plus';
+import { ShareNetworkIcon } from '@phosphor-icons/react/dist/csr/ShareNetwork';
 import { TrashIcon } from '@phosphor-icons/react/dist/csr/Trash';
 import { TrayIcon } from '@phosphor-icons/react/dist/csr/Tray';
 import { XIcon } from '@phosphor-icons/react/dist/csr/X';
@@ -754,5 +770,136 @@ export function SnackbarDemo() {
         sx={{ position: 'absolute' }}
       />
     </OverlayStage>
+  );
+}
+
+// Surfaces demos, in the same style as the categories above:
+// canonical variants per component, interaction state local to the
+// card where the component has a meaningful interaction.
+
+export function AccordionDemo() {
+  const [expanded, setExpanded] = useState<string | false>('panel1');
+  const panels = [
+    { body: 'First panel body text.', id: 'panel1', title: 'Accordion 1' },
+    { body: 'Second panel body text.', id: 'panel2', title: 'Accordion 2' },
+    { body: 'Third panel body text.', id: 'panel3', title: 'Accordion 3' },
+  ];
+  return (
+    <Box>
+      {panels.map((panel) => (
+        <Accordion
+          expanded={expanded === panel.id}
+          key={panel.id}
+          onChange={(_, isExpanded) => setExpanded(isExpanded ? panel.id : false)}
+        >
+          <AccordionSummary expandIcon={<CaretDownIcon size={20} />}>
+            <Typography>{panel.title}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="body2">{panel.body}</Typography>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+    </Box>
+  );
+}
+
+// App Bar is a full-width top bar by nature; the demo renders it
+// position="static" at the card's width, a contained sample bar
+// (the MUI docs' menu, title, and login pattern), not a bar fixed
+// across the app.
+export function AppBarDemo() {
+  return (
+    <AppBar position="static">
+      <Toolbar>
+        <IconButton
+          aria-label="Open menu"
+          color="inherit"
+          edge="start"
+          sx={{ mr: 1 }}
+        >
+          <ListIcon size={20} />
+        </IconButton>
+        <Typography component="div" sx={{ flexGrow: 1 }} variant="h6">
+          News
+        </Typography>
+        <Button color="inherit">Login</Button>
+      </Toolbar>
+    </AppBar>
+  );
+}
+
+// A composed Card (header, media, content, actions) rendered under
+// the preview theme, nested inside the registry's own preview card
+// chrome; the outlined variant keeps the two cards readable as
+// separate surfaces. The app ships no photo assets, so the media is
+// a themed gradient block (the real CardMedia component) rather
+// than a photo. The favorite action carries local toggle state.
+export function CardDemo() {
+  const [liked, setLiked] = useState(false);
+  return (
+    <Card sx={{ maxWidth: 345 }} variant="outlined">
+      <CardHeader
+        action={
+          <IconButton aria-label="More actions">
+            <DotsThreeVerticalIcon size={20} />
+          </IconButton>
+        }
+        avatar={<Avatar sx={{ bgcolor: 'secondary.main' }}>D</Avatar>}
+        subheader="Design team"
+        title="Project update"
+      />
+      <CardMedia
+        component="div"
+        sx={{
+          background: (theme) =>
+            `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          height: 120,
+        }}
+      />
+      <CardContent>
+        <Typography color="text.secondary" variant="body2">
+          A composed card with a header, media, content, and actions, rendered
+          with the preview theme.
+        </Typography>
+      </CardContent>
+      <CardActions>
+        <IconButton
+          aria-label="Add to favorites"
+          aria-pressed={liked}
+          color={liked ? 'error' : 'default'}
+          onClick={() => setLiked((current) => !current)}
+        >
+          <HeartIcon size={20} weight={liked ? 'fill' : 'regular'} />
+        </IconButton>
+        <IconButton aria-label="Share">
+          <ShareNetworkIcon size={20} />
+        </IconButton>
+        <Button size="small">Learn more</Button>
+      </CardActions>
+    </Card>
+  );
+}
+
+export function PaperDemo() {
+  const elevations = [0, 1, 3, 6];
+  const squareSx = {
+    alignItems: 'center',
+    display: 'flex',
+    height: 72,
+    justifyContent: 'center',
+    width: 72,
+  };
+  return (
+    <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap' }}>
+      {elevations.map((elevation) => (
+        <Paper elevation={elevation} key={elevation} sx={squareSx}>
+          <Typography variant="caption">{elevation}</Typography>
+        </Paper>
+      ))}
+      <Paper sx={squareSx} variant="outlined">
+        <Typography variant="caption">Outlined</Typography>
+      </Paper>
+    </Stack>
   );
 }

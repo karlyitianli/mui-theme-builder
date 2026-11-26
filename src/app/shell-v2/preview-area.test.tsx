@@ -195,6 +195,48 @@ describe('PreviewArea Feedback section', () => {
   });
 });
 
+describe('PreviewArea Surfaces section', () => {
+  afterEach(() => cleanup());
+
+  it('renders the Surfaces cards in a section after Feedback', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const feedbackHeader = screen.getByText('Feedback');
+    const surfacesHeader = screen.getByText('Surfaces');
+    expect(
+      feedbackHeader.compareDocumentPosition(surfacesHeader) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of ['Accordion', 'App Bar', 'Card', 'Paper']) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it('filters across all four categories through the search box', () => {
+    renderPreviewArea();
+    fireEvent.change(screen.getByPlaceholderText('Search'), {
+      target: { value: 'paper' },
+    });
+    expect(screen.getByText('Paper')).toBeInTheDocument();
+    expect(screen.getByText('Surfaces')).toBeInTheDocument();
+    // No Inputs, Data Display, or Feedback entry matches, so those
+    // sections drop out.
+    expect(screen.queryByText('Inputs')).not.toBeInTheDocument();
+    expect(screen.queryByText('Data Display')).not.toBeInTheDocument();
+    expect(screen.queryByText('Feedback')).not.toBeInTheDocument();
+    expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
+    expect(screen.queryByText('Alert')).not.toBeInTheDocument();
+  });
+
+  it('collapses and expands the Surfaces section from its header', () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Surfaces'));
+    expect(screen.queryByText('Paper')).not.toBeInTheDocument();
+    expect(screen.getByText('Alert')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Surfaces'));
+    expect(screen.getByText('Paper')).toBeInTheDocument();
+  });
+});
+
 describe('PreviewArea theme reflection (Phase 3 integration)', () => {
   afterEach(() => cleanup());
 

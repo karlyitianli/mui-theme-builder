@@ -330,3 +330,86 @@ describe('Feedback preview cards', () => {
     );
   });
 });
+
+// Render and interaction smoke tests for the Surfaces cards added
+// after Feedback (Karl, Nov 25, 2026), in the same style as above.
+describe('Surfaces preview cards', () => {
+  afterEach(() => cleanup());
+
+  it('Accordion renders three sections with the first expanded', () => {
+    renderEntry('accordion');
+    expect(screen.getByRole('button', { name: 'Accordion 1' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Accordion 2' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Accordion 3' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getByText('First panel body text.')).toBeVisible();
+    expect(screen.getByText('Second panel body text.')).not.toBeVisible();
+  });
+
+  it('clicking another Accordion section expands it and collapses the first', () => {
+    renderEntry('accordion');
+    fireEvent.click(screen.getByRole('button', { name: 'Accordion 2' }));
+    expect(screen.getByRole('button', { name: 'Accordion 2' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Accordion 1' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('clicking the expanded Accordion section collapses it', () => {
+    renderEntry('accordion');
+    fireEvent.click(screen.getByRole('button', { name: 'Accordion 1' }));
+    expect(screen.getByRole('button', { name: 'Accordion 1' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('App Bar renders a contained bar with a menu button, a title, and a login button', () => {
+    renderEntry('app-bar');
+    expect(screen.getByRole('banner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
+    expect(screen.getByText('News')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
+  });
+
+  it('Card renders a composed card with header, content, and actions', () => {
+    renderEntry('card');
+    expect(screen.getByText('Project update')).toBeInTheDocument();
+    expect(screen.getByText('Design team')).toBeInTheDocument();
+    expect(
+      screen.getByText(/A composed card with a header, media, content, and actions/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Learn more' })).toBeInTheDocument();
+  });
+
+  it('toggling the Card favorite action marks it pressed', () => {
+    renderEntry('card');
+    const favorite = screen.getByRole('button', { name: 'Add to favorites' });
+    expect(favorite).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(favorite);
+    expect(favorite).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('Paper renders the elevation variants and an outlined paper', () => {
+    const { container } = renderEntry('paper');
+    expect(container.querySelectorAll('.MuiPaper-root')).toHaveLength(5);
+    expect(container.querySelector('.MuiPaper-outlined')).not.toBeNull();
+    for (const label of ['0', '1', '3', '6', 'Outlined']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+  });
+});
