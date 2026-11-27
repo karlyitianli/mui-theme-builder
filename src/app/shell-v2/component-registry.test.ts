@@ -137,6 +137,43 @@ const EXPECTED_LAYOUT_NAMES = ['Box', 'Container', 'Grid', 'Stack'];
 
 const EXPECTED_LAYOUT_IDS = ['box', 'container', 'grid', 'stack'];
 
+// The Utils category carries MUI's Utils entries in alphabetical
+// order by display name, minus four omissions. CSS Baseline and
+// Global Styles are global-effect utilities (mounting one in a
+// card would restyle the document and break shell insulation),
+// No SSR only changes server-side rendering, and Transitions is a
+// docs topic with no single component. The eight that remain are
+// all exported by the installed @mui/material (9.3.1, checked
+// against the runtime exports).
+const EXPECTED_UTILS_NAMES = [
+  'Click-Away Listener',
+  'Modal',
+  'Popover',
+  'Popper',
+  'Portal',
+  'Textarea Autosize',
+  'useMediaQuery',
+  'useScrollTrigger',
+];
+
+const EXPECTED_UTILS_IDS = [
+  'click-away-listener',
+  'modal',
+  'popover',
+  'popper',
+  'portal',
+  'textarea-autosize',
+  'use-media-query',
+  'use-scroll-trigger',
+];
+
+// The omitted Utils entries, pinned so the omissions stay
+// deliberate: none of these names or ids may appear in the
+// registry (see the registry header comment for the reasons).
+const OMITTED_UTILS_NAMES = ['CSS Baseline', 'Global Styles', 'No SSR', 'Transitions'];
+
+const OMITTED_UTILS_IDS = ['css-baseline', 'global-styles', 'no-ssr', 'transitions'];
+
 const inputsEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Inputs');
 const dataDisplayEntries = () =>
@@ -149,6 +186,8 @@ const navigationEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Navigation');
 const layoutEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Layout');
+const utilsEntries = () =>
+  PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Utils');
 
 describe('PREVIEW_COMPONENTS (Inputs registry)', () => {
   it('contains the MUI Inputs components in alphabetical order, all in Inputs', () => {
@@ -316,6 +355,41 @@ describe('PREVIEW_COMPONENTS (Layout registry)', () => {
   });
 
   it('places Layout after Navigation as the sixth group', () => {
+    expect(
+      PREVIEW_COMPONENTS.slice(
+        0,
+        EXPECTED_INPUT_NAMES.length +
+          EXPECTED_DATA_DISPLAY_NAMES.length +
+          EXPECTED_FEEDBACK_NAMES.length +
+          EXPECTED_SURFACES_NAMES.length +
+          EXPECTED_NAVIGATION_NAMES.length +
+          EXPECTED_LAYOUT_NAMES.length,
+      ).map((entry) => entry.name),
+    ).toEqual([
+      ...EXPECTED_INPUT_NAMES,
+      ...EXPECTED_DATA_DISPLAY_NAMES,
+      ...EXPECTED_FEEDBACK_NAMES,
+      ...EXPECTED_SURFACES_NAMES,
+      ...EXPECTED_NAVIGATION_NAMES,
+      ...EXPECTED_LAYOUT_NAMES,
+    ]);
+    const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
+    expect(groups[5].category).toBe('Layout');
+    expect(groups[5].entries.map((entry) => entry.name)).toEqual(EXPECTED_LAYOUT_NAMES);
+  });
+});
+
+describe('PREVIEW_COMPONENTS (Utils registry)', () => {
+  it('contains the demoable MUI Utils entries in alphabetical order, all in Utils', () => {
+    expect(utilsEntries().map((entry) => entry.name)).toEqual(EXPECTED_UTILS_NAMES);
+    expect(utilsEntries().map((entry) => entry.id)).toEqual(EXPECTED_UTILS_IDS);
+    for (const entry of utilsEntries()) {
+      expect(entry.category).toBe('Utils');
+      expect(typeof entry.render).toBe('function');
+    }
+  });
+
+  it('places Utils after Layout as the seventh group', () => {
     expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual([
       ...EXPECTED_INPUT_NAMES,
       ...EXPECTED_DATA_DISPLAY_NAMES,
@@ -323,6 +397,7 @@ describe('PREVIEW_COMPONENTS (Layout registry)', () => {
       ...EXPECTED_SURFACES_NAMES,
       ...EXPECTED_NAVIGATION_NAMES,
       ...EXPECTED_LAYOUT_NAMES,
+      ...EXPECTED_UTILS_NAMES,
     ]);
     const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
     expect(groups.map((group) => group.category)).toEqual([
@@ -332,8 +407,20 @@ describe('PREVIEW_COMPONENTS (Layout registry)', () => {
       'Surfaces',
       'Navigation',
       'Layout',
+      'Utils',
     ]);
-    expect(groups[5].entries.map((entry) => entry.name)).toEqual(EXPECTED_LAYOUT_NAMES);
+    expect(groups[6].entries.map((entry) => entry.name)).toEqual(EXPECTED_UTILS_NAMES);
+  });
+
+  it('omits the Utils entries that cannot be demoed as a card', () => {
+    const names = PREVIEW_COMPONENTS.map((entry) => entry.name);
+    const ids = PREVIEW_COMPONENTS.map((entry) => entry.id);
+    for (const name of OMITTED_UTILS_NAMES) {
+      expect(names).not.toContain(name);
+    }
+    for (const id of OMITTED_UTILS_IDS) {
+      expect(ids).not.toContain(id);
+    }
   });
 });
 
@@ -345,7 +432,8 @@ describe('filterPreviewComponents (preview search)', () => {
         EXPECTED_FEEDBACK_NAMES.length +
         EXPECTED_SURFACES_NAMES.length +
         EXPECTED_NAVIGATION_NAMES.length +
-        EXPECTED_LAYOUT_NAMES.length,
+        EXPECTED_LAYOUT_NAMES.length +
+        EXPECTED_UTILS_NAMES.length,
     );
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '   ')).toHaveLength(
       EXPECTED_INPUT_NAMES.length +
@@ -353,7 +441,8 @@ describe('filterPreviewComponents (preview search)', () => {
         EXPECTED_FEEDBACK_NAMES.length +
         EXPECTED_SURFACES_NAMES.length +
         EXPECTED_NAVIGATION_NAMES.length +
-        EXPECTED_LAYOUT_NAMES.length,
+        EXPECTED_LAYOUT_NAMES.length +
+        EXPECTED_UTILS_NAMES.length,
     );
   });
 
@@ -361,9 +450,11 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'button').map((entry) => entry.name),
     ).toEqual(['Button', 'Button Group', 'Floating Action Button', 'Toggle Button']);
+    // 'TEXT' matches Text Field and, since the Utils category
+    // landed, Textarea Autosize.
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'TEXT').map((entry) => entry.name),
-    ).toEqual(['Text Field']);
+    ).toEqual(['Text Field', 'Textarea Autosize']);
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'Select').map((entry) => entry.name),
     ).toEqual(['Select']);
@@ -377,10 +468,11 @@ describe('filterPreviewComponents (preview search)', () => {
       filterPreviewComponents(PREVIEW_COMPONENTS, 'TABLE').map((entry) => entry.name),
     ).toEqual(['Table']);
     // 'list' matched the Inputs Transfer List as well until Karl
-    // removed that card; now only the Data Display List matches.
+    // removed that card; it now matches the Data Display List and
+    // the Utils Click-Away Listener ("Listener" contains "list").
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'list').map((entry) => entry.name),
-    ).toEqual(['List']);
+    ).toEqual(['List', 'Click-Away Listener']);
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'alert').map((entry) => entry.name),
     ).toEqual(['Alert']);
@@ -416,6 +508,27 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'Container').map((entry) => entry.name),
     ).toEqual(['Container']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'modal').map((entry) => entry.name),
+    ).toEqual(['Modal']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'POPPER').map((entry) => entry.name),
+    ).toEqual(['Popper']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'portal').map((entry) => entry.name),
+    ).toEqual(['Portal']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'Click-Away').map((entry) => entry.name),
+    ).toEqual(['Click-Away Listener']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'textarea').map((entry) => entry.name),
+    ).toEqual(['Textarea Autosize']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'media').map((entry) => entry.name),
+    ).toEqual(['useMediaQuery']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'SCROLL').map((entry) => entry.name),
+    ).toEqual(['useScrollTrigger']);
   });
 
   it('returns an empty list for a nonsense query', () => {
@@ -424,15 +537,18 @@ describe('filterPreviewComponents (preview search)', () => {
 });
 
 // Task 3.2: every card links to its component's MUI documentation
-// page. The URL slug follows the entry id, with one exception: Radio
-// Group's docs live on the Radio buttons page.
+// page. The URL slug follows the entry id, with two exceptions:
+// Radio Group's docs live on the Radio buttons page, and
+// useScrollTrigger is documented on the App Bar page, so its URL
+// repeats the App Bar entry's, the registry's one duplicate.
 describe('PREVIEW_COMPONENTS docs URLs (task 3.2)', () => {
-  it('gives every entry a well-formed MUI docs URL, unique per entry', () => {
+  it('gives every entry a well-formed MUI docs URL, with one documented duplicate', () => {
     const urls = PREVIEW_COMPONENTS.map((entry) => entry.docsUrl);
     for (const url of urls) {
       expect(url).toMatch(/^https:\/\/mui\.com\/material-ui\/react-[a-z-]+\/$/);
     }
-    expect(new Set(urls).size).toBe(urls.length);
+    const duplicates = urls.filter((url, index) => urls.indexOf(url) !== index);
+    expect(duplicates).toEqual(['https://mui.com/material-ui/react-app-bar/']);
   });
 
   it('points representative entries at their docs pages', () => {
@@ -450,5 +566,23 @@ describe('PREVIEW_COMPONENTS docs URLs (task 3.2)', () => {
     );
     expect(byId.get('grid')).toBe('https://mui.com/material-ui/react-grid/');
     expect(byId.get('stack')).toBe('https://mui.com/material-ui/react-stack/');
+    expect(byId.get('click-away-listener')).toBe(
+      'https://mui.com/material-ui/react-click-away-listener/',
+    );
+    expect(byId.get('modal')).toBe('https://mui.com/material-ui/react-modal/');
+    expect(byId.get('popover')).toBe('https://mui.com/material-ui/react-popover/');
+    expect(byId.get('popper')).toBe('https://mui.com/material-ui/react-popper/');
+    expect(byId.get('portal')).toBe('https://mui.com/material-ui/react-portal/');
+    expect(byId.get('textarea-autosize')).toBe(
+      'https://mui.com/material-ui/react-textarea-autosize/',
+    );
+    expect(byId.get('use-media-query')).toBe(
+      'https://mui.com/material-ui/react-use-media-query/',
+    );
+    // useScrollTrigger has no docs page of its own; MUI documents
+    // it on the App Bar page.
+    expect(byId.get('use-scroll-trigger')).toBe(
+      'https://mui.com/material-ui/react-app-bar/',
+    );
   });
 });

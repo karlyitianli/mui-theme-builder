@@ -264,20 +264,21 @@ describe('PreviewArea Navigation section', () => {
     expect(screen.getAllByText('Link')).toHaveLength(5);
   });
 
-  it('filters across all six categories through the search box', { timeout: 20000 }, () => {
+  it('filters across all seven categories through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'pagination' },
     });
     expect(screen.getByText('Pagination')).toBeInTheDocument();
     expect(screen.getByText('Navigation')).toBeInTheDocument();
-    // No Inputs, Data Display, Feedback, Surfaces, or Layout entry
-    // matches, so those sections drop out.
+    // No Inputs, Data Display, Feedback, Surfaces, Layout, or
+    // Utils entry matches, so those sections drop out.
     expect(screen.queryByText('Inputs')).not.toBeInTheDocument();
     expect(screen.queryByText('Data Display')).not.toBeInTheDocument();
     expect(screen.queryByText('Feedback')).not.toBeInTheDocument();
     expect(screen.queryByText('Surfaces')).not.toBeInTheDocument();
     expect(screen.queryByText('Layout')).not.toBeInTheDocument();
+    expect(screen.queryByText('Utils')).not.toBeInTheDocument();
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
     expect(screen.queryByText('Card')).not.toBeInTheDocument();
   });
@@ -318,6 +319,41 @@ describe('PreviewArea Layout section', () => {
   });
 });
 
+describe('PreviewArea Utils section', () => {
+  afterEach(() => cleanup());
+
+  it('renders the Utils cards in a section after Layout', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const layoutHeader = screen.getByText('Layout');
+    const utilsHeader = screen.getByText('Utils');
+    expect(
+      layoutHeader.compareDocumentPosition(utilsHeader) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of [
+      'Click-Away Listener',
+      'Modal',
+      'Popover',
+      'Popper',
+      'Portal',
+      'Textarea Autosize',
+      'useMediaQuery',
+      'useScrollTrigger',
+    ]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it('collapses and expands the Utils section from its header', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Utils'));
+    expect(screen.queryByText('useMediaQuery')).not.toBeInTheDocument();
+    expect(screen.getByText('Grid')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Utils'));
+    expect(screen.getByText('useMediaQuery')).toBeInTheDocument();
+  });
+});
+
 describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => {
   afterEach(() => cleanup());
 
@@ -330,6 +366,7 @@ describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => 
       ['Surfaces', '3'],
       ['Navigation', '9'],
       ['Layout', '4'],
+      ['Utils', '8'],
     ];
     for (const [category, count] of counts) {
       const header = screen.getByText(category).parentElement;
@@ -372,6 +409,14 @@ describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => 
     expect(
       screen.getByRole('link', { name: 'MUI documentation for Radio Group' }),
     ).toHaveAttribute('href', 'https://mui.com/material-ui/react-radio-button/');
+    expect(
+      screen.getByRole('link', { name: 'MUI documentation for Popover' }),
+    ).toHaveAttribute('href', 'https://mui.com/material-ui/react-popover/');
+    // useScrollTrigger is documented on the App Bar page, so its
+    // Docs link repeats that entry's URL.
+    expect(
+      screen.getByRole('link', { name: 'MUI documentation for useScrollTrigger' }),
+    ).toHaveAttribute('href', 'https://mui.com/material-ui/react-app-bar/');
   });
 
   it('shows no docs links on the Templates tab', { timeout: 20000 }, () => {

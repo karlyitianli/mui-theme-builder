@@ -24,6 +24,7 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
+  ClickAwayListener,
   Container,
   Dialog,
   DialogActions,
@@ -46,7 +47,12 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Modal,
   Pagination,
+  Paper,
+  Popover,
+  Popper,
+  Portal,
   Radio,
   RadioGroup,
   Rating,
@@ -69,12 +75,16 @@ import {
   TableHead,
   TableRow,
   Tabs,
+  TextareaAutosize,
   TextField,
   Toolbar,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useScrollTrigger,
+  useTheme,
 } from '@mui/material';
 import { type SxProps, type Theme } from '@mui/material/styles';
 import { BellIcon } from '@phosphor-icons/react/dist/csr/Bell';
@@ -1271,5 +1281,298 @@ export function StackDemo() {
         ))}
       </Stack>
     </Stack>
+  );
+}
+
+// Utils demos, in the same style as the categories above:
+// canonical usage per entry, interaction state local to the card
+// where the entry has a meaningful interaction.
+//
+// Modal and Popover are overlays, contained in a stage in their
+// card the way the Feedback and Navigation overlays are: each
+// one's container prop points at the stage, so the overlay renders
+// inside the stage and covers only it. Popper renders in place
+// instead (disablePortal), anchored to its button inside the card,
+// and Portal is pointed at a host element inside its own card, so
+// nothing here escapes into the document body or over the shell.
+
+// The listener wraps the box; the readout under it reports the
+// last click the card saw, inside the box or away from it (the
+// away click is the one the listener exists to catch).
+export function ClickAwayListenerDemo() {
+  const [lastClick, setLastClick] = useState<'away' | 'inside' | null>(null);
+  return (
+    <Stack spacing={1.5}>
+      <ClickAwayListener onClickAway={() => setLastClick('away')}>
+        <Box
+          onClick={() => setLastClick('inside')}
+          sx={{
+            bgcolor: 'action.hover',
+            borderRadius: 1,
+            cursor: 'pointer',
+            p: 2,
+            textAlign: 'center',
+          }}
+        >
+          <Typography variant="body2">
+            Click in this box, then click anywhere outside it
+          </Typography>
+        </Box>
+      </ClickAwayListener>
+      <Typography color="text.secondary" variant="body2">
+        {lastClick === null
+          ? 'No clicks yet'
+          : lastClick === 'inside'
+            ? 'Last click: inside the box'
+            : 'Last click: away, the listener fired'}
+      </Typography>
+    </Stack>
+  );
+}
+
+// A plain Modal (the base Dialog is built on), with the docs'
+// centred box pattern for its content, contained in the stage.
+export function ModalDemo() {
+  const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const close = () => setOpen(false);
+  return (
+    <OverlayStage stageRef={setStage}>
+      <Button onClick={() => setOpen(true)} sx={stageTriggerSx} variant="outlined">
+        Open modal
+      </Button>
+      <Modal
+        container={stage ?? undefined}
+        onClose={close}
+        open={open}
+        sx={{ position: 'absolute' }}
+      >
+        <Box
+          sx={{
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 24,
+            left: '50%',
+            p: 3,
+            position: 'absolute',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 280,
+          }}
+        >
+          <Typography component="h2" sx={{ mb: 1 }} variant="h6">
+            Modal title
+          </Typography>
+          <Typography sx={{ mb: 2 }} variant="body2">
+            A basic modal, contained in its preview card.
+          </Typography>
+          <Button onClick={close} variant="contained">
+            Close
+          </Button>
+        </Box>
+      </Modal>
+    </OverlayStage>
+  );
+}
+
+export function PopoverDemo() {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const open = Boolean(anchorEl);
+  const close = () => setAnchorEl(null);
+  return (
+    <OverlayStage stageRef={setStage}>
+      <Button
+        aria-describedby={open ? 'preview-popover' : undefined}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        sx={stageTriggerSx}
+        variant="outlined"
+      >
+        Open popover
+      </Button>
+      <Popover
+        anchorEl={anchorEl}
+        anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
+        container={stage ?? undefined}
+        id="preview-popover"
+        onClose={close}
+        open={open}
+        transformOrigin={{ horizontal: 'center', vertical: 'top' }}
+      >
+        <Typography sx={{ p: 2 }}>Popover content, contained in its card.</Typography>
+      </Popover>
+    </OverlayStage>
+  );
+}
+
+// Popper with disablePortal renders where it is placed rather
+// than portaling to the body, so the paper stays in the card,
+// positioned from the toggle button by Popper.js.
+export function PopperDemo() {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const open = Boolean(anchorEl);
+  return (
+    <Box>
+      <Button
+        onClick={(event) => setAnchorEl(open ? null : event.currentTarget)}
+        variant="outlined"
+      >
+        Toggle popper
+      </Button>
+      <Popper anchorEl={anchorEl} disablePortal open={open} placement="bottom-start">
+        <Paper elevation={8} sx={{ mt: 1, p: 1.5 }}>
+          <Typography variant="body2">
+            Popper content, positioned from the button.
+          </Typography>
+        </Paper>
+      </Popper>
+    </Box>
+  );
+}
+
+// The portaled content is rendered by the toggle under the host
+// box but lives in the host, because the Portal's container points
+// at it. The container stays inside the card; the default target
+// (the document body) is exactly what this demo avoids.
+export function PortalDemo() {
+  const [host, setHost] = useState<HTMLDivElement | null>(null);
+  const [show, setShow] = useState(false);
+  return (
+    <Stack spacing={1.5}>
+      <Box
+        ref={setHost}
+        sx={{
+          border: '1px dashed',
+          borderColor: 'divider',
+          borderRadius: 1,
+          minHeight: 48,
+          p: 1.5,
+        }}
+      >
+        <Typography color="text.secondary" variant="body2">
+          Portal host
+        </Typography>
+      </Box>
+      <Button onClick={() => setShow((previous) => !previous)} variant="outlined">
+        {show ? 'Unmount from host' : 'Render into host'}
+      </Button>
+      {show && host ? (
+        <Portal container={host}>
+          <Typography variant="body2">
+            Portaled content: sent by the toggle below, living in this host.
+          </Typography>
+        </Portal>
+      ) : null}
+    </Stack>
+  );
+}
+
+// TextareaAutosize is unstyled by design; the demo gives it the
+// card's font and a little padding, and the growing height as text
+// is added is the behaviour on show.
+export function TextareaAutosizeDemo() {
+  return (
+    <>
+      <Typography sx={{ mb: 1 }} variant="body1">
+        Label
+      </Typography>
+      <TextareaAutosize
+        aria-label="Autosizing textarea"
+        minRows={3}
+        placeholder="Start typing, the box grows"
+        style={{ font: 'inherit', padding: 8, width: '100%' }}
+      />
+    </>
+  );
+}
+
+// The hook readouts follow the MUI docs pattern: the theme's
+// breakpoint helpers turned into queries, each row showing whether
+// the query currently matches. The matches track the browser
+// window, so the rows update live as the window is resized.
+export function UseMediaQueryDemo() {
+  const theme = useTheme();
+  const rows = [
+    { label: "breakpoints.up('sm')", matches: useMediaQuery(theme.breakpoints.up('sm')) },
+    { label: "breakpoints.up('md')", matches: useMediaQuery(theme.breakpoints.up('md')) },
+    { label: "breakpoints.up('lg')", matches: useMediaQuery(theme.breakpoints.up('lg')) },
+  ];
+  return (
+    <Stack spacing={1}>
+      {rows.map((row) => (
+        <Stack
+          direction="row"
+          key={row.label}
+          spacing={1}
+          sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <Typography variant="body2">{row.label}</Typography>
+          <Chip
+            color={row.matches ? 'primary' : 'default'}
+            label={row.matches ? 'Matches' : 'No match'}
+            size="small"
+          />
+        </Stack>
+      ))}
+      <Typography color="text.secondary" variant="body2">
+        Resize the window and the matches update live.
+      </Typography>
+    </Stack>
+  );
+}
+
+// The trigger watches the card's own scroll box (the hook's target
+// option) instead of the window: past 40px of scrolling inside the
+// box, the sticky header flips to the primary colors and reports
+// that the trigger is on.
+export function UseScrollTriggerDemo() {
+  const [scroller, setScroller] = useState<HTMLDivElement | null>(null);
+  const trigger = useScrollTrigger({
+    disableHysteresis: true,
+    target: scroller ?? undefined,
+    threshold: 40,
+  });
+  const lines = [
+    'Scrollable content, line one.',
+    'Scrollable content, line two.',
+    'Scrollable content, line three.',
+    'Scrollable content, line four.',
+    'Scrollable content, line five.',
+    'Scrollable content, line six.',
+    'Scrollable content, line seven.',
+    'Scrollable content, line eight.',
+  ];
+  return (
+    <Box
+      ref={setScroller}
+      sx={{
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1,
+        height: 168,
+        overflowY: 'auto',
+      }}
+    >
+      <Box
+        sx={{
+          bgcolor: trigger ? 'primary.main' : 'action.hover',
+          color: trigger ? 'primary.contrastText' : 'text.primary',
+          p: 1.5,
+          position: 'sticky',
+          top: 0,
+        }}
+      >
+        <Typography variant="body2">
+          {trigger ? 'Trigger on: scrolled past 40px' : 'Scroll this box: trigger off'}
+        </Typography>
+      </Box>
+      <Stack spacing={1} sx={{ p: 1.5 }}>
+        {lines.map((line) => (
+          <Typography key={line} variant="body2">
+            {line}
+          </Typography>
+        ))}
+      </Stack>
+    </Box>
   );
 }

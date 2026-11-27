@@ -676,6 +676,117 @@ describe('Layout preview cards', () => {
   });
 });
 
+// Render and interaction smoke tests for the Utils cards added
+// after Layout (Karl, Nov 26, 2026), in the same style as above.
+describe('Utils preview cards', () => {
+  afterEach(() => cleanup());
+
+  it('Click-Away Listener reports clicks inside the box, then away from it', async () => {
+    renderEntry('click-away-listener');
+    // The listener activates on the macrotask after mount (it sets
+    // an activated flag in a setTimeout), so let that tick pass
+    // before clicking, as a real user's clicks would.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+    expect(screen.getByText('No clicks yet')).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByText('Click in this box, then click anywhere outside it'),
+    );
+    expect(screen.getByText('Last click: inside the box')).toBeInTheDocument();
+    // The readout sits outside the listener's box, so clicking it
+    // is a click away.
+    fireEvent.click(screen.getByText('Last click: inside the box'));
+    expect(
+      screen.getByText('Last click: away, the listener fired'),
+    ).toBeInTheDocument();
+  });
+
+  it('Modal opens contained in the card and closes from its button', async () => {
+    renderEntry('modal');
+    expect(screen.queryByText('Modal title')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open modal' }));
+    expect(await screen.findByText('Modal title')).toBeInTheDocument();
+    expect(
+      screen.getByText('A basic modal, contained in its preview card.'),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(
+      () => expect(screen.queryByText('Modal title')).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+  });
+
+  it('Popover opens from its button with its content', async () => {
+    renderEntry('popover');
+    expect(
+      screen.queryByText('Popover content, contained in its card.'),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open popover' }));
+    expect(
+      await screen.findByText('Popover content, contained in its card.'),
+    ).toBeInTheDocument();
+  });
+
+  it('Popper shows its content when toggled on', async () => {
+    renderEntry('popper');
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle popper' }));
+    expect(
+      await screen.findByText('Popper content, positioned from the button.'),
+    ).toBeInTheDocument();
+  });
+
+  it('Portal renders its content into the host box on toggle, and removes it on the next', () => {
+    renderEntry('portal');
+    const content =
+      'Portaled content: sent by the toggle below, living in this host.';
+    expect(screen.queryByText(content)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Render into host' }));
+    const rendered = screen.getByText(content);
+    expect(rendered).toBeInTheDocument();
+    // The content lives inside the host box, not where the toggle
+    // sits: the host is the box carrying the "Portal host" label.
+    const host = screen.getByText('Portal host').parentElement;
+    expect(host?.contains(rendered)).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Unmount from host' }));
+    expect(screen.queryByText(content)).not.toBeInTheDocument();
+  });
+
+  it('Textarea Autosize renders a textarea that takes input', () => {
+    renderEntry('textarea-autosize');
+    const textarea = screen.getByPlaceholderText('Start typing, the box grows');
+    expect(textarea.tagName).toBe('TEXTAREA');
+    fireEvent.change(textarea, { target: { value: 'Line one\nLine two' } });
+    expect(textarea).toHaveValue('Line one\nLine two');
+  });
+
+  it('useMediaQuery renders a readout row per breakpoint query', () => {
+    renderEntry('use-media-query');
+    for (const label of [
+      "breakpoints.up('sm')",
+      "breakpoints.up('md')",
+      "breakpoints.up('lg')",
+    ]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    // jsdom has no matchMedia implementation, so the hook reports
+    // its default (no match) for every query in this environment;
+    // in a browser the rows track the window width live.
+    expect(screen.getAllByText('No match')).toHaveLength(3);
+  });
+
+  it('useScrollTrigger turns on once its scroll box passes the threshold', () => {
+    renderEntry('use-scroll-trigger');
+    const header = screen.getByText('Scroll this box: trigger off');
+    // The scroll box is the sticky header's parent element.
+    const scroller = header.parentElement?.parentElement as HTMLElement;
+    expect(scroller).not.toBeNull();
+    scroller.scrollTop = 100;
+    fireEvent.scroll(scroller);
+    expect(screen.getByText('Trigger on: scrolled past 40px')).toBeInTheDocument();
+  });
+});
+
 // Checks that need the real preview theme rather than MUI's default
 // theme (which the card tests above render under): the overlay
 // trigger buttons' dark-mode treatment and the Autocomplete dropdown

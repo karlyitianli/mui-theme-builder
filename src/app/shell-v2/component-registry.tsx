@@ -24,6 +24,7 @@ import {
   CardDemo,
   CheckboxDemo,
   ChipDemo,
+  ClickAwayListenerDemo,
   ContainerDemo,
   DialogDemo,
   DividerDemo,
@@ -33,7 +34,11 @@ import {
   LinkDemo,
   ListDemo,
   MenuDemo,
+  ModalDemo,
   PaginationDemo,
+  PopoverDemo,
+  PopperDemo,
+  PortalDemo,
   ProgressDemo,
   RadioGroupDemo,
   RatingDemo,
@@ -46,8 +51,11 @@ import {
   SwitchDemo,
   TableDemo,
   TabsDemo,
+  TextareaAutosizeDemo,
   ToggleButtonDemo,
   TooltipDemo,
+  UseMediaQueryDemo,
+  UseScrollTriggerDemo,
 } from './component-demos';
 
 // Component registry for the v2 shell preview area.
@@ -139,13 +147,39 @@ import {
 // the container in a dashed card-width viewport and toggles the
 // maxWidth prop (xs, sm, off) to show the value in force (see the
 // Layout demos in component-demos.tsx).
+//
+// The Utils category follows Layout with MUI's Utils list (the
+// all-components page and the docs' Utils navigation), again
+// alphabetical by display name, with four omissions. What remains
+// is Click-Away Listener, Modal, Popover, Popper, Portal,
+// Textarea Autosize, useMediaQuery, useScrollTrigger, all verified
+// against the installed @mui/material (9.3.1) runtime exports. The
+// omissions, all present in the package but not honestly demoable
+// as a card: CSS Baseline and Global Styles are global-effect
+// utilities whose whole job is restyling the document, so mounting
+// one in a card would leak into the shell and break shell
+// insulation; No SSR only changes server-side rendering, so it has
+// no behaviour to show in a client-side card; and Transitions is a
+// docs topic spanning the Fade, Grow, Slide, Zoom, and Collapse
+// components, with no single Transitions component to render.
+// Demo notes. Modal and Popover are overlays, contained in a stage
+// in their card through their container prop, like the Feedback
+// and Navigation overlays. Popper renders in place with
+// disablePortal, and Portal's demo points the portal at a host
+// element inside its own card rather than the document body. And
+// useScrollTrigger is documented by MUI on the App Bar page (it
+// has no page of its own), so its entry's docsUrl repeats the App
+// Bar entry's URL, the registry's one intentional duplicate (see
+// the Utils demos in component-demos.tsx).
 
 export interface PreviewComponentEntry {
   category: string;
   // The component's page in the MUI documentation. PreviewArea shows
   // it as a Docs link in the card header (task 3.2). The slug follows
   // the entry id except for Radio Group, whose docs page is the Radio
-  // buttons page (react-radio-button).
+  // buttons page (react-radio-button), and useScrollTrigger, which
+  // MUI documents on the App Bar page, so its URL repeats that
+  // entry's (the one intentional duplicate in the registry).
   docsUrl: string;
   id: string;
   name: string;
@@ -469,6 +503,62 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     name: 'Stack',
     docsUrl: 'https://mui.com/material-ui/react-stack/',
     render: () => <StackDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'click-away-listener',
+    name: 'Click-Away Listener',
+    docsUrl: 'https://mui.com/material-ui/react-click-away-listener/',
+    render: () => <ClickAwayListenerDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'modal',
+    name: 'Modal',
+    docsUrl: 'https://mui.com/material-ui/react-modal/',
+    render: () => <ModalDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'popover',
+    name: 'Popover',
+    docsUrl: 'https://mui.com/material-ui/react-popover/',
+    render: () => <PopoverDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'popper',
+    name: 'Popper',
+    docsUrl: 'https://mui.com/material-ui/react-popper/',
+    render: () => <PopperDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'portal',
+    name: 'Portal',
+    docsUrl: 'https://mui.com/material-ui/react-portal/',
+    render: () => <PortalDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'textarea-autosize',
+    name: 'Textarea Autosize',
+    docsUrl: 'https://mui.com/material-ui/react-textarea-autosize/',
+    render: () => <TextareaAutosizeDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'use-media-query',
+    name: 'useMediaQuery',
+    docsUrl: 'https://mui.com/material-ui/react-use-media-query/',
+    render: () => <UseMediaQueryDemo />,
+  },
+  {
+    category: 'Utils',
+    id: 'use-scroll-trigger',
+    name: 'useScrollTrigger',
+    docsUrl: 'https://mui.com/material-ui/react-app-bar/',
+    render: () => <UseScrollTriggerDemo />,
   },
 ];
 
