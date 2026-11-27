@@ -140,6 +140,24 @@ describe('TokenPanel wiring (Phase 5)', () => {
     expect(probeProject().foundations?.typography?.variants?.h1?.fontWeight).toBe(600);
   });
 
+  it('a Typography text transform edit sets the field and Auto clears it (task 1.5)', { timeout: 20000 }, () => {
+    renderPanel();
+    fireEvent.click(screen.getByText('Typography'));
+    fireEvent.click(screen.getByText('Button'));
+    expect(screen.getByText('button settings')).toBeInTheDocument();
+    // Unset reads Auto, the panels' word for a field MUI defaults.
+    fireEvent.mouseDown(screen.getByLabelText('Text transform'));
+    fireEvent.click(screen.getByRole('option', { name: 'Uppercase' }));
+    expect(probeProject().foundations?.typography?.variants?.button?.textTransform).toBe(
+      'uppercase',
+    );
+    fireEvent.mouseDown(screen.getByLabelText('Text transform'));
+    fireEvent.click(screen.getByRole('option', { name: 'Auto' }));
+    expect(
+      probeProject().foundations?.typography?.variants?.button?.textTransform,
+    ).toBeUndefined();
+  });
+
   it('a Spacing base edit updates the project and the scale values', () => {
     renderPanel();
     fireEvent.click(screen.getByText('Spacing'));

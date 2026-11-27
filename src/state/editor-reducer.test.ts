@@ -167,4 +167,32 @@ describe('editorReducer semantic color variants', () => {
     const undone = editorReducer(pinned, { type: 'undo' });
     expect(undone.project.colorSchemes.light.palette?.primary).toBeUndefined();
   });
+
+  it('a typography textTransform edit stores the value, and clearing removes the key (task 1.5)', () => {
+    const state = createInitialEditorState();
+    const set = editorReducer(state, {
+      type: 'set-typography-variant',
+      variant: 'button',
+      patch: { textTransform: 'uppercase' },
+    });
+    expect(set.project.foundations?.typography?.variants?.button?.textTransform).toBe('uppercase');
+    expect(set.past).toHaveLength(1);
+    // The panel's Auto choice patches the field with no value; the
+    // stored variant must lose the key entirely, not carry an
+    // undefined, so the emitted options omit it and MUI's defaults
+    // apply. Each edit is its own undo step.
+    const cleared = editorReducer(set, {
+      type: 'set-typography-variant',
+      variant: 'button',
+      patch: { textTransform: undefined },
+    });
+    const button = cleared.project.foundations?.typography?.variants?.button;
+    expect(button?.textTransform).toBeUndefined();
+    expect(button !== undefined && 'textTransform' in button).toBe(false);
+    expect(cleared.past).toHaveLength(2);
+    const undone = editorReducer(cleared, { type: 'undo' });
+    expect(undone.project.foundations?.typography?.variants?.button?.textTransform).toBe(
+      'uppercase',
+    );
+  });
 });

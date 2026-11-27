@@ -5,6 +5,7 @@ import {
   type ThemeProject,
 } from '../domain/project';
 import type { PaletteColorSettings } from '../domain/palette.types';
+import type { TypographyStyle } from '../domain/value.types';
 import { semanticColorMainDefault } from '../theme/palette-adapter';
 import type { EditorAction, EditorSection, EditorState } from './editor-state.types';
 
@@ -248,6 +249,18 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       });
     case 'set-typography-variant': {
       const typography = state.project.foundations?.typography;
+      const nextVariant: TypographyStyle = {
+        ...typography?.variants?.[action.variant],
+        ...action.patch,
+      };
+      // A patch that names textTransform with no value is the panel's
+      // Auto choice: the key leaves the stored variant entirely (the
+      // delete pattern the semantic color clear uses), so the emitted
+      // options omit it and MUI's own defaults apply, exactly as if
+      // the field had never been set.
+      if ('textTransform' in action.patch && action.patch.textTransform === undefined) {
+        delete nextVariant.textTransform;
+      }
       return commitProject(state, {
         ...state.project,
         foundations: {
@@ -256,7 +269,7 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
             ...typography,
             variants: {
               ...typography?.variants,
-              [action.variant]: { ...typography?.variants?.[action.variant], ...action.patch },
+              [action.variant]: nextVariant,
             },
           },
         },

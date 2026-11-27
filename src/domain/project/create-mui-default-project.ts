@@ -25,14 +25,15 @@ import type { ThemeProjectV1 } from './theme-project.types';
 // different rgb() values, so storing main alone would not reproduce
 // the default theme.
 //
-// Two MUI defaults the project model cannot express, recorded honestly:
-// the button and overline variants' textTransform: 'uppercase'
-// (TypographyStyle has no textTransform field), so those two variants
-// match the oracle on size, weight, line height, and letter spacing
-// only. The font stack is expressed exactly: family Roboto with the
-// Helvetica, Arial, sans-serif fallback (the font catalog's Roboto
-// entry falls back to Arial only, so the factory names the stack
-// itself rather than reusing the catalog entry).
+// The button and overline variants store textTransform: 'uppercase'
+// like the oracle (the field joined TypographyStyle with task 1.5,
+// Nov 26, 2026; before that the model could not express it and the two
+// variants matched the oracle on size, weight, line height, and letter
+// spacing only, with the uppercase arriving by MUI's own fill-in at
+// createTheme time). The font stack is expressed exactly: family
+// Roboto with the Helvetica, Arial, sans-serif fallback (the font
+// catalog's Roboto entry falls back to Arial only, so the factory
+// names the stack itself rather than reusing the catalog entry).
 export function createMuiDefaultProject(now = new Date()): ThemeProjectV1 {
   const timestamp = now.toISOString();
 
@@ -119,7 +120,8 @@ export function createMuiDefaultProject(now = new Date()): ThemeProjectV1 {
         },
         fontSize: 14,
         // MUI's default variants, font sizes converted from rem at the
-        // 16px root. textTransform is omitted: see the header comment.
+        // 16px root. Button and Overline carry the oracle's uppercase
+        // textTransform (task 1.5); no other variant sets the field.
         variants: {
           h1: { fontSize: 96, fontWeight: 300, lineHeight: 1.167, letterSpacing: '-0.01562em' },
           h2: { fontSize: 60, fontWeight: 300, lineHeight: 1.2, letterSpacing: '-0.00833em' },
@@ -131,9 +133,9 @@ export function createMuiDefaultProject(now = new Date()): ThemeProjectV1 {
           subtitle2: { fontSize: 14, fontWeight: 500, lineHeight: 1.57, letterSpacing: '0.00714em' },
           body1: { fontSize: 16, fontWeight: 400, lineHeight: 1.5, letterSpacing: '0.00938em' },
           body2: { fontSize: 14, fontWeight: 400, lineHeight: 1.43, letterSpacing: '0.01071em' },
-          button: { fontSize: 14, fontWeight: 500, lineHeight: 1.75, letterSpacing: '0.02857em' },
+          button: { fontSize: 14, fontWeight: 500, lineHeight: 1.75, letterSpacing: '0.02857em', textTransform: 'uppercase' },
           caption: { fontSize: 12, fontWeight: 400, lineHeight: 1.66, letterSpacing: '0.03333em' },
-          overline: { fontSize: 12, fontWeight: 400, lineHeight: 2.66, letterSpacing: '0.08333em' },
+          overline: { fontSize: 12, fontWeight: 400, lineHeight: 2.66, letterSpacing: '0.08333em', textTransform: 'uppercase' },
         },
       },
     },

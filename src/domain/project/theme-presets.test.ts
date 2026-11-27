@@ -80,6 +80,31 @@ describe('theme presets (Nov 26, 2026)', () => {
     expect(createRuntimeTheme(project).shape.borderRadius).toBe(8);
     expect(emitThemeTsx(project)).toContain('borderRadius: 8');
   });
+
+  it('the Black project leaves textTransform unset and resolves exactly as before (task 1.5)', () => {
+    const project = createDefaultProject();
+    // Black stores no typography, and task 1.5 stores nothing for it:
+    // unset already resolved to MUI's uppercase fill-in for the
+    // Button and Overline variants, so the resolved theme is
+    // unchanged. (Storing a partial Button variant would not be a
+    // no-op: the theme mapping merges variants over the baseline
+    // shallowly, so it would drop the baseline's Button line height
+    // and letter spacing.)
+    expect(project.foundations?.typography).toBeUndefined();
+    const options = projectToThemeOptions(project);
+    const typography = options.typography as
+      | Record<string, { textTransform?: string } | undefined>
+      | undefined;
+    expect(typography?.button?.textTransform).toBeUndefined();
+    expect(typography?.overline).toBeUndefined();
+    const theme = createRuntimeTheme(project);
+    expect(theme.typography.button.textTransform).toBe('uppercase');
+    expect(theme.typography.overline.textTransform).toBe('uppercase');
+    // The baseline's Button values still govern the rest of the
+    // variant, proving the resolution did not drift.
+    expect(theme.typography.button.lineHeight).toBe(1.4);
+    expect(theme.typography.button.letterSpacing).toBe(0);
+  });
 });
 
 describe('the Default preset against a plain createTheme oracle', () => {
@@ -165,15 +190,56 @@ describe('the Default preset against a plain createTheme oracle', () => {
         letterSpacing: oracle[variant].letterSpacing,
       });
     }
-    // The button variant matches on the properties the project model
-    // can express; its textTransform: 'uppercase' is not one of them
-    // (TypographyStyle has no textTransform field).
+    // The button variant is compared on the same properties as the
+    // loop above, and its textTransform now matches the oracle too
+    // (the field joined the model with task 1.5; before that the
+    // resolved uppercase arrived by MUI's fill-in alone).
     expect(toPx(theme.typography.button.fontSize)).toBe(toPx(oracle.button.fontSize));
     expect(theme.typography.button).toMatchObject({
       fontWeight: oracle.button.fontWeight,
       lineHeight: oracle.button.lineHeight,
       letterSpacing: oracle.button.letterSpacing,
     });
+    expect(theme.typography.button.textTransform).toBe(oracle.button.textTransform);
+    expect(theme.typography.overline.textTransform).toBe(oracle.overline.textTransform);
+    // No other variant carries a textTransform on either side.
+    for (const variant of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'caption'] as const) {
+      expect(theme.typography[variant].textTransform).toBeUndefined();
+    }
+  });
+
+  it('stores uppercase for Button and Overline only, and the options carry exactly those (task 1.5)', () => {
+    const variants = project.foundations?.typography?.variants;
+    expect(variants?.button?.textTransform).toBe('uppercase');
+    expect(variants?.overline?.textTransform).toBe('uppercase');
+    for (const variant of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'caption'] as const) {
+      expect(variants?.[variant]?.textTransform).toBeUndefined();
+    }
+    // The emitted options carry the field for exactly those two
+    // variants; an unset variant emits no textTransform key at all,
+    // so projects that never touch the field emit what they always
+    // emitted.
+    const options = projectToThemeOptions(project);
+    const typography = options.typography as
+      | Record<string, { textTransform?: string } | undefined>
+      | undefined;
+    expect(typography?.button?.textTransform).toBe('uppercase');
+    expect(typography?.overline?.textTransform).toBe('uppercase');
+    expect(typography?.h1 !== undefined && 'textTransform' in typography.h1).toBe(false);
+    expect(typography?.caption !== undefined && 'textTransform' in typography.caption).toBe(
+      false,
+    );
+  });
+
+  it('a stored textTransform agrees across options, runtime theme, and export (task 1.5)', () => {
+    const options = projectToThemeOptions(project);
+    const typography = options.typography as
+      | Record<string, { textTransform?: string } | undefined>
+      | undefined;
+    expect(typography?.button?.textTransform).toBe('uppercase');
+    expect(theme.typography.button.textTransform).toBe('uppercase');
+    expect(theme.typography.overline.textTransform).toBe('uppercase');
+    expect(emitThemeTsx(project)).toContain("textTransform: 'uppercase'");
   });
 
   it('matches MUI breakpoints, transitions, and z-index (task 3.5)', () => {

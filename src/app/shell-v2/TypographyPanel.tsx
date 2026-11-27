@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Divider, MenuItem, Select, Stack, Typography } from '@mui/material';
 
 import type { TypographyVariant } from '../../domain/typography.types';
-import type { CssLengthValue, FontWeight } from '../../domain/value.types';
+import type { CssLengthValue, FontWeight, TextTransform } from '../../domain/value.types';
 import { findGoogleFont, googleFontCatalog } from '../../fonts/catalog';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
 import type { PreviewMode } from '../../state/editor-state.types';
@@ -73,7 +73,19 @@ interface VariantRowData {
   fontWeight: number;
   lineHeight: number | string;
   letterSpacing: CssLengthValue;
+  textTransform?: TextTransform;
 }
+
+// The text transform select's choices: the four stored values plus
+// Auto, the panels' word for an unset field (the stored variant omits
+// the key and MUI's own variant default applies).
+const textTransformOptions: { label: string; value: TextTransform | 'auto' }[] = [
+  { label: 'Auto', value: 'auto' },
+  { label: 'None', value: 'none' },
+  { label: 'Capitalize', value: 'capitalize' },
+  { label: 'Uppercase', value: 'uppercase' },
+  { label: 'Lowercase', value: 'lowercase' },
+];
 
 function VariantRow({
   fontSize,
@@ -138,8 +150,13 @@ function VariantRow({
 // spacing -2 to 10 step 0.1, weight one of 300-700.
 function VariantEditor({ mode, row }: { mode: PreviewMode; row: VariantRowData }) {
   const dispatch = useEditorDispatch();
-  const patch = (partial: { fontSize?: number; fontWeight?: FontWeight; lineHeight?: number; letterSpacing?: number }) =>
-    dispatch({ type: 'set-typography-variant', variant: row.variant, patch: partial });
+  const patch = (partial: {
+    fontSize?: number;
+    fontWeight?: FontWeight;
+    lineHeight?: number;
+    letterSpacing?: number;
+    textTransform?: TextTransform;
+  }) => dispatch({ type: 'set-typography-variant', variant: row.variant, patch: partial });
 
   const fontSize = asNumber(row.fontSize, 16);
   const lineHeight = asNumber(row.lineHeight, 1.5);
@@ -171,6 +188,32 @@ function VariantEditor({ mode, row }: { mode: PreviewMode; row: VariantRowData }
             ).map((weight) => (
               <MenuItem key={weight} value={weight}>
                 {weight}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+      </Box>
+      <Box sx={{ alignItems: 'center', display: 'flex', height: 30 }}>
+        <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>Text transform</Typography>
+        <Box sx={{ ml: 'auto' }}>
+          <Select
+            inputProps={{ 'aria-label': 'Text transform' }}
+            onChange={(event) => {
+              const value = event.target.value as TextTransform | 'auto';
+              // Auto clears the stored field: the patch names it with
+              // no value and the reducer deletes the key, so the
+              // variant goes back to MUI's own default.
+              patch(
+                value === 'auto' ? { textTransform: undefined } : { textTransform: value },
+              );
+            }}
+            size="small"
+            sx={{ fontSize: 14, fontWeight: 500, height: 30, width: 118 }}
+            value={row.textTransform ?? 'auto'}
+          >
+            {textTransformOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
               </MenuItem>
             ))}
           </Select>
@@ -213,6 +256,7 @@ export function TypographyPanel() {
       fontWeight: style?.fontWeight ?? spec.fontWeight,
       lineHeight: style?.lineHeight ?? spec.lineHeight,
       letterSpacing: style?.letterSpacing ?? 0,
+      textTransform: style?.textTransform,
     };
   });
   const selectedRow = rows.find((row) => row.variant === selectedVariant);
