@@ -25,7 +25,9 @@ import type {
 } from '../../state/editor-state.types';
 import {
   resolveSemanticColors,
+  resolveSurfaceColors,
   type ResolvedSemanticColor,
+  type ResolvedSurfaceColors,
 } from '../../theme/create-runtime-theme';
 import { PANEL_WIDTH_DEFAULT } from './panel-width';
 import { PillTab, SearchBox } from './primitives';
@@ -50,39 +52,6 @@ import { TypographyPanel } from './TypographyPanel';
 // the panels: every control dispatches the same editor actions the old
 // shell's inspectors use, so edits are undoable like all other edits.
 // The preset row was wired earlier, in Phase 4 (see below).
-
-const paletteDefaults = {
-  light: {
-    primary: '#171717',
-    secondary: '#f5f5f5',
-    error: '#dc2626',
-    warning: '#ed6c02',
-    info: '#0288d1',
-    success: '#2e7d32',
-    'background.default': '#ffffff',
-    'background.paper': '#ffffff',
-    'text.primary': '#0a0a0a',
-    'text.secondary': '#737373',
-    'text.disabled': '#a3a3a3',
-    divider: '#e5e5e5',
-  },
-  dark: {
-    primary: '#fafafa',
-    secondary: '#262626',
-    error: '#ef4444',
-    warning: '#ffa726',
-    info: '#29b6f6',
-    success: '#66bb6a',
-    'background.default': '#0a0a0a',
-    'background.paper': '#0a0a0a',
-    'text.primary': '#fafafa',
-    'text.secondary': '#a3a3a3',
-    'text.disabled': '#737373',
-    divider: '#262626',
-  },
-} as const;
-
-type PaletteDefaultKey = keyof (typeof paletteDefaults)['light'];
 
 interface ColorRowData {
   label: string;
@@ -115,12 +84,17 @@ interface ColorSectionData {
 
 function buildColorSections(
   palette: PaletteSettings | undefined,
-  mode: PreviewMode,
   resolved: Record<SemanticPaletteRole, ResolvedSemanticColor>,
+  surfaces: ResolvedSurfaceColors,
 ): ColorSectionData[] {
-  const defaults = paletteDefaults[mode];
-  const pick = (override: string | undefined, key: PaletteDefaultKey) =>
-    override ?? defaults[key];
+  // Every value the rows show comes from the resolved runtime theme
+  // (the semantic resolution for the token rows, the surface
+  // resolution for text, backgrounds, and divider), never from a
+  // panel-side copy of the defaults (audit finding C1): the baseline
+  // plus MUI's defaults, via the theme mapping, are the one source,
+  // so a baseline change moves the panel, the preview, and the export
+  // together. The project's stored values reach the rows through that
+  // same resolution, which already layers them over the defaults.
 
   // Each semantic token gets a Main row plus Light and Dark rows. A
   // variant the project stores shows the stored value as a pinned row;
@@ -132,7 +106,7 @@ function buildColorSections(
     return [
       {
         label: name,
-        value: pick(stored?.main, role),
+        value: resolved[role].main,
         kind: 'semantic',
         role,
         variant: 'main',
@@ -160,9 +134,9 @@ function buildColorSections(
     {
       title: 'Text',
       rows: [
-        { label: 'Primary text', value: pick(palette?.text?.primary, 'text.primary'), kind: 'surface', role: 'text.primary' },
-        { label: 'Secondary text', value: pick(palette?.text?.secondary, 'text.secondary'), kind: 'surface', role: 'text.secondary' },
-        { label: 'Disabled text', value: pick(palette?.text?.disabled, 'text.disabled'), kind: 'surface', role: 'text.disabled' },
+        { label: 'Primary text', value: surfaces.text.primary, kind: 'surface', role: 'text.primary' },
+        { label: 'Secondary text', value: surfaces.text.secondary, kind: 'surface', role: 'text.secondary' },
+        { label: 'Disabled text', value: surfaces.text.disabled, kind: 'surface', role: 'text.disabled' },
       ],
     },
     {
@@ -179,9 +153,9 @@ function buildColorSections(
     {
       title: 'Surfaces',
       rows: [
-        { label: 'Page background', value: pick(palette?.background?.default, 'background.default'), kind: 'surface', role: 'background.default' },
-        { label: 'Surface', value: pick(palette?.background?.paper, 'background.paper'), kind: 'surface', role: 'background.paper' },
-        { label: 'Divider', value: pick(palette?.divider, 'divider'), kind: 'surface', role: 'divider' },
+        { label: 'Page background', value: surfaces.background.default, kind: 'surface', role: 'background.default' },
+        { label: 'Surface', value: surfaces.background.paper, kind: 'surface', role: 'background.paper' },
+        { label: 'Divider', value: surfaces.divider, kind: 'surface', role: 'divider' },
       ],
     },
     {
@@ -885,12 +859,16 @@ export function TokenPanel({ width = PANEL_WIDTH_DEFAULT }: { width?: number }) 
     () => resolveSemanticColors(project, activeMode),
     [project, activeMode],
   );
+  const resolvedSurfaces = useMemo(
+    () => resolveSurfaceColors(project, activeMode),
+    [project, activeMode],
+  );
 
   // The panel search filters the Color tab's rows by token name and hex
   // value (the design spec); sections left with no matching row drop out
   // while a query is active. Other tabs ignore the query.
   const normalizedQuery = query.trim().toLowerCase();
-  const sections = buildColorSections(palette, activeMode, resolvedSemantic)
+  const sections = buildColorSections(palette, resolvedSemantic, resolvedSurfaces)
     .map((section) => ({
       ...section,
       rows:

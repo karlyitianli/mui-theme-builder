@@ -1,3 +1,4 @@
+import { paletteSettingsToMui } from '../../theme/palette-adapter';
 import { createDefaultProject } from './create-default-project';
 import { createMuiDefaultProject } from './create-mui-default-project';
 import type { ThemeProject } from './theme-project.types';
@@ -8,9 +9,25 @@ export interface ThemePreset {
   id: ThemePresetId;
   name: string;
   // The four swatch dots the preset row shows for this preset (primary,
-  // secondary, surface, divider of its light scheme).
+  // secondary, surface, divider of its light scheme). They are the
+  // preset's identity swatches, shown in both modes, and they are
+  // derived from the preset's own factory project through the palette
+  // adapter, not a literal copy of its values (audit finding C7): if a
+  // preset's palette ever changes, its dots move with it.
   dots: string[];
   createProject: (now?: Date) => ThemeProject;
+}
+
+function presetDots(createProject: (now?: Date) => ThemeProject): string[] {
+  const palette = paletteSettingsToMui('light', createProject().colorSchemes.light.palette);
+  const mainOf = (color: typeof palette.primary): string =>
+    color !== undefined && 'main' in color ? (color.main ?? '') : '';
+  return [
+    mainOf(palette.primary),
+    mainOf(palette.secondary),
+    palette.background?.paper ?? '',
+    palette.divider ?? '',
+  ];
 }
 
 // The builder's theme presets (Karl's Nov 26, 2026 preset decision).
@@ -30,13 +47,13 @@ export const THEME_PRESETS: ThemePreset[] = [
   {
     id: 'black',
     name: 'Black',
-    dots: ['#171717', '#f5f5f5', '#f5f5f5', '#e5e5e5'],
+    dots: presetDots(createDefaultProject),
     createProject: createDefaultProject,
   },
   {
     id: 'mui-default',
     name: 'Default',
-    dots: ['#1976d2', '#9c27b0', '#ffffff', '#e0e0e0'],
+    dots: presetDots(createMuiDefaultProject),
     createProject: createMuiDefaultProject,
   },
 ];

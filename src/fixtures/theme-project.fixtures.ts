@@ -19,10 +19,15 @@ export const customizedProjectFixture = {
     shape: { borderRadius: 8 },
     spacing: 8,
     typography: {
+      // Exactly the catalog's Inter entry, which is what the
+      // Typography panel stores when a user picks Inter (audit
+      // findings T3 and T4): the full weight list and the Arial
+      // fallback, so the characterized export matches a panel-created
+      // project instead of carrying a Roboto no panel path produces.
       font: {
         family: 'Inter',
-        weights: [400, 500, 700],
-        fallback: ['Roboto', 'Arial', 'sans-serif'],
+        weights: [300, 400, 500, 600, 700],
+        fallback: ['Arial', 'sans-serif'],
       },
     },
   },

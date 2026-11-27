@@ -18,6 +18,21 @@ describe('theme presets (Nov 26, 2026)', () => {
     expect(STARTUP_PRESET_ID).toBe('black');
   });
 
+  it('derives the preset dots from each preset\u2019s own light palette (task 4.1, finding C7)', () => {
+    // Primary, secondary, surface (background paper), divider of the
+    // preset's light scheme, resolved through the palette adapter:
+    // the dots are identity swatches, not a literal copy that can go
+    // stale. (The old Black literals duplicated the secondary in the
+    // surface slot; the resolved paper is #ffffff.)
+    expect(THEME_PRESETS[0].dots).toEqual(['#171717', '#f5f5f5', '#ffffff', '#e5e5e5']);
+    expect(THEME_PRESETS[1].dots).toEqual([
+      '#1976d2',
+      '#9c27b0',
+      '#fff',
+      'rgba(0, 0, 0, 0.12)',
+    ]);
+  });
+
   it('the Black project stores the Nov 26 density and shadow configuration', () => {
     const project = createDefaultProject();
     // Comfortable (8px) is stored explicitly; shadows are the None

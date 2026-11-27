@@ -43,6 +43,24 @@ function validateMetadata(value: unknown, errors: string[]): boolean {
   return errors.length === 0;
 }
 
+// A hex color string the app can actually use: 3, 6, or 8 hex digits
+// after the #. Palette strings that start with # but are not valid
+// hex ('#12', '#gggggg') are values neither the app nor MUI can
+// interpret; audit finding C4. Legitimate stored forms pass
+// untouched: uppercase hex, the Default preset's three-digit hexes,
+// rgba() strings, and named colors are all values the app itself
+// stores or MUI accepts as-is.
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+
+function hasOnlyValidHexColors(value: unknown): boolean {
+  if (typeof value === 'string') {
+    return !value.startsWith('#') || HEX_COLOR_PATTERN.test(value);
+  }
+  if (Array.isArray(value)) return value.every(hasOnlyValidHexColors);
+  if (isRecord(value)) return Object.values(value).every(hasOnlyValidHexColors);
+  return true;
+}
+
 function validateColorSchemes(value: unknown, errors: string[]): boolean {
   if (!isRecord(value) || !hasOnlyKeys(value, ['light', 'dark'])) {
     errors.push('colorSchemes must contain only light and dark schemes.');
@@ -59,6 +77,8 @@ function validateColorSchemes(value: unknown, errors: string[]): boolean {
       errors.push(`colorSchemes.${mode}.palette must be an object.`);
     } else if (scheme.palette !== undefined && !isSparseJsonValue(scheme.palette)) {
       errors.push(`colorSchemes.${mode}.palette contains an unsupported value.`);
+    } else if (scheme.palette !== undefined && !hasOnlyValidHexColors(scheme.palette)) {
+      errors.push(`colorSchemes.${mode}.palette contains a malformed hex color.`);
     }
   }
 

@@ -72,7 +72,10 @@ export type EditorAction =
   | { type: 'set-action-color'; mode: PreviewMode; key: ActionColorKey; color: string }
   | { type: 'set-action-opacity'; mode: PreviewMode; key: ActionOpacityKey; value: number }
   | { type: 'set-base-font-size'; value: number }
-  | { type: 'set-google-font'; font: GoogleFontSettings }
+  // A font of undefined clears the stored font: the project goes back
+  // to no font, and the theme mapping applies the baseline's stack
+  // (the Typography panel's System default choice, audit finding T2).
+  | { type: 'set-google-font'; font: GoogleFontSettings | undefined }
   | { type: 'set-typography-variant'; variant: TypographyVariant; patch: TypographyStyle }
   | { type: 'set-border-radius'; value: number }
   | { type: 'set-card-border-radius'; value: number }

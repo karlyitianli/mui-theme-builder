@@ -6,7 +6,10 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // The generated fixture is exporter output, not app source: it is
+  // compile-checked by verify:generated and diffed against the
+  // exporter by its test (audit finding C2), so lint does not apply.
+  globalIgnores(['dist', 'generated-fixtures']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

@@ -41,7 +41,10 @@ describe('TokenPanel tabs (Phase 2)', () => {
     expect(screen.getByText('Type specimens')).toBeInTheDocument();
     expect(screen.getByText('Inter')).toBeInTheDocument();
     expect(screen.getByText('14 px')).toBeInTheDocument();
-    expect(screen.getByText('32px \u00B7 700 \u00B7 1.20')).toBeInTheDocument();
+    // The fixture stores no variants, so the h1 specimen shows the
+    // resolved applied values (task 4.1, finding T1), not the Figma
+    // frame's 32px / 700 / 1.20 specimen scale.
+    expect(screen.getByText('96px \u00B7 300 \u00B7 1.17')).toBeInTheDocument();
   });
 
   it('shows the Spacing panel with the scale derived from the project base unit', () => {

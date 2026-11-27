@@ -167,7 +167,7 @@ export const theme = createTheme({
     tooltip: 1500,
   },
   typography: {
-    fontFamily: 'Inter, Roboto, Arial, sans-serif',
+    fontFamily: 'Inter, Arial, sans-serif',
     fontSize: 14,
     button: {
       fontSize: 14,

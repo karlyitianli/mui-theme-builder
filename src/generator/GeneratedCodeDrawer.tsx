@@ -22,6 +22,12 @@ import { emitThemeTsx } from './emit-theme-tsx';
 
 type CodeTab = 'theme' | 'font' | 'integration';
 
+// The code view is a dark block in both modes by design (audit finding
+// C6): its colors come from the shell theme's grey ramp (the sx grey.900
+// background and grey.50 text below), and its type is this named
+// monospace stack, so no value in the drawer comes from nowhere.
+const CODE_FONT_FAMILY = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
 export function GeneratedCodeDrawer({
   open,
   onClose,
@@ -77,7 +83,7 @@ export function GeneratedCodeDrawer({
         <Box
           component="pre"
           tabIndex={0}
-          sx={{ bgcolor: '#111318', color: '#e8e8e8', flex: 1, fontFamily: 'monospace', fontSize: 13, m: 0, overflow: 'auto', p: 3, whiteSpace: 'pre' }}
+          sx={{ bgcolor: 'grey.900', color: 'grey.50', flex: 1, fontFamily: CODE_FONT_FAMILY, fontSize: 13, m: 0, overflow: 'auto', p: 3, whiteSpace: 'pre' }}
         >
           <code>{code}</code>
         </Box>

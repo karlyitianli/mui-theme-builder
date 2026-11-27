@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Divider, MenuItem, Select, Stack, Typography } from '@mui/material';
 
 import type { TypographyVariant } from '../../domain/typography.types';
@@ -6,47 +6,47 @@ import type { CssLengthValue, FontWeight, TextTransform } from '../../domain/val
 import { findGoogleFont, googleFontCatalog } from '../../fonts/catalog';
 import { useEditorDispatch, useEditorState } from '../../state/editor-hooks';
 import type { PreviewMode } from '../../state/editor-state.types';
+import { resolveTypographyVariants } from '../../theme/create-runtime-theme';
 import { ComponentStepperRow, SectionLabel, StepperRow } from './primitives';
 import { shellBorderForMode } from './shell-border';
 
 // Typography tab panel, from Figma frame 294:152: font family dropdown,
-// base font size and letter spacing steppers, then a specimen row for each
-// of the 13 variants (name, sample text at the variant's size, and a
-// "size · weight · line height" meta line).
+// base font size stepper, then a specimen row for each of the 13
+// variants (name, sample text at the variant's size, and a
+// "size · weight · line height" meta line), with an editor for the
+// selected variant (size, weight, text transform, line height, letter
+// spacing, all through set-typography-variant; spacing is per variant,
+// there is no global letter-spacing field).
 //
-// Phase 5 wired the controls to the same actions the old shell's
-// TypographyInspector uses: the family dropdown dispatches set-google-font
-// (with the inspector's [400] weight list), the base size stepper
-// dispatches set-base-font-size, and clicking a specimen row selects that
-// variant and opens its editor (size, weight, line height, letter
-// spacing, all through set-typography-variant, the only letter-spacing
-// action the model has; spacing is per variant, there is no global
-// letter-spacing field). Values fall back to the frame's specimen values
-// when the project does not set a variant.
+// The specimen and editor values come from the resolved runtime theme
+// (resolveTypographyVariants), the same theme the preview renders and
+// the exporter ships, so the panel shows the values the theme actually
+// applies: a stored variant value where the project sets one, the
+// baseline's overrides and MUI's built-in defaults where it does not
+// (audit finding T1; the panel used to fall back to the frame's
+// specimen scale, which the theme never applied). The frame keeps only
+// the sample texts and the row order.
 
 interface VariantSpec {
   variant: TypographyVariant;
   sample: string;
-  fontSize: number;
-  fontWeight: number;
-  lineHeight: number;
 }
 
-// The frame's specimen defaults, in the frame's order.
+// The frame's specimen rows, in the frame's order.
 const variantSpecs: VariantSpec[] = [
-  { variant: 'h1', sample: 'Heading 1', fontSize: 32, fontWeight: 700, lineHeight: 1.2 },
-  { variant: 'h2', sample: 'Heading 2', fontSize: 28, fontWeight: 700, lineHeight: 1.25 },
-  { variant: 'h3', sample: 'Heading 3', fontSize: 24, fontWeight: 600, lineHeight: 1.3 },
-  { variant: 'h4', sample: 'Heading 4', fontSize: 20, fontWeight: 600, lineHeight: 1.35 },
-  { variant: 'h5', sample: 'Heading 5', fontSize: 18, fontWeight: 600, lineHeight: 1.4 },
-  { variant: 'h6', sample: 'Heading 6', fontSize: 16, fontWeight: 600, lineHeight: 1.4 },
-  { variant: 'subtitle1', sample: 'Subtitle 1', fontSize: 16, fontWeight: 400, lineHeight: 1.75 },
-  { variant: 'subtitle2', sample: 'Subtitle 2', fontSize: 14, fontWeight: 500, lineHeight: 1.57 },
-  { variant: 'body1', sample: 'Body 1', fontSize: 16, fontWeight: 400, lineHeight: 1.5 },
-  { variant: 'body2', sample: 'Body 2', fontSize: 14, fontWeight: 400, lineHeight: 1.43 },
-  { variant: 'button', sample: 'Button', fontSize: 14, fontWeight: 500, lineHeight: 1.75 },
-  { variant: 'caption', sample: 'Caption', fontSize: 12, fontWeight: 400, lineHeight: 1.66 },
-  { variant: 'overline', sample: 'OVERLINE', fontSize: 12, fontWeight: 500, lineHeight: 2.66 },
+  { variant: 'h1', sample: 'Heading 1' },
+  { variant: 'h2', sample: 'Heading 2' },
+  { variant: 'h3', sample: 'Heading 3' },
+  { variant: 'h4', sample: 'Heading 4' },
+  { variant: 'h5', sample: 'Heading 5' },
+  { variant: 'h6', sample: 'Heading 6' },
+  { variant: 'subtitle1', sample: 'Subtitle 1' },
+  { variant: 'subtitle2', sample: 'Subtitle 2' },
+  { variant: 'body1', sample: 'Body 1' },
+  { variant: 'body2', sample: 'Body 2' },
+  { variant: 'button', sample: 'Button' },
+  { variant: 'caption', sample: 'Caption' },
+  { variant: 'overline', sample: 'OVERLINE' },
 ];
 
 const weightOptions = ['300', '400', '500', '600', '700'];
@@ -69,10 +69,10 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
 interface VariantRowData {
   variant: TypographyVariant;
   sample: string;
-  fontSize: CssLengthValue;
+  fontSize: number;
   fontWeight: number;
   lineHeight: number | string;
-  letterSpacing: CssLengthValue;
+  letterSpacing: number;
   textTransform?: TextTransform;
 }
 
@@ -90,6 +90,7 @@ const textTransformOptions: { label: string; value: TextTransform | 'auto' }[] =
 function VariantRow({
   fontSize,
   fontWeight,
+  letterSpacing,
   lineHeight,
   onSelect,
   sample,
@@ -106,7 +107,7 @@ function VariantRow({
     >
       <Typography
         sx={{
-          color: selected ? 'text.primary' : '#a3a3a3',
+          color: selected ? 'text.primary' : 'text.secondary',
           flexShrink: 0,
           fontSize: 12,
           fontWeight: selected ? 600 : 400,
@@ -120,6 +121,7 @@ function VariantRow({
         sx={{
           fontSize,
           fontWeight,
+          letterSpacing,
           lineHeight,
           minWidth: 0,
           overflow: 'hidden',
@@ -147,7 +149,10 @@ function VariantRow({
 
 // Editor for the selected variant, with the old inspector's ranges:
 // font size 8-128 step 0.5, line height 0.8-3 step 0.05, letter
-// spacing -2 to 10 step 0.1, weight one of 300-700.
+// spacing -2 to 10 step 0.1, weight one of 300-700. The values it
+// shows and steps from are the variant's resolved values, so the
+// first step from an unset variant pins the value the theme already
+// applies (the pattern the Color panel's auto rows use).
 function VariantEditor({ mode, row }: { mode: PreviewMode; row: VariantRowData }) {
   const dispatch = useEditorDispatch();
   const patch = (partial: {
@@ -237,26 +242,38 @@ function VariantEditor({ mode, row }: { mode: PreviewMode; row: VariantRowData }
   );
 }
 
+// The family dropdown's value for a project with no stored font: the
+// empty string, rendered by the System default entry below. A project
+// that stores no font applies the baseline's system stack (audit
+// finding T2), so the dropdown names that state instead of showing a
+// family the theme does not use; choosing the entry clears a stored
+// font back to it.
+const NO_FONT_VALUE = '';
+
 export function TypographyPanel() {
   const { activeMode, project } = useEditorState();
   const dispatch = useEditorDispatch();
   const [selectedVariant, setSelectedVariant] = useState<TypographyVariant | null>(null);
   const typography = project.foundations?.typography;
-  // The v2 design is Inter-first; the frame's dropdown shows Inter when no
-  // project font is set (the old shell's inspector defaults to Roboto).
-  const fontFamily = typography?.font?.family ?? 'Inter';
+  const storedFamily = typography?.font?.family;
   const baseFontSize = typography?.fontSize ?? 14;
 
+  // The resolved variant values, rebuilt when the project changes:
+  // what the preview renders and the exporter ships, per variant.
+  const resolvedVariants = useMemo(() => resolveTypographyVariants(project), [project]);
+
   const rows: VariantRowData[] = variantSpecs.map((spec) => {
-    const style = typography?.variants?.[spec.variant];
+    const resolved = resolvedVariants[spec.variant];
     return {
       variant: spec.variant,
       sample: spec.sample,
-      fontSize: style?.fontSize ?? spec.fontSize,
-      fontWeight: style?.fontWeight ?? spec.fontWeight,
-      lineHeight: style?.lineHeight ?? spec.lineHeight,
-      letterSpacing: style?.letterSpacing ?? 0,
-      textTransform: style?.textTransform,
+      fontSize: resolved.fontSize,
+      fontWeight: resolved.fontWeight,
+      lineHeight: resolved.lineHeight,
+      letterSpacing: resolved.letterSpacing,
+      // The transform select reads the stored field only (task 1.5):
+      // unset reads Auto, whatever the resolved theme applies.
+      textTransform: typography?.variants?.[spec.variant]?.textTransform,
     };
   });
   const selectedRow = rows.find((row) => row.variant === selectedVariant);
@@ -266,26 +283,43 @@ export function TypographyPanel() {
       <Stack spacing={1.5}>
         <SectionLabel>Font family</SectionLabel>
         <Select
+          displayEmpty
           fullWidth
           inputProps={{ 'aria-label': 'Font family' }}
           onChange={(event) => {
-            const font = findGoogleFont(event.target.value as string);
+            const value = event.target.value as string;
+            if (value === NO_FONT_VALUE) {
+              dispatch({ type: 'set-google-font', font: undefined });
+              return;
+            }
+            const font = findGoogleFont(value);
             if (font) {
+              // Picking a family stores its full catalog weight list
+              // (audit finding T3): the exported theme's variants call
+              // for weights up to 700, so loading and exporting only
+              // 400 left the rest to synthesis.
               dispatch({
                 type: 'set-google-font',
-                font: { family: font.family, weights: [400], fallback: font.fallback },
+                font: { family: font.family, weights: font.weights, fallback: font.fallback },
               });
             }
           }}
           size="small"
           sx={{ fontSize: 14, fontWeight: 500, height: 30 }}
-          value={findGoogleFont(fontFamily) ? fontFamily : 'Inter'}
+          value={storedFamily ?? NO_FONT_VALUE}
         >
+          <MenuItem value={NO_FONT_VALUE}>System default</MenuItem>
           {googleFontCatalog.map((font) => (
             <MenuItem key={font.family} value={font.family}>
               {font.family}
             </MenuItem>
           ))}
+          {/* A stored family outside the catalog (an imported project
+              need not use one) is shown as itself, never silently
+              relabeled as another family. */}
+          {storedFamily && !findGoogleFont(storedFamily) && (
+            <MenuItem value={storedFamily}>{storedFamily}</MenuItem>
+          )}
         </Select>
       </Stack>
       <StepperRow
@@ -299,11 +333,11 @@ export function TypographyPanel() {
         }
         value={`${baseFontSize} px`}
       />
-      {/* Letter spacing is per variant in the project model (there is no
-          global field), so the editor for it lives in the selected
-          variant's settings below; this row keeps the frame's global
-          display value. */}
-      <StepperRow label="Letter spacing" mode={activeMode} value="0 px" />
+      {/* No global Letter spacing row: the model has no global
+          letter-spacing field, so the frame's static "0 px" row read
+          as a live control that did nothing (audit finding T6). Letter
+          spacing is per variant, edited in the selected variant's
+          settings below. */}
       <Divider />
       <SectionLabel>Type specimens</SectionLabel>
       <Stack spacing={1.5}>

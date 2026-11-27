@@ -106,6 +106,35 @@ describe('TokenPanel wiring (Phase 5)', () => {
     expect(probeMode()).toBe('light');
   });
 
+  it('the Color panel main and surface rows show the resolved theme values (task 4.1, finding C1)', () => {
+    renderPanel();
+    // Light scheme of a fresh project: the baseline's mains and
+    // surfaces plus MUI's own warning, info, and success mains, the
+    // values the runtime theme resolves and the export carries. The
+    // panel reads them from that resolution, not from a hardcoded
+    // copy, so these are the theme's numbers, stated independently.
+    for (const value of [
+      '#171717', // primary
+      '#f5f5f5', // secondary
+      '#dc2626', // error
+      '#ed6c02', // warning (MUI)
+      '#0288d1', // info (MUI)
+      '#2e7d32', // success (MUI)
+      '#0a0a0a', // text primary
+      '#737373', // text secondary
+      '#a3a3a3', // text disabled
+      '#e5e5e5', // divider
+    ]) {
+      expect(screen.getAllByText(value).length).toBeGreaterThan(0);
+    }
+    fireEvent.click(screen.getByText('Dark'));
+    for (const value of ['#ef4444', '#ffa726', '#29b6f6', '#66bb6a', '#262626']) {
+      expect(screen.getAllByText(value).length).toBeGreaterThan(0);
+    }
+    // The light-only error main is gone in the dark scheme.
+    expect(screen.queryByText('#dc2626')).not.toBeInTheDocument();
+  });
+
   it('the panel search filters color rows by token name and by hex value', () => {
     renderPanel();
     const search = screen.getByLabelText('Search');
@@ -131,13 +160,74 @@ describe('TokenPanel wiring (Phase 5)', () => {
     fireEvent.click(screen.getByText('Typography'));
     fireEvent.click(screen.getByText('Heading 1'));
     expect(screen.getByText('h1 settings')).toBeInTheDocument();
+    // The editor steps from the resolved value the theme applies
+    // (task 4.1, finding T1): h1 resolves to 96px, so one step stores
+    // 96.5. Before the audit fix the panel stepped from the Figma
+    // frame's 32px fallback and stored 32.5.
     fireEvent.click(screen.getByLabelText('Increase Font size'));
-    expect(probeProject().foundations?.typography?.variants?.h1?.fontSize).toBe(32.5);
+    expect(probeProject().foundations?.typography?.variants?.h1?.fontSize).toBe(96.5);
     fireEvent.click(screen.getByLabelText('Increase Letter spacing'));
     expect(probeProject().foundations?.typography?.variants?.h1?.letterSpacing).toBe(0.1);
     fireEvent.mouseDown(screen.getByLabelText('Font weight'));
     fireEvent.click(screen.getByRole('option', { name: '600' }));
     expect(probeProject().foundations?.typography?.variants?.h1?.fontWeight).toBe(600);
+  });
+
+  it('the Typography specimens show the values the theme applies (task 4.1, finding T1)', () => {
+    renderPanel();
+    fireEvent.click(screen.getByText('Typography'));
+    // A fresh project's applied scale: MUI's built-in variants with
+    // the baseline's body1, body2, and button overrides. These are
+    // the meta lines the shared theme mapping produces for the same
+    // project the probe reports; the frame's specimen scale (32px,
+    // 700, 1.20 for h1) must not appear.
+    const expectedMeta = [
+      '96px \u00B7 300 \u00B7 1.17',
+      '60px \u00B7 300 \u00B7 1.20',
+      '48px \u00B7 400 \u00B7 1.17',
+      '34px \u00B7 400 \u00B7 1.24',
+      '24px \u00B7 400 \u00B7 1.33',
+      '20px \u00B7 500 \u00B7 1.60',
+      '16px \u00B7 400 \u00B7 1.75',
+      '14px \u00B7 500 \u00B7 1.57',
+      '14px \u00B7 400 \u00B7 1.50',
+      '13px \u00B7 400 \u00B7 1.50',
+      '14px \u00B7 500 \u00B7 1.40',
+      '12px \u00B7 400 \u00B7 1.66',
+      '12px \u00B7 400 \u00B7 2.66',
+    ];
+    for (const meta of expectedMeta) {
+      expect(screen.getByText(meta)).toBeInTheDocument();
+    }
+    expect(screen.queryByText('32px \u00B7 700 \u00B7 1.20')).not.toBeInTheDocument();
+  });
+
+  it('the family dropdown names the unset state and picking a family stores its catalog weights (task 4.1, findings T2 and T3)', { timeout: 20000 }, () => {
+    renderPanel();
+    fireEvent.click(screen.getByText('Typography'));
+    // No font is stored on a fresh project, and the applied stack is
+    // the baseline's system stack: the dropdown says so instead of
+    // naming a family the theme does not use.
+    expect(screen.getByRole('combobox', { name: 'Font family' })).toHaveTextContent(
+      'System default',
+    );
+    fireEvent.mouseDown(screen.getByLabelText('Font family'));
+    fireEvent.click(screen.getByRole('option', { name: 'Inter' }));
+    // The full catalog weight list is stored, not just 400, so the
+    // preview loads and the export requests every weight the theme's
+    // variants call for.
+    expect(probeProject().foundations?.typography?.font).toEqual({
+      family: 'Inter',
+      weights: [300, 400, 500, 600, 700],
+      fallback: ['Arial', 'sans-serif'],
+    });
+    // Choosing System default clears the stored font again.
+    fireEvent.mouseDown(screen.getByLabelText('Font family'));
+    fireEvent.click(screen.getByRole('option', { name: 'System default' }));
+    expect(probeProject().foundations?.typography?.font).toBeUndefined();
+    expect(screen.getByRole('combobox', { name: 'Font family' })).toHaveTextContent(
+      'System default',
+    );
   });
 
   it('a Typography text transform edit sets the field and Auto clears it (task 1.5)', { timeout: 20000 }, () => {

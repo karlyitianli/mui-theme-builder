@@ -72,4 +72,35 @@ describe('validateThemeProject (characterization)', () => {
     const result = validateThemeProject(futureProjectFixture);
     expect(result.success).toBe(false);
   });
+
+  // Audit finding C4: a palette string that starts with # but is not
+  // valid hex is a color neither the app nor MUI can interpret, so
+  // import rejects it. Legitimate stored forms pass: uppercase hex
+  // and the Default preset's three-digit hexes and rgba strings.
+  it('rejects malformed hex colors in a palette but accepts legitimate forms', () => {
+    const withPalette = (palette: unknown) => ({
+      ...defaultProjectFixture,
+      colorSchemes: {
+        light: { palette },
+        dark: { palette: {} },
+      },
+    });
+    expect(
+      validateThemeProject(withPalette({ primary: { main: '#12' } })).success,
+    ).toBe(false);
+    expect(
+      validateThemeProject(withPalette({ primary: { main: '#gggggg' } })).success,
+    ).toBe(false);
+    expect(
+      validateThemeProject(withPalette({ primary: { main: '#FAFAFA' } })).success,
+    ).toBe(true);
+    expect(
+      validateThemeProject(
+        withPalette({
+          background: { default: '#fff' },
+          text: { primary: 'rgba(0, 0, 0, 0.87)' },
+        }),
+      ).success,
+    ).toBe(true);
+  });
 });
