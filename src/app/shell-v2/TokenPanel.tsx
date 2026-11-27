@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
+import type { FocusEvent, KeyboardEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise';
 import { CaretDownIcon } from '@phosphor-icons/react/dist/csr/CaretDown';
-import { Box, Divider, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Box, Divider, IconButton, InputBase, Menu, MenuItem, Stack, Typography } from '@mui/material';
 
-import type { PaletteSettings } from '../../domain/palette.types';
+import { GREY_SHADES, resolveAction, resolveGrey } from '../../domain/palette-defaults';
+import type {
+  ActionColorKey,
+  ActionOpacityKey,
+  GreyShade,
+  PaletteSettings,
+} from '../../domain/palette.types';
 import {
   findThemePreset,
   THEME_PRESETS,
@@ -84,9 +90,15 @@ interface ColorRowData {
   // Which reducer action edits this row, mirroring the old shell's
   // PaletteInspector: semantic roles go through set-semantic-color,
   // everything else (text, backgrounds, divider) through
-  // set-surface-color.
-  kind: 'semantic' | 'surface';
-  role: SemanticPaletteRole | SurfacePaletteRole;
+  // set-surface-color. The Grey and Action groups (task 3.6) have their
+  // own actions, set-grey-color and set-action-color, keyed by shade
+  // and action key instead of a role.
+  kind: 'semantic' | 'surface' | 'grey' | 'action';
+  role?: SemanticPaletteRole | SurfacePaletteRole;
+  // Grey rows only: which shade of the ramp this row edits.
+  shade?: GreyShade;
+  // Action rows only: which action color this row edits.
+  actionKey?: ActionColorKey;
   // Semantic rows only: which variant of the token this row edits.
   variant?: SemanticColorVariant;
   // Semantic light and dark rows only: true while the variant is not
@@ -172,7 +184,71 @@ function buildColorSections(
         { label: 'Divider', value: pick(palette?.divider, 'divider'), kind: 'surface', role: 'divider' },
       ],
     },
+    {
+      // The grey ramp (task 3.6): the resolved values, MUI's defaults
+      // until a shade is edited and stored. The ramp is the same in
+      // both schemes, so the rows read identically under Light and
+      // Dark; the edits still land per scheme.
+      title: 'Grey',
+      rows: GREY_SHADES.map((shade) => ({
+        label: `Grey ${shade}`,
+        value: resolveGrey(palette?.grey)[shade],
+        kind: 'grey' as const,
+        shade,
+      })),
+    },
   ];
+}
+
+interface OpacityRowData {
+  opacityKey: ActionOpacityKey;
+  label: string;
+  value: number;
+}
+
+interface ActionSectionData {
+  colorRows: ColorRowData[];
+  opacityRows: OpacityRowData[];
+}
+
+const actionColorRowDefs: Array<{ key: ActionColorKey; label: string }> = [
+  { key: 'active', label: 'Active' },
+  { key: 'hover', label: 'Hover' },
+  { key: 'selected', label: 'Selected' },
+  { key: 'disabled', label: 'Disabled' },
+  { key: 'disabledBackground', label: 'Disabled background' },
+  { key: 'focus', label: 'Focus' },
+];
+
+const actionOpacityRowDefs: Array<{ key: ActionOpacityKey; label: string }> = [
+  { key: 'hoverOpacity', label: 'Hover opacity' },
+  { key: 'selectedOpacity', label: 'Selected opacity' },
+  { key: 'disabledOpacity', label: 'Disabled opacity' },
+  { key: 'focusOpacity', label: 'Focus opacity' },
+  { key: 'activatedOpacity', label: 'Activated opacity' },
+];
+
+// The Action group (task 3.6) mixes color rows with opacity numbers,
+// so it is built separately from the color-only sections above: the
+// resolved action values for the scheme, MUI's defaults until edited.
+function buildActionSection(
+  palette: PaletteSettings | undefined,
+  mode: PreviewMode,
+): ActionSectionData {
+  const action = resolveAction(mode, palette?.action);
+  return {
+    colorRows: actionColorRowDefs.map(({ key, label }) => ({
+      label,
+      value: action[key],
+      kind: 'action' as const,
+      actionKey: key,
+    })),
+    opacityRows: actionOpacityRowDefs.map(({ key, label }) => ({
+      opacityKey: key,
+      label,
+      value: action[key],
+    })),
+  };
 }
 
 const tokenTabs = ['Color', 'Typography', 'Spacing', 'Radius', 'Shadows', 'Other'] as const;
@@ -448,6 +524,7 @@ interface ColorRowProps extends ColorRowData {
 }
 
 function ColorRow({
+  actionKey,
   auto,
   kind,
   label,
@@ -456,6 +533,7 @@ function ColorRow({
   pickerAnchor,
   pickerOpen,
   role,
+  shade,
   value,
   variant,
 }: ColorRowProps) {
@@ -471,6 +549,10 @@ function ColorRow({
         variant: variant ?? 'main',
         color,
       });
+    } else if (kind === 'grey' && shade !== undefined) {
+      dispatch({ type: 'set-grey-color', mode: activeMode, shade, color });
+    } else if (kind === 'action' && actionKey !== undefined) {
+      dispatch({ type: 'set-action-color', mode: activeMode, key: actionKey, color });
     } else {
       dispatch({ type: 'set-surface-color', mode: activeMode, role: role as SurfacePaletteRole, color });
     }
@@ -591,7 +673,7 @@ function ColorSection({
       </Box>
       {expanded &&
         rows.map((row) => {
-          const rowKey = `${row.kind}-${row.role}-${row.variant ?? 'main'}`;
+          const rowKey = `${row.kind}-${row.role ?? ''}-${row.variant ?? ''}-${row.shade ?? ''}-${row.actionKey ?? ''}`;
           return (
             <ColorRow
               key={rowKey}
@@ -603,6 +685,163 @@ function ColorSection({
             />
           );
         })}
+    </Stack>
+  );
+}
+
+// An Action opacity row: label on the left, a bordered box on the
+// right in the hex box's 78x32 shape. It follows the Other tab's
+// numeric-field pattern (commit on blur or Enter, invalid entries
+// ignored and reverted), except opacities are decimals, so the value
+// is clamped to 0 to 1 rather than rounded to an integer.
+function OpacityRow({ label, opacityKey, value }: OpacityRowData) {
+  const { activeMode } = useEditorState();
+  const dispatch = useEditorDispatch();
+
+  const commit = (event: FocusEvent<HTMLInputElement>) => {
+    const parsed = Number(event.target.value);
+    if (Number.isFinite(parsed) && event.target.value.trim() !== '') {
+      dispatch({
+        type: 'set-action-opacity',
+        mode: activeMode,
+        key: opacityKey,
+        value: Math.min(1, Math.max(0, parsed)),
+      });
+    } else {
+      // Not a number: ignore the entry and show the stored value again.
+      event.target.value = String(value);
+    }
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') event.currentTarget.blur();
+  };
+
+  return (
+    <Box sx={{ alignItems: 'center', display: 'flex', height: 32 }}>
+      <Typography sx={{ fontSize: 14, lineHeight: '20px' }}>{label}</Typography>
+      <Box
+        sx={{
+          alignItems: 'center',
+          border: shellBorderForMode(activeMode),
+          borderRadius: '6px',
+          display: 'flex',
+          flexShrink: 0,
+          height: 32,
+          justifyContent: 'center',
+          ml: 'auto',
+          width: 78,
+        }}
+      >
+        <InputBase
+          key={value}
+          defaultValue={String(value)}
+          inputProps={{ 'aria-label': `${label} value` }}
+          onBlur={commit}
+          onKeyDown={onKeyDown}
+          sx={{
+            fontSize: 14,
+            lineHeight: '20px',
+            '& input': { p: 0, textAlign: 'center' },
+          }}
+        />
+      </Box>
+    </Box>
+  );
+}
+
+// An Action color row: swatch and label on one line, the color string
+// in a full-width bordered field under it, the Other tab's easing-row
+// shape. The text field is deliberate, not a fallback: MUI's action
+// defaults are alpha-bearing rgba strings (rgba(0, 0, 0, 0.04) and
+// kin), and the shared color picker is hex-only by design (Karl's
+// Nov 25, 2026 picker: HEX field, no opacity slider), so it cannot
+// represent them; converting them to hex would change the resolved
+// theme. A text field commits any CSS color string (hex included) on
+// blur or Enter as one undoable edit, and an empty entry reverts.
+function ActionColorRow({ actionKey, label, value }: ColorRowData) {
+  const { activeMode } = useEditorState();
+  const dispatch = useEditorDispatch();
+
+  const commit = (event: FocusEvent<HTMLInputElement>) => {
+    const next = event.target.value.trim();
+    if (next !== '' && actionKey !== undefined) {
+      dispatch({ type: 'set-action-color', mode: activeMode, key: actionKey, color: next });
+    } else {
+      event.target.value = value;
+    }
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') event.currentTarget.blur();
+  };
+
+  return (
+    <Stack spacing={0.75}>
+      <Box sx={{ alignItems: 'center', display: 'flex' }}>
+        <Box
+          sx={{
+            bgcolor: value,
+            border: shellBorderForMode(activeMode),
+            borderRadius: '6px',
+            flexShrink: 0,
+            height: 24,
+            width: 24,
+          }}
+        />
+        <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1.5 }}>{label}</Typography>
+      </Box>
+      <Box
+        sx={{
+          alignItems: 'center',
+          bgcolor: 'background.paper',
+          border: shellBorderForMode(activeMode),
+          borderRadius: '6px',
+          display: 'flex',
+          height: 32,
+          px: 1,
+        }}
+      >
+        <InputBase
+          key={value}
+          defaultValue={value}
+          fullWidth
+          inputProps={{ 'aria-label': `${label} value` }}
+          onBlur={commit}
+          onKeyDown={onKeyDown}
+          sx={{ fontSize: 13, fontWeight: 500, lineHeight: '20px', '& input': { p: 0 } }}
+        />
+      </Box>
+    </Stack>
+  );
+}
+
+// The Action section: color rows through ActionColorRow and opacity
+// rows through OpacityRow. Collapse is local view state, like the
+// other Color sections.
+function ActionSection({ colorRows, opacityRows }: ActionSectionData) {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <Stack spacing={1.5}>
+      <Box
+        aria-expanded={expanded}
+        onClick={() => setExpanded((previous) => !previous)}
+        role="button"
+        sx={{ alignItems: 'center', cursor: 'pointer', display: 'flex' }}
+      >
+        <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: '20px' }}>
+          Action
+        </Typography>
+        <CaretDownIcon
+          size={16}
+          style={{
+            marginLeft: 'auto',
+            transform: expanded ? undefined : 'rotate(-90deg)',
+          }}
+        />
+      </Box>
+      {expanded &&
+        colorRows.map((row) => <ActionColorRow key={row.actionKey} {...row} />)}
+      {expanded &&
+        opacityRows.map((row) => <OpacityRow key={row.opacityKey} {...row} />)}
     </Stack>
   );
 }
@@ -665,6 +904,28 @@ export function TokenPanel({ width = PANEL_WIDTH_DEFAULT }: { width?: number }) 
     }))
     .filter((section) => section.rows.length > 0);
 
+  // The Action section filters by the same rule (name or value, with
+  // opacity values matched as their decimal text) and drops out when
+  // neither a color row nor an opacity row matches.
+  const actionData = buildActionSection(palette, activeMode);
+  const filteredAction: ActionSectionData =
+    normalizedQuery === ''
+      ? actionData
+      : {
+          colorRows: actionData.colorRows.filter(
+            (row) =>
+              row.label.toLowerCase().includes(normalizedQuery) ||
+              row.value.toLowerCase().includes(normalizedQuery),
+          ),
+          opacityRows: actionData.opacityRows.filter(
+            (row) =>
+              row.label.toLowerCase().includes(normalizedQuery) ||
+              String(row.value).includes(normalizedQuery),
+          ),
+        };
+  const actionVisible =
+    filteredAction.colorRows.length > 0 || filteredAction.opacityRows.length > 0;
+
   return (
     <Box
       sx={{
@@ -698,6 +959,7 @@ export function TokenPanel({ width = PANEL_WIDTH_DEFAULT }: { width?: number }) 
                   pickerRowKey={pickerRowKey}
                 />
               ))}
+              {actionVisible && <ActionSection {...filteredAction} />}
             </Stack>
           </>
         )}

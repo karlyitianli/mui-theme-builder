@@ -272,3 +272,93 @@ describe('TokenPanel semantic color variants', () => {
     expect(within(rowElement('Primary light')).queryByText('#454545')).not.toBeInTheDocument();
   });
 });
+
+// Task 3.6: the Color panel gains a Grey section (the MUI ramp, edited
+// through the shared color picker like every other color row) and an
+// Action section (color strings in text fields, because MUI's action
+// defaults are alpha-bearing rgba the hex-only picker cannot
+// represent, plus opacity numbers that clamp to 0 to 1 and revert on
+// invalid entries, the Other tab's numeric pattern).
+describe('TokenPanel Grey and Action sections (task 3.6)', () => {
+  afterEach(() => cleanup());
+
+  function rowElement(label: string): HTMLElement {
+    const row = screen.getByText(label).parentElement;
+    if (!row) throw new Error(`row for ${label} not found`);
+    return row;
+  }
+
+  function editRowHex(label: string, nextValue: string) {
+    fireEvent.click(within(rowElement(label)).getByText(/^#[0-9a-f]{6}$/));
+    const input = screen.getByLabelText(`${label} hex value`);
+    fireEvent.change(input, { target: { value: nextValue } });
+    fireEvent.blur(input);
+  }
+
+  it('shows the Grey ramp at MUI defaults and the Action rows for the scheme', () => {
+    renderPanel();
+    expect(screen.getByText('Grey')).toBeInTheDocument();
+    expect(within(rowElement('Grey 500')).getByText('#9e9e9e')).toBeInTheDocument();
+    expect(within(rowElement('Grey 900')).getByText('#212121')).toBeInTheDocument();
+    expect(screen.getByText('Action')).toBeInTheDocument();
+    expect((screen.getByLabelText('Hover value') as HTMLInputElement).value).toBe(
+      'rgba(0, 0, 0, 0.04)',
+    );
+    expect((screen.getByLabelText('Hover opacity value') as HTMLInputElement).value).toBe('0.04');
+    expect((screen.getByLabelText('Activated opacity value') as HTMLInputElement).value).toBe(
+      '0.12',
+    );
+  });
+
+  it('editing a Grey row through the picker stores the shade for the scheme', () => {
+    renderPanel();
+    editRowHex('Grey 500', '#123456');
+    expect(probeProject().colorSchemes.light.palette?.grey?.[500]).toBe('#123456');
+    expect(within(rowElement('Grey 500')).getByText('#123456')).toBeInTheDocument();
+    // The rest of the ramp stays at the stored defaults.
+    expect(probeProject().colorSchemes.light.palette?.grey?.[900]).toBe('#212121');
+  });
+
+  it('editing an Action color field stores the string, and an empty entry reverts', () => {
+    renderPanel();
+    const hover = screen.getByLabelText('Hover value');
+    fireEvent.change(hover, { target: { value: 'rgba(0, 0, 0, 0.10)' } });
+    fireEvent.blur(hover);
+    expect(probeProject().colorSchemes.light.palette?.action?.hover).toBe('rgba(0, 0, 0, 0.10)');
+
+    const active = screen.getByLabelText('Active value');
+    fireEvent.change(active, { target: { value: '' } });
+    fireEvent.blur(active);
+    expect(probeProject().colorSchemes.light.palette?.action?.active).toBe('rgba(0, 0, 0, 0.54)');
+    expect((screen.getByLabelText('Active value') as HTMLInputElement).value).toBe(
+      'rgba(0, 0, 0, 0.54)',
+    );
+  });
+
+  it('opacity fields commit decimals, clamp to 0 to 1, and revert invalid entries', () => {
+    renderPanel();
+    const hoverOpacity = screen.getByLabelText('Hover opacity value');
+    fireEvent.change(hoverOpacity, { target: { value: '0.5' } });
+    fireEvent.blur(hoverOpacity);
+    expect(probeProject().colorSchemes.light.palette?.action?.hoverOpacity).toBe(0.5);
+
+    const selectedOpacity = screen.getByLabelText('Selected opacity value');
+    fireEvent.change(selectedOpacity, { target: { value: '2' } });
+    fireEvent.blur(selectedOpacity);
+    expect(probeProject().colorSchemes.light.palette?.action?.selectedOpacity).toBe(1);
+
+    const focusOpacity = screen.getByLabelText('Focus opacity value');
+    fireEvent.change(focusOpacity, { target: { value: 'abc' } });
+    fireEvent.blur(focusOpacity);
+    expect(probeProject().colorSchemes.light.palette?.action?.focusOpacity).toBe(0.12);
+    expect((screen.getByLabelText('Focus opacity value') as HTMLInputElement).value).toBe('0.12');
+  });
+
+  it('the Dark scheme shows its own action values while the grey ramp is unchanged', () => {
+    renderPanel();
+    fireEvent.click(screen.getByText('Dark'));
+    expect((screen.getByLabelText('Active value') as HTMLInputElement).value).toBe('#fff');
+    expect((screen.getByLabelText('Hover opacity value') as HTMLInputElement).value).toBe('0.08');
+    expect(within(rowElement('Grey 500')).getByText('#9e9e9e')).toBeInTheDocument();
+  });
+});
