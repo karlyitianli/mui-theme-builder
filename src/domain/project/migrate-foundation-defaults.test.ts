@@ -115,6 +115,73 @@ describe('migrateThemeProject foundation defaults (Phase 5)', () => {
     expect(result.project.foundations?.zIndex?.tooltip).toBe(1500);
   });
 
+  // Task 3.6 (Nov 26, 2026): the palette's Grey and Action groups fill
+  // the same way, per scheme and per key, with MUI's defaults, the
+  // values a pre-3.6 project's theme already resolved to (the baseline
+  // carries neither group). The grey ramp is mode-independent; the
+  // action group is stored per scheme because MUI's differs by mode.
+  it('gives an old project the MUI grey ramp and per-scheme action defaults', () => {
+    const result = migrateThemeProject(customizedProjectFixture);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    for (const mode of ['light', 'dark'] as const) {
+      expect(result.project.colorSchemes[mode].palette?.grey).toEqual({
+        50: '#fafafa',
+        100: '#f5f5f5',
+        200: '#eeeeee',
+        300: '#e0e0e0',
+        400: '#bdbdbd',
+        500: '#9e9e9e',
+        600: '#757575',
+        700: '#616161',
+        800: '#424242',
+        900: '#212121',
+      });
+    }
+    expect(result.project.colorSchemes.light.palette?.action).toEqual({
+      active: 'rgba(0, 0, 0, 0.54)',
+      hover: 'rgba(0, 0, 0, 0.04)',
+      hoverOpacity: 0.04,
+      selected: 'rgba(0, 0, 0, 0.08)',
+      selectedOpacity: 0.08,
+      disabled: 'rgba(0, 0, 0, 0.26)',
+      disabledBackground: 'rgba(0, 0, 0, 0.12)',
+      disabledOpacity: 0.38,
+      focus: 'rgba(0, 0, 0, 0.12)',
+      focusOpacity: 0.12,
+      activatedOpacity: 0.12,
+    });
+    expect(result.project.colorSchemes.dark.palette?.action?.active).toBe('#fff');
+    expect(result.project.colorSchemes.dark.palette?.action?.activatedOpacity).toBe(0.24);
+    // The palette values the project already had are preserved.
+    expect(result.project.colorSchemes.light.palette?.primary?.main).toBe('#6750a4');
+    expect(result.project.colorSchemes.dark.palette?.primary?.main).toBe('#d0bcff');
+  });
+
+  it('fills only the missing grey and action keys and keeps the stored ones', () => {
+    const partial = {
+      ...defaultProjectFixture,
+      colorSchemes: {
+        light: {
+          palette: {
+            grey: { 500: '#111111' },
+            action: { hoverOpacity: 0.5 },
+          },
+        },
+        dark: { palette: {} },
+      },
+    };
+    const result = migrateThemeProject(partial);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.migrated).toBe(true);
+    expect(result.project.colorSchemes.light.palette?.grey?.[500]).toBe('#111111');
+    expect(result.project.colorSchemes.light.palette?.grey?.[900]).toBe('#212121');
+    expect(result.project.colorSchemes.light.palette?.action?.hoverOpacity).toBe(0.5);
+    expect(result.project.colorSchemes.light.palette?.action?.hover).toBe('rgba(0, 0, 0, 0.04)');
+    expect(result.project.colorSchemes.dark.palette?.action?.active).toBe('#fff');
+  });
+
   it('fills only the missing shadow keys and reports no migration when complete', () => {
     const partial = {
       ...defaultProjectFixture,

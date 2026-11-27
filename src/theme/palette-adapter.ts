@@ -1,5 +1,6 @@
 import { createTheme, type Palette, type PaletteOptions } from '@mui/material/styles';
 
+import { resolveAction, resolveGrey } from '../domain/palette-defaults';
 import type {
   PaletteColorSettings,
   PaletteSettings,
@@ -38,6 +39,13 @@ export function paletteSettingsToMui(
       : { success: mergePaletteColor(baseline.success, settings?.success) }),
     background: { ...baseline.background, ...settings?.background },
     text: { ...baseline.text, ...settings?.text },
+    // Grey and action (task 3.6) emit resolved in full: the baseline
+    // carries neither group, so a sparse project's stored shades merge
+    // over MUI's defaults here, exactly the values its theme resolved
+    // to before the groups had model homes. The panel, the preview,
+    // and the export therefore agree on every shade and action value.
+    grey: resolveGrey(settings?.grey),
+    action: resolveAction(mode, settings?.action),
   };
 }
 

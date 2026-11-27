@@ -30,10 +30,24 @@ describe('theme presets (Nov 26, 2026)', () => {
       input: 0,
       menu: 8,
     });
-    // The palette stays sparse: the baseline in the theme mapping
-    // supplies the Black values.
-    expect(project.colorSchemes.light.palette).toBeUndefined();
-    expect(project.colorSchemes.dark.palette).toBeUndefined();
+    // The palette stays sparse apart from the Grey and Action groups
+    // (task 3.6), which both presets store explicitly at MUI's
+    // defaults: the baseline in the theme mapping supplies the Black
+    // values for everything else, but it carries neither group, so
+    // storing them is what keeps the panel, the preview, and the
+    // export in agreement, as with the stored foundations.
+    for (const mode of ['light', 'dark'] as const) {
+      const palette = project.colorSchemes[mode].palette;
+      expect(palette?.primary).toBeUndefined();
+      expect(palette?.background).toBeUndefined();
+      expect(palette?.text).toBeUndefined();
+      expect(palette?.divider).toBeUndefined();
+      expect(palette?.grey?.[500]).toBe('#9e9e9e');
+      expect(Object.keys(palette?.grey ?? {})).toHaveLength(10);
+      expect(Object.keys(palette?.action ?? {})).toHaveLength(11);
+    }
+    expect(project.colorSchemes.light.palette?.action?.active).toBe('rgba(0, 0, 0, 0.54)');
+    expect(project.colorSchemes.dark.palette?.action?.active).toBe('#fff');
   });
 
   it('a fresh Black project agrees on spacing across panel value, options, runtime theme, and export', () => {
@@ -76,6 +90,40 @@ describe('the Default preset against a plain createTheme oracle', () => {
       expect(palette.text.secondary).toBe(oracle.text.secondary);
       expect(palette.text.disabled).toBe(oracle.text.disabled);
       expect(palette.divider).toBe(oracle.divider);
+      // Grey and action (task 3.6): the ramp's stored shades and the
+      // full action group match the oracle per mode.
+      for (const shade of [50, 100, 200, 300, 400, 500, 600, 700, 800, 900] as const) {
+        expect(palette.grey[shade]).toBe(oracle.grey[shade]);
+      }
+      for (const key of ['active', 'hover', 'hoverOpacity', 'selected', 'selectedOpacity', 'disabled', 'disabledBackground', 'disabledOpacity', 'focus', 'focusOpacity', 'activatedOpacity'] as const) {
+        expect(palette.action[key]).toBe(oracle.action[key]);
+      }
+    }
+  });
+
+  it('both presets store the MUI grey and action defaults (task 3.6)', () => {
+    for (const createProject of [createDefaultProject, createMuiDefaultProject]) {
+      const stored = createProject();
+      for (const mode of ['light', 'dark'] as const) {
+        const oracle = createTheme({ palette: { mode } }).palette;
+        const palette = stored.colorSchemes[mode].palette;
+        for (const shade of [50, 100, 200, 300, 400, 500, 600, 700, 800, 900] as const) {
+          expect(palette?.grey?.[shade]).toBe(oracle.grey[shade]);
+        }
+        expect(palette?.action).toEqual({
+          active: oracle.action.active,
+          hover: oracle.action.hover,
+          hoverOpacity: oracle.action.hoverOpacity,
+          selected: oracle.action.selected,
+          selectedOpacity: oracle.action.selectedOpacity,
+          disabled: oracle.action.disabled,
+          disabledBackground: oracle.action.disabledBackground,
+          disabledOpacity: oracle.action.disabledOpacity,
+          focus: oracle.action.focus,
+          focusOpacity: oracle.action.focusOpacity,
+          activatedOpacity: oracle.action.activatedOpacity,
+        });
+      }
     }
   });
 

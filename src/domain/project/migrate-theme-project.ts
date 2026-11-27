@@ -7,6 +7,8 @@ import {
   DEFAULT_TRANSITION_EASING,
   DEFAULT_Z_INDEX,
 } from '../foundation-defaults';
+import { DEFAULT_ACTION, DEFAULT_GREY } from '../palette-defaults';
+import type { PaletteSettings } from '../palette.types';
 import { CURRENT_SCHEMA_VERSION } from './project-version';
 import type { ThemeProject } from './theme-project.types';
 import { validateThemeProject, type ProjectValidationResult } from './validate-theme-project';
@@ -15,6 +17,28 @@ export type ProjectMigrationResult =
   | { success: true; project: ThemeProject; migrated: boolean }
   | { success: false; errors: string[] };
 
+// Fills one scheme's palette with the Grey and Action defaults (task
+// 3.6), per key, the way the foundation groups below fill: a project
+// saved before the groups existed gains exactly the MUI values its
+// theme already resolved to, and stored shades or action values are
+// never overwritten.
+function withPaletteDefaults(
+  mode: 'light' | 'dark',
+  palette: PaletteSettings | undefined,
+): { palette: PaletteSettings; migrated: boolean } {
+  const grey = palette?.grey ?? {};
+  const action = palette?.action ?? {};
+  const filledGrey = { ...DEFAULT_GREY, ...grey };
+  const filledAction = { ...DEFAULT_ACTION[mode], ...action };
+  // The fill only ever adds keys, so a longer filled group is exactly
+  // "some key was missing".
+  const migrated =
+    Object.keys(filledGrey).length > Object.keys(grey).length ||
+    Object.keys(filledAction).length > Object.keys(action).length;
+  if (!migrated) return { palette: palette ?? {}, migrated: false };
+  return { palette: { ...palette, grey: filledGrey, action: filledAction }, migrated: true };
+}
+
 // Projects saved before the Phase 5 foundation fields existed have no
 // shadows, no card radius, and possibly no spacing base unit. Fill those
 // with the shared locked defaults so a loaded project edits and exports
@@ -22,7 +46,8 @@ export type ProjectMigrationResult =
 // never overwritten, per key. The Other tab's groups (task 3.5,
 // breakpoints, transitions, z-index) fill the same way with MUI's
 // defaults, so a project saved before they existed gains exactly the
-// values its theme already resolved to.
+// values its theme already resolved to. The palette's Grey and Action
+// groups (task 3.6) fill identically, per scheme and per key.
 function withFoundationDefaults(project: ThemeProject): { project: ThemeProject; migrated: boolean } {
   const foundations = project.foundations ?? {};
   const shape = foundations.shape ?? {};
@@ -54,7 +79,11 @@ function withFoundationDefaults(project: ThemeProject): { project: ThemeProject;
     (key) => zIndex[key as keyof typeof zIndex] === undefined,
   );
 
-  if (!needsSpacing && !needsCardRadius && !needsShadows && !needsBreakpoints && !needsTransitions && !needsZIndex) {
+  const lightPalette = withPaletteDefaults('light', project.colorSchemes.light.palette);
+  const darkPalette = withPaletteDefaults('dark', project.colorSchemes.dark.palette);
+  const needsPalette = lightPalette.migrated || darkPalette.migrated;
+
+  if (!needsSpacing && !needsCardRadius && !needsShadows && !needsBreakpoints && !needsTransitions && !needsZIndex && !needsPalette) {
     return { project, migrated: false };
   }
 
@@ -62,6 +91,14 @@ function withFoundationDefaults(project: ThemeProject): { project: ThemeProject;
     migrated: true,
     project: {
       ...project,
+      ...(needsPalette
+        ? {
+            colorSchemes: {
+              light: { ...project.colorSchemes.light, palette: lightPalette.palette },
+              dark: { ...project.colorSchemes.dark, palette: darkPalette.palette },
+            },
+          }
+        : {}),
       foundations: {
         ...foundations,
         ...(needsSpacing ? { spacing: DEFAULT_SPACING } : {}),

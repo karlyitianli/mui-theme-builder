@@ -46,6 +46,115 @@ describe('projectToThemeOptions (characterization)', () => {
   });
 });
 
+// Task 3.6 (Nov 26, 2026): palette.grey and palette.action emit in
+// full for both schemes. The stored defaults are MUI's (see
+// palette-defaults.ts), the values every project already resolved to
+// before the groups had model homes, so the resolved runtime theme is
+// unchanged; only the options (and therefore the export) gain the
+// explicit blocks.
+describe('grey and action groups (task 3.6)', () => {
+  const greyDefaults = {
+    50: '#fafafa',
+    100: '#f5f5f5',
+    200: '#eeeeee',
+    300: '#e0e0e0',
+    400: '#bdbdbd',
+    500: '#9e9e9e',
+    600: '#757575',
+    700: '#616161',
+    800: '#424242',
+    900: '#212121',
+  };
+
+  it('emits the MUI grey ramp and per-scheme action defaults for the default project', () => {
+    const options = projectToThemeOptions(defaultProjectFixture);
+    const light = options.colorSchemes?.light as {
+      palette?: { grey?: unknown; action?: unknown };
+    };
+    const dark = options.colorSchemes?.dark as {
+      palette?: { grey?: unknown; action?: unknown };
+    };
+    expect(light.palette?.grey).toEqual(greyDefaults);
+    expect(dark.palette?.grey).toEqual(greyDefaults);
+    expect(light.palette?.action).toEqual({
+      active: 'rgba(0, 0, 0, 0.54)',
+      hover: 'rgba(0, 0, 0, 0.04)',
+      hoverOpacity: 0.04,
+      selected: 'rgba(0, 0, 0, 0.08)',
+      selectedOpacity: 0.08,
+      disabled: 'rgba(0, 0, 0, 0.26)',
+      disabledBackground: 'rgba(0, 0, 0, 0.12)',
+      disabledOpacity: 0.38,
+      focus: 'rgba(0, 0, 0, 0.12)',
+      focusOpacity: 0.12,
+      activatedOpacity: 0.12,
+    });
+    expect(dark.palette?.action).toEqual({
+      active: '#fff',
+      hover: 'rgba(255, 255, 255, 0.08)',
+      hoverOpacity: 0.08,
+      selected: 'rgba(255, 255, 255, 0.16)',
+      selectedOpacity: 0.16,
+      disabled: 'rgba(255, 255, 255, 0.3)',
+      disabledBackground: 'rgba(255, 255, 255, 0.12)',
+      disabledOpacity: 0.38,
+      focus: 'rgba(255, 255, 255, 0.12)',
+      focusOpacity: 0.12,
+      activatedOpacity: 0.24,
+    });
+  });
+
+  it('resolves the same defaults for a sparse project that stores neither group', () => {
+    const options = projectToThemeOptions(customizedProjectFixture);
+    const light = options.colorSchemes?.light as {
+      palette?: { grey?: Record<string, string>; action?: { hoverOpacity?: number } };
+    };
+    expect(light.palette?.grey?.[500]).toBe('#9e9e9e');
+    expect(light.palette?.action?.hoverOpacity).toBe(0.04);
+  });
+
+  it('carries stored grey and action edits into the options', () => {
+    const project: ThemeProject = {
+      ...customizedProjectFixture,
+      colorSchemes: {
+        light: {
+          palette: {
+            grey: { 500: '#123456' },
+            action: { hover: '#ff0000', hoverOpacity: 0.5 },
+          },
+        },
+        dark: { palette: {} },
+      },
+    };
+    const options = projectToThemeOptions(project);
+    const light = options.colorSchemes?.light as {
+      palette?: { grey?: Record<string, string>; action?: { hover?: string; hoverOpacity?: number } };
+    };
+    expect(light.palette?.grey?.[500]).toBe('#123456');
+    // Unstored shades still resolve to the defaults around the edit.
+    expect(light.palette?.grey?.[900]).toBe('#212121');
+    expect(light.palette?.action?.hover).toBe('#ff0000');
+    expect(light.palette?.action?.hoverOpacity).toBe(0.5);
+  });
+
+  it('the runtime theme grey and action match a plain createTheme oracle per mode', () => {
+    const theme = createRuntimeTheme(defaultProjectFixture);
+    for (const mode of ['light', 'dark'] as const) {
+      const oracle = createTheme({ palette: { mode } }).palette;
+      const palette = theme.colorSchemes[mode]!.palette;
+      expect(palette.grey).toEqual(oracle.grey);
+      expect(palette.action.active).toBe(oracle.action.active);
+      expect(palette.action.hover).toBe(oracle.action.hover);
+      expect(palette.action.hoverOpacity).toBe(oracle.action.hoverOpacity);
+      expect(palette.action.selected).toBe(oracle.action.selected);
+      expect(palette.action.disabled).toBe(oracle.action.disabled);
+      expect(palette.action.disabledBackground).toBe(oracle.action.disabledBackground);
+      expect(palette.action.focus).toBe(oracle.action.focus);
+      expect(palette.action.activatedOpacity).toBe(oracle.action.activatedOpacity);
+    }
+  });
+});
+
 describe('semantic color variants (main, light, dark)', () => {
   it('leaves light and dark out of the options for an unpinned token', () => {
     const options = projectToThemeOptions(customizedProjectFixture);

@@ -9,6 +9,7 @@ import type {
 import type { ButtonSettings } from '../domain/components/button.types';
 import type { SelectSettings } from '../domain/components/select.types';
 import type { TextFieldSettings } from '../domain/components/text-field.types';
+import type { ActionColorKey, ActionOpacityKey, GreyShade } from '../domain/palette.types';
 import type { GoogleFontSettings, TypographyVariant } from '../domain/typography.types';
 import type { TypographyStyle } from '../domain/value.types';
 
@@ -67,6 +68,9 @@ export type EditorAction =
       variant: 'light' | 'dark';
     }
   | { type: 'set-surface-color'; mode: PreviewMode; role: SurfacePaletteRole; color: string }
+  | { type: 'set-grey-color'; mode: PreviewMode; shade: GreyShade; color: string }
+  | { type: 'set-action-color'; mode: PreviewMode; key: ActionColorKey; color: string }
+  | { type: 'set-action-opacity'; mode: PreviewMode; key: ActionOpacityKey; value: number }
   | { type: 'set-base-font-size'; value: number }
   | { type: 'set-google-font'; font: GoogleFontSettings }
   | { type: 'set-typography-variant'; variant: TypographyVariant; patch: TypographyStyle }

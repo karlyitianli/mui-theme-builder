@@ -6,6 +6,7 @@ import {
   DEFAULT_TRANSITION_EASING,
   DEFAULT_Z_INDEX,
 } from '../foundation-defaults';
+import { DEFAULT_ACTION, DEFAULT_GREY } from '../palette-defaults';
 import { BUILDER_VERSION, CURRENT_SCHEMA_VERSION, TARGET_MUI_VERSION } from './project-version';
 import type { ThemeProjectV1 } from './theme-project.types';
 
@@ -22,8 +23,24 @@ export function createDefaultProject(now = new Date()): ThemeProjectV1 {
       updatedAt: timestamp,
     },
     colorSchemes: {
-      light: {},
-      dark: {},
+      // The palette otherwise stays sparse over the shadcn baseline;
+      // the one exception is the Grey and Action groups (task 3.6),
+      // stored explicitly at MUI's defaults, the values every project
+      // already resolved them to (the baseline carries neither group).
+      // Storing them keeps the panel, the preview, and the export in
+      // agreement, the same reasoning as the stored foundations below.
+      light: {
+        palette: {
+          grey: { ...DEFAULT_GREY },
+          action: { ...DEFAULT_ACTION.light },
+        },
+      },
+      dark: {
+        palette: {
+          grey: { ...DEFAULT_GREY },
+          action: { ...DEFAULT_ACTION.dark },
+        },
+      },
     },
     // This factory is the Black preset's project (the shadcn-styled
     // baseline; see theme-presets.ts). Its foundations are stored

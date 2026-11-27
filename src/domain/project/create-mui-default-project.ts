@@ -4,6 +4,7 @@ import {
   DEFAULT_TRANSITION_EASING,
   DEFAULT_Z_INDEX,
 } from '../foundation-defaults';
+import { DEFAULT_ACTION, DEFAULT_GREY } from '../palette-defaults';
 import { BUILDER_VERSION, CURRENT_SCHEMA_VERSION, TARGET_MUI_VERSION } from './project-version';
 import type { ThemeProjectV1 } from './theme-project.types';
 
@@ -60,6 +61,11 @@ export function createMuiDefaultProject(now = new Date()): ThemeProjectV1 {
             disabled: 'rgba(0, 0, 0, 0.38)',
           },
           divider: 'rgba(0, 0, 0, 0.12)',
+          // Grey and action (task 3.6) at MUI's defaults, from the
+          // shared palette defaults (oracle-verified there): the ramp
+          // is mode-independent, the action group is the light set.
+          grey: { ...DEFAULT_GREY },
+          action: { ...DEFAULT_ACTION.light },
         },
       },
       dark: {
@@ -77,6 +83,8 @@ export function createMuiDefaultProject(now = new Date()): ThemeProjectV1 {
             disabled: 'rgba(255, 255, 255, 0.5)',
           },
           divider: 'rgba(255, 255, 255, 0.12)',
+          grey: { ...DEFAULT_GREY },
+          action: { ...DEFAULT_ACTION.dark },
         },
       },
     },

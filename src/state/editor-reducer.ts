@@ -175,6 +175,57 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         },
       });
     }
+    case 'set-grey-color': {
+      const scheme = state.project.colorSchemes[action.mode];
+      if (scheme.palette?.grey?.[action.shade] === action.color) return state;
+      return commitProject(state, {
+        ...state.project,
+        colorSchemes: {
+          ...state.project.colorSchemes,
+          [action.mode]: {
+            ...scheme,
+            palette: {
+              ...scheme.palette,
+              grey: { ...scheme.palette?.grey, [action.shade]: action.color },
+            },
+          },
+        },
+      });
+    }
+    case 'set-action-color': {
+      const scheme = state.project.colorSchemes[action.mode];
+      if (scheme.palette?.action?.[action.key] === action.color) return state;
+      return commitProject(state, {
+        ...state.project,
+        colorSchemes: {
+          ...state.project.colorSchemes,
+          [action.mode]: {
+            ...scheme,
+            palette: {
+              ...scheme.palette,
+              action: { ...scheme.palette?.action, [action.key]: action.color },
+            },
+          },
+        },
+      });
+    }
+    case 'set-action-opacity': {
+      const scheme = state.project.colorSchemes[action.mode];
+      if (scheme.palette?.action?.[action.key] === action.value) return state;
+      return commitProject(state, {
+        ...state.project,
+        colorSchemes: {
+          ...state.project.colorSchemes,
+          [action.mode]: {
+            ...scheme,
+            palette: {
+              ...scheme.palette,
+              action: { ...scheme.palette?.action, [action.key]: action.value },
+            },
+          },
+        },
+      });
+    }
     case 'set-base-font-size':
       if (state.project.foundations?.typography?.fontSize === action.value) return state;
       return commitProject(state, {
