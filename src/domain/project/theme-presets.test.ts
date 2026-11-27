@@ -65,6 +65,21 @@ describe('theme presets (Nov 26, 2026)', () => {
     expect(createRuntimeTheme(project).spacing(1)).toBe('var(--mui-spacing, 8px)');
     expect(emitThemeTsx(project)).toContain('spacing: 8');
   });
+
+  it('a fresh Black project agrees on radius across stored value, options, runtime theme, and export (task 5.3)', () => {
+    const project = createDefaultProject();
+    // Karl's Nov 26, 2026 radius decision: Rounded (8px) is the
+    // default radius preset, so the Black project stores 8 and the
+    // theme options, the runtime theme the preview renders, and the
+    // exported theme.tsx all carry borderRadius 8. Projects that
+    // never stored a radius still resolve to the historical 6px
+    // fallback. The MUI Default preset is untouched by the decision:
+    // it keeps MUI's own 4, pinned against the oracle below.
+    expect(project.foundations?.shape?.borderRadius).toBe(8);
+    expect(projectToThemeOptions(project).shape?.borderRadius).toBe(8);
+    expect(createRuntimeTheme(project).shape.borderRadius).toBe(8);
+    expect(emitThemeTsx(project)).toContain('borderRadius: 8');
+  });
 });
 
 describe('the Default preset against a plain createTheme oracle', () => {

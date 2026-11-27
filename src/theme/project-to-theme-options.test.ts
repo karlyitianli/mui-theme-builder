@@ -15,7 +15,12 @@ describe('projectToThemeOptions (characterization)', () => {
   it('maps the default project to the baseline options', () => {
     const options = projectToThemeOptions(defaultProjectFixture);
     expect(options.cssVariables).toMatchObject({ colorSchemeSelector: 'data' });
-    expect(options.shape?.borderRadius).toBe(6);
+    // Karl's Nov 26, 2026 radius decision (task 5.3): the default
+    // (Black) project stores Rounded's 8px global radius, so the
+    // options carry 8. This assertion previously pinned 6, the value
+    // an unset project fell back to; that fallback still governs
+    // projects that never stored a radius.
+    expect(options.shape?.borderRadius).toBe(8);
     // Karl's Nov 26, 2026 spacing fix: the default (Black) project now
     // stores its 8px base, so the options carry it and the panel, the
     // preview, and the exported theme agree. This assertion previously

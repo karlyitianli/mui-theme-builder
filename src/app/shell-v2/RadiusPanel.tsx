@@ -18,8 +18,9 @@ import {
 // Card, and Input.
 //
 // Phase 5 wiring: the global stepper and the presets dispatch the
-// existing set-border-radius action (0-32, the old FoundationInspector's
-// range). set-border-radius is global only, so the Button and Input
+// existing set-border-radius action (0-99; the stepper range ran 0-32,
+// the old FoundationInspector's range, until the Full preset's 99
+// raised its ceiling). set-border-radius is global only, so the Button and Input
 // overrides go through the component settings actions the old inspectors
 // use (set-button-settings / set-text-field-settings, writing
 // style.border.radius, preserving the rest of each settings object).
@@ -27,11 +28,14 @@ import {
 // (foundations.shape.cardBorderRadius, default 12px) and dispatches
 // set-card-border-radius. Button and Input fall back to the global value
 // unless their component settings carry their own border radius. The
-// frame's pill row literally reads Sharp / Rounded / Spacious with
-// Rounded active; the preset values are 0px, 6px, and 16px.
+// frame's pill row read Sharp / Rounded / Spacious; Karl's Nov 26,
+// 2026 decision (task 5.3) renamed Spacious to Full and set the values
+// to 0px, 8px, and 99px, with Rounded the default: a fresh project
+// stores 8px (see create-default-project.ts), so the derived active
+// pill is Rounded until the user picks another preset or steps off it.
 
-const radiusPresets = ['Sharp', 'Rounded', 'Spacious'];
-const radiusPresetValues = [0, 6, 16];
+const radiusPresets = ['Sharp', 'Rounded', 'Full'];
+const radiusPresetValues = [0, 8, 99];
 
 function formatRadius(value: CssLengthValue): string {
   return typeof value === 'number' ? `${value}px` : value;
@@ -41,7 +45,7 @@ function asNumber(value: CssLengthValue, fallback: number): number {
   return typeof value === 'number' ? value : fallback;
 }
 
-const clampRadius = (value: number) => Math.min(32, Math.max(0, value));
+const clampRadius = (value: number) => Math.min(99, Math.max(0, value));
 
 export function RadiusPanel() {
   const { activeMode, project } = useEditorState();

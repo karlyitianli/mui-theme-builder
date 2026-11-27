@@ -533,7 +533,7 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 6,
+    borderRadius: 8,
   },
   spacing: 8,
   breakpoints: {

@@ -165,12 +165,38 @@ describe('TokenPanel wiring (Phase 5)', () => {
   it('Radius global and override edits update the project', () => {
     renderPanel();
     fireEvent.click(screen.getByText('Radius'));
+    // The Black project stores Rounded's 8px global radius (Karl's
+    // Nov 26, 2026 radius decision, task 5.3), so the steppers start
+    // from 8, not the 6px an unset project used to fall back to.
     fireEvent.click(screen.getByLabelText('Increase Global border radius'));
-    expect(probeProject().foundations?.shape?.borderRadius).toBe(7);
+    expect(probeProject().foundations?.shape?.borderRadius).toBe(9);
     fireEvent.click(screen.getByLabelText('Increase Button'));
-    expect(probeProject().components?.button?.style?.border?.radius).toBe(8);
+    expect(probeProject().components?.button?.style?.border?.radius).toBe(10);
     fireEvent.click(screen.getByLabelText('Increase Input'));
-    expect(probeProject().components?.textField?.style?.border?.radius).toBe(8);
+    expect(probeProject().components?.textField?.style?.border?.radius).toBe(10);
+  });
+
+  it('Radius presets apply their values, with Rounded the fresh default (task 5.3)', () => {
+    renderPanel();
+    fireEvent.click(screen.getByText('Radius'));
+    // Karl's Nov 26, 2026 decision: Sharp 0, Rounded 8, and Spacious
+    // renamed Full at 99. The fresh project stores Rounded's 8, so
+    // Rounded carries the active pill styling (its background differs
+    // from an inactive pill's) before anything is clicked.
+    expect(screen.getByText('Sharp')).toBeInTheDocument();
+    expect(screen.getByText('Full')).toBeInTheDocument();
+    expect(screen.queryByText('Spacious')).not.toBeInTheDocument();
+    const roundedBg = window.getComputedStyle(screen.getByText('Rounded')).backgroundColor;
+    const sharpBg = window.getComputedStyle(screen.getByText('Sharp')).backgroundColor;
+    expect(roundedBg).not.toBe(sharpBg);
+    expect(probeProject().foundations?.shape?.borderRadius).toBe(8);
+    fireEvent.click(screen.getByText('Full'));
+    expect(probeProject().foundations?.shape?.borderRadius).toBe(99);
+    expect(screen.getAllByText('99px').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('Sharp'));
+    expect(probeProject().foundations?.shape?.borderRadius).toBe(0);
+    fireEvent.click(screen.getByText('Rounded'));
+    expect(probeProject().foundations?.shape?.borderRadius).toBe(8);
   });
 
   it('a Card radius edit updates the project shape', () => {

@@ -2,6 +2,7 @@ import type { ThemeOptions } from '@mui/material/styles';
 
 import type { ThemeProject } from '../domain/project';
 import {
+  DEFAULT_BORDER_RADIUS,
   DEFAULT_CARD_BORDER_RADIUS,
   resolveBreakpoints,
   resolveShadows,
@@ -89,7 +90,7 @@ export function projectToThemeOptions(project: ThemeProject): ThemeOptions {
         palette: paletteSettingsToMui('dark', project.colorSchemes.dark.palette),
       },
     },
-    shape: { borderRadius: foundations?.shape?.borderRadius ?? 6 },
+    shape: { borderRadius: foundations?.shape?.borderRadius ?? DEFAULT_BORDER_RADIUS },
     ...(foundations?.spacing === undefined ? {} : { spacing: foundations.spacing }),
     // The Other tab's groups (task 3.5). Both factories and migration
     // store the full groups (MUI's defaults until edited), and the

@@ -48,7 +48,11 @@ export function createDefaultProject(now = new Date()): ThemeProjectV1 {
     // show: spacing carries the 8px base (Comfortable, Karl's Nov 26,
     // 2026 density decision) instead of staying sparse and relying on
     // the DEFAULT_SPACING fallback, which now only gives older, unset
-    // projects their historical 4px. Shadows carry the Nov 26, 2026
+    // projects their historical 4px. The shape carries the global
+    // radius the same way: 8px, the Rounded preset Karl made the
+    // default on Nov 26, 2026 (task 5.3), instead of the
+    // DEFAULT_BORDER_RADIUS fallback, which now only gives older,
+    // unset projects their historical 6px. Shadows carry the Nov 26, 2026
     // configuration (global none, per-component elevations) and the
     // card radius Karl's locked default. The Other tab's groups
     // (breakpoints, transitions, z-index; task 3.5) store MUI's
@@ -56,7 +60,7 @@ export function createDefaultProject(now = new Date()): ThemeProjectV1 {
     // preview renders and the export carries.
     foundations: {
       spacing: 8,
-      shape: { cardBorderRadius: DEFAULT_CARD_BORDER_RADIUS },
+      shape: { borderRadius: 8, cardBorderRadius: DEFAULT_CARD_BORDER_RADIUS },
       shadows: { ...DEFAULT_SHADOWS },
       breakpoints: { ...DEFAULT_BREAKPOINTS },
       transitions: {

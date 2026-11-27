@@ -10,6 +10,14 @@
 // project stores its 8px base explicitly (Karl's Nov 26, 2026 density
 // decision: Comfortable, 8px, is the default selected preset).
 export const DEFAULT_SPACING = 4;
+// DEFAULT_BORDER_RADIUS is 6px. Like DEFAULT_SPACING, it is the value
+// an *unset* radius resolves to: projects saved before the radius was
+// stored carry none, and both the panel fallback and the theme mapping
+// resolve theirs to 6px, the global default those projects were built
+// and displayed with, so loading one never restyles it. It is no
+// longer the builder's default radius: the Black preset's project
+// stores Rounded's 8px explicitly (Karl's Nov 26, 2026 radius
+// decision, task 5.3: Sharp 0, Rounded 8 and the default, Full 99).
 export const DEFAULT_BORDER_RADIUS = 6;
 export const DEFAULT_CARD_BORDER_RADIUS = 12;
 
