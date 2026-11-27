@@ -129,6 +129,14 @@ const EXPECTED_NAVIGATION_IDS = [
   'tabs',
 ];
 
+// The Layout category carries MUI's four Layout components in
+// alphabetical order by MUI display name. All four are exported by
+// the installed @mui/material (9.3.1, checked against the runtime
+// exports), so this list has no omission either.
+const EXPECTED_LAYOUT_NAMES = ['Box', 'Container', 'Grid', 'Stack'];
+
+const EXPECTED_LAYOUT_IDS = ['box', 'container', 'grid', 'stack'];
+
 const inputsEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Inputs');
 const dataDisplayEntries = () =>
@@ -139,6 +147,8 @@ const surfacesEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Surfaces');
 const navigationEntries = () =>
   PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Navigation');
+const layoutEntries = () =>
+  PREVIEW_COMPONENTS.filter((entry) => entry.category === 'Layout');
 
 describe('PREVIEW_COMPONENTS (Inputs registry)', () => {
   it('contains the MUI Inputs components in alphabetical order, all in Inputs', () => {
@@ -271,12 +281,48 @@ describe('PREVIEW_COMPONENTS (Navigation registry)', () => {
   });
 
   it('places Navigation after Surfaces as the fifth group', () => {
+    expect(
+      PREVIEW_COMPONENTS.slice(
+        0,
+        EXPECTED_INPUT_NAMES.length +
+          EXPECTED_DATA_DISPLAY_NAMES.length +
+          EXPECTED_FEEDBACK_NAMES.length +
+          EXPECTED_SURFACES_NAMES.length +
+          EXPECTED_NAVIGATION_NAMES.length,
+      ).map((entry) => entry.name),
+    ).toEqual([
+      ...EXPECTED_INPUT_NAMES,
+      ...EXPECTED_DATA_DISPLAY_NAMES,
+      ...EXPECTED_FEEDBACK_NAMES,
+      ...EXPECTED_SURFACES_NAMES,
+      ...EXPECTED_NAVIGATION_NAMES,
+    ]);
+    const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
+    expect(groups[4].category).toBe('Navigation');
+    expect(groups[4].entries.map((entry) => entry.name)).toEqual(
+      EXPECTED_NAVIGATION_NAMES,
+    );
+  });
+});
+
+describe('PREVIEW_COMPONENTS (Layout registry)', () => {
+  it('contains the MUI Layout components in alphabetical order, all in Layout', () => {
+    expect(layoutEntries().map((entry) => entry.name)).toEqual(EXPECTED_LAYOUT_NAMES);
+    expect(layoutEntries().map((entry) => entry.id)).toEqual(EXPECTED_LAYOUT_IDS);
+    for (const entry of layoutEntries()) {
+      expect(entry.category).toBe('Layout');
+      expect(typeof entry.render).toBe('function');
+    }
+  });
+
+  it('places Layout after Navigation as the sixth group', () => {
     expect(PREVIEW_COMPONENTS.map((entry) => entry.name)).toEqual([
       ...EXPECTED_INPUT_NAMES,
       ...EXPECTED_DATA_DISPLAY_NAMES,
       ...EXPECTED_FEEDBACK_NAMES,
       ...EXPECTED_SURFACES_NAMES,
       ...EXPECTED_NAVIGATION_NAMES,
+      ...EXPECTED_LAYOUT_NAMES,
     ]);
     const groups = groupPreviewComponents(PREVIEW_COMPONENTS);
     expect(groups.map((group) => group.category)).toEqual([
@@ -285,10 +331,9 @@ describe('PREVIEW_COMPONENTS (Navigation registry)', () => {
       'Feedback',
       'Surfaces',
       'Navigation',
+      'Layout',
     ]);
-    expect(groups[4].entries.map((entry) => entry.name)).toEqual(
-      EXPECTED_NAVIGATION_NAMES,
-    );
+    expect(groups[5].entries.map((entry) => entry.name)).toEqual(EXPECTED_LAYOUT_NAMES);
   });
 });
 
@@ -299,14 +344,16 @@ describe('filterPreviewComponents (preview search)', () => {
         EXPECTED_DATA_DISPLAY_NAMES.length +
         EXPECTED_FEEDBACK_NAMES.length +
         EXPECTED_SURFACES_NAMES.length +
-        EXPECTED_NAVIGATION_NAMES.length,
+        EXPECTED_NAVIGATION_NAMES.length +
+        EXPECTED_LAYOUT_NAMES.length,
     );
     expect(filterPreviewComponents(PREVIEW_COMPONENTS, '   ')).toHaveLength(
       EXPECTED_INPUT_NAMES.length +
         EXPECTED_DATA_DISPLAY_NAMES.length +
         EXPECTED_FEEDBACK_NAMES.length +
         EXPECTED_SURFACES_NAMES.length +
-        EXPECTED_NAVIGATION_NAMES.length,
+        EXPECTED_NAVIGATION_NAMES.length +
+        EXPECTED_LAYOUT_NAMES.length,
     );
   });
 
@@ -360,6 +407,15 @@ describe('filterPreviewComponents (preview search)', () => {
     expect(
       filterPreviewComponents(PREVIEW_COMPONENTS, 'Pagination').map((entry) => entry.name),
     ).toEqual(['Pagination']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'grid').map((entry) => entry.name),
+    ).toEqual(['Grid']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'STACK').map((entry) => entry.name),
+    ).toEqual(['Stack']);
+    expect(
+      filterPreviewComponents(PREVIEW_COMPONENTS, 'Container').map((entry) => entry.name),
+    ).toEqual(['Container']);
   });
 
   it('returns an empty list for a nonsense query', () => {
@@ -388,5 +444,11 @@ describe('PREVIEW_COMPONENTS docs URLs (task 3.2)', () => {
     );
     expect(byId.get('app-bar')).toBe('https://mui.com/material-ui/react-app-bar/');
     expect(byId.get('tabs')).toBe('https://mui.com/material-ui/react-tabs/');
+    expect(byId.get('box')).toBe('https://mui.com/material-ui/react-box/');
+    expect(byId.get('container')).toBe(
+      'https://mui.com/material-ui/react-container/',
+    );
+    expect(byId.get('grid')).toBe('https://mui.com/material-ui/react-grid/');
+    expect(byId.get('stack')).toBe('https://mui.com/material-ui/react-stack/');
   });
 });

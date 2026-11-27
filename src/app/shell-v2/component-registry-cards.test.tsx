@@ -599,6 +599,83 @@ describe('Navigation preview cards', () => {
   });
 });
 
+// Render and interaction smoke tests for the Layout cards added
+// after Navigation (Karl, Nov 26, 2026), in the same style as above.
+// None of the four is an overlay, so every demo renders in place.
+describe('Layout preview cards', () => {
+  afterEach(() => cleanup());
+
+  it('Box renders the filled and bordered sx boxes', () => {
+    const { container } = renderEntry('box');
+    expect(
+      screen.getByText('Background, padding, and radius from sx'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Border and radius from sx')).toBeInTheDocument();
+    // Both boxes are plain MUI Boxes (divs with the Box class hook).
+    expect(container.querySelectorAll('.MuiBox-root')).toHaveLength(2);
+  });
+
+  it('Container starts at maxWidth xs inside its frame', () => {
+    const { container } = renderEntry('container');
+    const inner = container.querySelector('.MuiContainer-root');
+    expect(inner?.className).toContain('MuiContainer-maxWidthXs');
+    expect(screen.getByText('maxWidth xs')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'XS' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('switching the Container toggle changes the maxWidth in force', () => {
+    const { container } = renderEntry('container');
+    fireEvent.click(screen.getByRole('button', { name: 'SM' }));
+    expect(container.querySelector('.MuiContainer-root')?.className).toContain(
+      'MuiContainer-maxWidthSm',
+    );
+    expect(screen.getByText('maxWidth sm')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'None' }));
+    // maxWidth={false} drops the maxWidth class entirely in MUI v9;
+    // there is no MuiContainer-maxWidthFalse class.
+    expect(container.querySelector('.MuiContainer-root')?.className).not.toContain(
+      'MuiContainer-maxWidth',
+    );
+    expect(screen.getByText('No max width')).toBeInTheDocument();
+  });
+
+  it('Grid renders five sized cells in one container', () => {
+    const { container } = renderEntry('grid');
+    // Container plus five items, all carrying the Grid class hook.
+    expect(container.querySelectorAll('.MuiGrid-root')).toHaveLength(6);
+    expect(screen.getAllByText('6')).toHaveLength(2);
+    expect(screen.getAllByText('4')).toHaveLength(3);
+  });
+
+  it('Stack renders its three items with a divider between each pair', () => {
+    const { container } = renderEntry('stack');
+    for (const label of ['One', 'Two', 'Three']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+    expect(container.querySelectorAll('.MuiDivider-root')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Column' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('switching the Stack direction moves the selection to Row', () => {
+    renderEntry('stack');
+    fireEvent.click(screen.getByRole('button', { name: 'Row' }));
+    expect(screen.getByRole('button', { name: 'Row' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Column' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+});
+
 // Checks that need the real preview theme rather than MUI's default
 // theme (which the card tests above render under): the overlay
 // trigger buttons' dark-mode treatment and the Autocomplete dropdown

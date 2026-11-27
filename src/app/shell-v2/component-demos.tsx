@@ -24,6 +24,7 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -35,6 +36,7 @@ import {
   FormControl,
   FormControlLabel,
   FormLabel,
+  Grid,
   IconButton,
   LinearProgress,
   Link,
@@ -1127,5 +1129,147 @@ export function TabsDemo() {
         </Box>
       ))}
     </Box>
+  );
+}
+
+// Layout demos, in the same style as the categories above:
+// canonical usage per component, interaction state local to the
+// card where the component has a meaningful interaction. None of
+// the four is an overlay, so nothing here needs a stage.
+
+// Box is the sx-driven primitive: the demo's two boxes take their
+// background, padding, border, and radius from the edited theme
+// through sx, which is the whole point of the component.
+export function BoxDemo() {
+  return (
+    <Stack spacing={1.5}>
+      <Box
+        sx={{
+          bgcolor: 'primary.main',
+          borderRadius: 2,
+          color: 'primary.contrastText',
+          p: 2,
+        }}
+      >
+        <Typography variant="body2">Background, padding, and radius from sx</Typography>
+      </Box>
+      <Box sx={{ border: 1, borderColor: 'primary.main', borderRadius: 1, p: 1.5 }}>
+        <Typography variant="body2">Border and radius from sx</Typography>
+      </Box>
+    </Stack>
+  );
+}
+
+// Container centres content and caps its width at the chosen
+// breakpoint. The dashed frame is the card-width "viewport" the
+// container sits in; the toggle switches the maxWidth prop between
+// two breakpoints and off, and the shaded container shows which
+// value is in force.
+export function ContainerDemo() {
+  const [maxWidth, setMaxWidth] = useState<'sm' | 'xs' | false>('xs');
+  return (
+    <Stack spacing={1.5}>
+      <ToggleButtonGroup
+        exclusive
+        onChange={(_, newMaxWidth) => {
+          if (newMaxWidth !== null) setMaxWidth(newMaxWidth);
+        }}
+        size="small"
+        value={maxWidth}
+      >
+        <ToggleButton value="xs">XS</ToggleButton>
+        <ToggleButton value="sm">SM</ToggleButton>
+        <ToggleButton value={false}>None</ToggleButton>
+      </ToggleButtonGroup>
+      <Box sx={{ border: '1px dashed', borderColor: 'divider', width: '100%' }}>
+        <Container maxWidth={maxWidth} sx={{ bgcolor: 'action.hover', py: 1.5 }}>
+          <Typography variant="body2">
+            {maxWidth === false ? 'No max width' : `maxWidth ${maxWidth}`}
+          </Typography>
+        </Container>
+      </Box>
+    </Stack>
+  );
+}
+
+// Grid uses the MUI v9 API: a container with spacing, and items
+// sized with the size prop (responsive objects included), not the
+// v1 item/xs props. The cell labels are the column counts the
+// items take at the small breakpoint and up: two halves, then
+// three thirds.
+export function GridDemo() {
+  const cells = [
+    { id: 'half-a', label: '6', size: { sm: 6, xs: 12 } },
+    { id: 'half-b', label: '6', size: { sm: 6, xs: 12 } },
+    { id: 'third-a', label: '4', size: { xs: 4 } },
+    { id: 'third-b', label: '4', size: { xs: 4 } },
+    { id: 'third-c', label: '4', size: { xs: 4 } },
+  ];
+  return (
+    <Grid container spacing={2}>
+      {cells.map((cell) => (
+        <Grid key={cell.id} size={cell.size}>
+          <Box
+            sx={{
+              bgcolor: 'primary.main',
+              borderRadius: 1,
+              color: 'primary.contrastText',
+              p: 1,
+              textAlign: 'center',
+            }}
+          >
+            <Typography variant="body2">{cell.label}</Typography>
+          </Box>
+        </Grid>
+      ))}
+    </Grid>
+  );
+}
+
+// Stack lays its children out in one direction with even spacing;
+// the demo adds a divider between the items and a toggle for the
+// direction, with the divider's orientation following it.
+export function StackDemo() {
+  const [direction, setDirection] = useState<'column' | 'row'>('column');
+  const items = ['One', 'Two', 'Three'];
+  return (
+    <Stack spacing={1.5}>
+      <ToggleButtonGroup
+        exclusive
+        onChange={(_, newDirection) => {
+          if (newDirection !== null) setDirection(newDirection);
+        }}
+        size="small"
+        value={direction}
+      >
+        <ToggleButton value="column">Column</ToggleButton>
+        <ToggleButton value="row">Row</ToggleButton>
+      </ToggleButtonGroup>
+      <Stack
+        direction={direction}
+        divider={
+          <Divider
+            flexItem
+            orientation={direction === 'row' ? 'vertical' : 'horizontal'}
+          />
+        }
+        spacing={2}
+      >
+        {items.map((item) => (
+          <Box
+            key={item}
+            sx={{
+              bgcolor: 'action.hover',
+              borderRadius: 1,
+              flex: 1,
+              p: 1,
+              textAlign: 'center',
+            }}
+          >
+            <Typography variant="body2">{item}</Typography>
+          </Box>
+        ))}
+      </Stack>
+    </Stack>
   );
 }

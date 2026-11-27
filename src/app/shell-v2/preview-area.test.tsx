@@ -264,19 +264,20 @@ describe('PreviewArea Navigation section', () => {
     expect(screen.getAllByText('Link')).toHaveLength(5);
   });
 
-  it('filters across all five categories through the search box', { timeout: 20000 }, () => {
+  it('filters across all six categories through the search box', { timeout: 20000 }, () => {
     renderPreviewArea();
     fireEvent.change(screen.getByPlaceholderText('Search'), {
       target: { value: 'pagination' },
     });
     expect(screen.getByText('Pagination')).toBeInTheDocument();
     expect(screen.getByText('Navigation')).toBeInTheDocument();
-    // No Inputs, Data Display, Feedback, or Surfaces entry matches,
-    // so those sections drop out.
+    // No Inputs, Data Display, Feedback, Surfaces, or Layout entry
+    // matches, so those sections drop out.
     expect(screen.queryByText('Inputs')).not.toBeInTheDocument();
     expect(screen.queryByText('Data Display')).not.toBeInTheDocument();
     expect(screen.queryByText('Feedback')).not.toBeInTheDocument();
     expect(screen.queryByText('Surfaces')).not.toBeInTheDocument();
+    expect(screen.queryByText('Layout')).not.toBeInTheDocument();
     expect(screen.queryByText('Text Field')).not.toBeInTheDocument();
     expect(screen.queryByText('Card')).not.toBeInTheDocument();
   });
@@ -291,6 +292,32 @@ describe('PreviewArea Navigation section', () => {
   });
 });
 
+describe('PreviewArea Layout section', () => {
+  afterEach(() => cleanup());
+
+  it('renders the Layout cards in a section after Navigation', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    const navigationHeader = screen.getByText('Navigation');
+    const layoutHeader = screen.getByText('Layout');
+    expect(
+      navigationHeader.compareDocumentPosition(layoutHeader) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    for (const name of ['Box', 'Container', 'Grid', 'Stack']) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it('collapses and expands the Layout section from its header', { timeout: 20000 }, () => {
+    renderPreviewArea();
+    fireEvent.click(screen.getByText('Layout'));
+    expect(screen.queryByText('Grid')).not.toBeInTheDocument();
+    expect(screen.getByText('Pagination')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Layout'));
+    expect(screen.getByText('Grid')).toBeInTheDocument();
+  });
+});
+
 describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => {
   afterEach(() => cleanup());
 
@@ -302,6 +329,7 @@ describe('PreviewArea section counts and docs links (tasks 3.1 and 3.2)', () => 
       ['Feedback', '6'],
       ['Surfaces', '3'],
       ['Navigation', '9'],
+      ['Layout', '4'],
     ];
     for (const [category, count] of counts) {
       const header = screen.getByText(category).parentElement;

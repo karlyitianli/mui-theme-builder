@@ -2,7 +2,7 @@
 
 **Last updated:** Nov 26, 2026
 
-**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 247 tests passing
+**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 257 tests passing
 
 ## Maintenance rule
 
@@ -14,7 +14,7 @@ This file is the plan of record for the project. Read it before starting work on
 | --- | --- | --- |
 | M0 Safety net (characterization tests) | Done | Vitest suite written before the shell rebuild |
 | M1-M2 New shell and token panels | Done | Token-first left panel with five tabs |
-| M3 Component preview | Done | Outgrew the original 3-component scope; 41 cards at peak, 37 after removals |
+| M3 Component preview | Done | Outgrew the original 3-component scope; 41 cards at peak, 37 after removals, back to 41 with the Layout category |
 | M4 Functional top bar | Done | Mode toggle, undo/redo, reset, export |
 | M5 Token panel wiring | Done | Every panel edit goes through the reducer and is undoable |
 | M6 Component defaults editors (Button, TextField, Select) | Open | Not started; see open tasks |
@@ -41,6 +41,7 @@ This file is the plan of record for the project. Read it before starting work on
 - Inputs expansion to 13 cards with live card-local state; Number Field omitted because it is unavailable in @mui/material 9.3.1
 - Data Display, Feedback, Surfaces, and Navigation categories added; preview peaked at 41 cards
 - Card removals (Transfer List, Icon, Typography, Paper) brought the preview to 37 cards
+- Layout category added (task 2.1, Nov 26, 2026): Box, Container, Grid, Stack in MUI order after Navigation, bringing the preview back to 41 cards; Grid demo uses the v9 size prop API, and the Container demo toggles its maxWidth prop (xs, sm, off) inside a dashed card-width frame because the breakpoint widths are wider than a preview card
 - Preview cards are real themed cards: Card radius, elevation, and surface come from the edited theme
 
 ### M4 Functional top bar
@@ -91,7 +92,6 @@ Effort estimates are rough. Small means a single small change, Medium means a fo
 
 ### Preview coverage
 
-- [ ] 2.1 Layout preview category (Box, Container, Grid, Stack) (Effort: Medium). Not started.
 - [ ] 2.2 Utils preview category (Effort: Medium). Not started.
 - [ ] 2.3 Templates: Sign up, Dashboard, Marketing, Checkout (Effort: Large). All four are stubs reading "Not built yet". Not started.
 - [ ] 2.4 Number Field card (Effort: Small, blocked). Parked by Karl's decision on Nov 25, 2026, because the component is absent from @mui/material 9.3.1. Revisit only if the MUI version changes.

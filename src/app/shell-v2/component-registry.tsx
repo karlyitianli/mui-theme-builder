@@ -18,15 +18,18 @@ import {
   BackdropDemo,
   BadgeDemo,
   BottomNavigationDemo,
+  BoxDemo,
   BreadcrumbsDemo,
   ButtonGroupDemo,
   CardDemo,
   CheckboxDemo,
   ChipDemo,
+  ContainerDemo,
   DialogDemo,
   DividerDemo,
   DrawerDemo,
   FabDemo,
+  GridDemo,
   LinkDemo,
   ListDemo,
   MenuDemo,
@@ -38,6 +41,7 @@ import {
   SliderDemo,
   SnackbarDemo,
   SpeedDialDemo,
+  StackDemo,
   StepperDemo,
   SwitchDemo,
   TableDemo,
@@ -123,6 +127,18 @@ import {
 // Speed Dial demo sits in a taller stage of its own, because the
 // dial opens upward and needs room for its actions (see the
 // Navigation demos in component-demos.tsx).
+//
+// The Layout category follows Navigation with MUI's Layout list,
+// again alphabetical: Box, Container, Grid, Stack. All four are
+// exported by the installed @mui/material (9.3.1, verified against
+// the runtime exports), so this category has no omissions either.
+// None of the four is an overlay, so no demo needs a stage. Two
+// demo notes. Grid uses the MUI v9 API, items sized with the size
+// prop rather than the v1 item API. And Container's maxWidth
+// breakpoints are wider than a preview card, so its demo frames
+// the container in a dashed card-width viewport and toggles the
+// maxWidth prop (xs, sm, off) to show the value in force (see the
+// Layout demos in component-demos.tsx).
 
 export interface PreviewComponentEntry {
   category: string;
@@ -425,6 +441,34 @@ export const PREVIEW_COMPONENTS: PreviewComponentEntry[] = [
     name: 'Tabs',
     docsUrl: 'https://mui.com/material-ui/react-tabs/',
     render: () => <TabsDemo />,
+  },
+  {
+    category: 'Layout',
+    id: 'box',
+    name: 'Box',
+    docsUrl: 'https://mui.com/material-ui/react-box/',
+    render: () => <BoxDemo />,
+  },
+  {
+    category: 'Layout',
+    id: 'container',
+    name: 'Container',
+    docsUrl: 'https://mui.com/material-ui/react-container/',
+    render: () => <ContainerDemo />,
+  },
+  {
+    category: 'Layout',
+    id: 'grid',
+    name: 'Grid',
+    docsUrl: 'https://mui.com/material-ui/react-grid/',
+    render: () => <GridDemo />,
+  },
+  {
+    category: 'Layout',
+    id: 'stack',
+    name: 'Stack',
+    docsUrl: 'https://mui.com/material-ui/react-stack/',
+    render: () => <StackDemo />,
   },
 ];
 
