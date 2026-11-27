@@ -10,77 +10,75 @@ This file is the plan of record for the project. Read it before starting work on
 
 ## Milestones
 
-| Milestone | Status | Notes |
-| --- | --- | --- |
-| M0 Safety net (characterization tests) | Done | Vitest suite written before the shell rebuild |
-| M1-M2 New shell and token panels | Done | Token-first left panel with five tabs |
-| M3 Component preview | Done | Outgrew the original 3-component scope; 41 cards at peak, 37 after removals, back to 41 with the Layout category, 49 with the Utils category |
-| M4 Functional top bar | Done | Mode toggle, undo/redo, reset, export |
-| M5 Token panel wiring | Done | Every panel edit goes through the reducer and is undoable |
-| M6 Component defaults editors (Button, TextField, Select) | Open | Not started; see open tasks |
-| M7 New shell becomes the only shell | Done | Original shell removed Nov 25, 2026 |
-| M8 Templates (Sign up, Dashboard, Marketing, Checkout) | Open | All four are stubs today |
-| Post-phase polish batches | Done | Color picker, shell insulation, preview category expansion, Phosphor icon swaps, resize edge |
+1. M0 Safety net (characterization tests): Done. Vitest suite written before the shell rebuild
+2. M1-M2 New shell and token panels: Done. Token-first left panel with five tabs
+3. M3 Component preview: Done. Outgrew the original 3-component scope; 41 cards at peak, 37 after removals, back to 41 with the Layout category, 49 with the Utils category
+4. M4 Functional top bar: Done. Mode toggle, undo/redo, reset, export
+5. M5 Token panel wiring: Done. Every panel edit goes through the reducer and is undoable
+6. M6 Component defaults editors (Button, TextField, Select): Open. Not started; see open tasks
+7. M7 New shell becomes the only shell: Done. Original shell removed Nov 25, 2026
+8. M8 Templates (Sign up, Dashboard, Marketing, Checkout): Open. All four are stubs today
+9. Post-phase polish batches: Done. Color picker, shell insulation, preview category expansion, Phosphor icon swaps, resize edge
 
 ## Completed tasks
 
 ### M0 Safety net
 
-- Vitest and Testing Library characterization suite covering the exporter, validation, theme-options mapping, and the reducer including undo/redo
+1. Vitest and Testing Library characterization suite covering the exporter, validation, theme-options mapping, and the reducer including undo/redo
 
 ### M1-M2 New shell and token panels
 
-- Shell v2 with a token-first left panel: five tabs (Color, Typography, Spacing, Radius, Shadows), horizontally scrollable
-- All five panels reading real project values
-- Drag-resizable left panel (240 to 640px, default 320px) with the width persisted in localStorage
-- Tab row scroll fades on both edges; clicking a partially visible tab scrolls it fully into view
+1. Shell v2 with a token-first left panel: five tabs (Color, Typography, Spacing, Radius, Shadows), horizontally scrollable
+2. All five panels reading real project values
+3. Drag-resizable left panel (240 to 640px, default 320px) with the width persisted in localStorage
+4. Tab row scroll fades on both edges; clicking a partially visible tab scrolls it fully into view
 
 ### M3 Component preview
 
-- Component registry with live search across categories and four Templates stubs (Sign up, Dashboard, Marketing, Checkout)
-- Inputs expansion to 13 cards with live card-local state; Number Field omitted because it is unavailable in @mui/material 9.3.1
-- Data Display, Feedback, Surfaces, and Navigation categories added; preview peaked at 41 cards
-- Card removals (Transfer List, Icon, Typography, Paper) brought the preview to 37 cards
-- Layout category added (task 2.1, Nov 26, 2026): Box, Container, Grid, Stack in MUI order after Navigation, bringing the preview back to 41 cards; Grid demo uses the v9 size prop API, and the Container demo toggles its maxWidth prop (xs, sm, off) inside a dashed card-width frame because the breakpoint widths are wider than a preview card
-- Utils category added (task 2.2, Nov 26, 2026): Click-Away Listener, Modal, Popover, Popper, Portal, Textarea Autosize, useMediaQuery, useScrollTrigger in MUI order after Layout, bringing the preview to 49 cards; Modal and Popover are contained in card stages through their container prop, Popper renders in place with disablePortal, the Portal demo targets a host inside its own card, and the useScrollTrigger demo watches the card's own scroll box. Four Utils entries omitted as not honestly demoable in a card: CSS Baseline and Global Styles (global effects that would leak into the shell), No SSR (server-rendering only), and Transitions (a docs topic with no single component). useScrollTrigger's Docs link points at the App Bar page, where MUI documents it, the registry's one intentional duplicate URL
-- Preview cards are real themed cards: Card radius, elevation, and surface come from the edited theme
+1. Component registry with live search across categories and four Templates stubs (Sign up, Dashboard, Marketing, Checkout)
+2. Inputs expansion to 13 cards with live card-local state; Number Field omitted because it is unavailable in @mui/material 9.3.1
+3. Data Display, Feedback, Surfaces, and Navigation categories added; preview peaked at 41 cards
+4. Card removals (Transfer List, Icon, Typography, Paper) brought the preview to 37 cards
+5. Layout category added (task 2.1, Nov 26, 2026): Box, Container, Grid, Stack in MUI order after Navigation, bringing the preview back to 41 cards; Grid demo uses the v9 size prop API, and the Container demo toggles its maxWidth prop (xs, sm, off) inside a dashed card-width frame because the breakpoint widths are wider than a preview card
+6. Utils category added (task 2.2, Nov 26, 2026): Click-Away Listener, Modal, Popover, Popper, Portal, Textarea Autosize, useMediaQuery, useScrollTrigger in MUI order after Layout, bringing the preview to 49 cards; Modal and Popover are contained in card stages through their container prop, Popper renders in place with disablePortal, the Portal demo targets a host inside its own card, and the useScrollTrigger demo watches the card's own scroll box. Four Utils entries omitted as not honestly demoable in a card: CSS Baseline and Global Styles (global effects that would leak into the shell), No SSR (server-rendering only), and Transitions (a docs topic with no single component). useScrollTrigger's Docs link points at the App Bar page, where MUI documents it, the registry's one intentional duplicate URL
+7. Preview cards are real themed cards: Card radius, elevation, and surface come from the edited theme
 
 ### M4 Functional top bar
 
-- Light/dark mode toggle, undo, redo, Reset and the Default preset sharing one reset flow (confirm only when edit history is non-empty)
-- Export opens the generated code drawer with the theme.tsx output
+1. Light/dark mode toggle, undo, redo, Reset and the Default preset sharing one reset flow (confirm only when edit history is non-empty)
+2. Export opens the generated code drawer with the theme.tsx output
 
 ### M5 Token panel wiring
 
-- All five token panels wired through the reducer; every edit is one undoable action
-- Color panel: hex click-to-edit, collapsible sections, Light/Dark segmented control, search by name and hex
-- Semantic colors with Main, Light, and Dark rows per scheme: unpinned variants derive automatically from the runtime theme, clicking pins a stored value, pinned rows can reset to auto
-- Typography panel: font family selection, base size, per-variant editor, font weight dropdown
-- Spacing panel: base unit editing; density presets implemented as base-unit presets (Compact 3px, Comfortable 4px, Spacious 5px)
-- Radius panel: global radius plus Button and Input radius through component settings; Card radius and shadows given model homes in foundation defaults, with migration filling defaults into older projects
+1. All five token panels wired through the reducer; every edit is one undoable action
+2. Color panel: hex click-to-edit, collapsible sections, Light/Dark segmented control, search by name and hex
+3. Semantic colors with Main, Light, and Dark rows per scheme: unpinned variants derive automatically from the runtime theme, clicking pins a stored value, pinned rows can reset to auto
+4. Typography panel: font family selection, base size, per-variant editor, font weight dropdown
+5. Spacing panel: base unit editing; density presets implemented as base-unit presets (Compact 3px, Comfortable 4px, Spacious 5px)
+6. Radius panel: global radius plus Button and Input radius through component settings; Card radius and shadows given model homes in foundation defaults, with migration filling defaults into older projects
 
 ### M7 New shell becomes the only shell
 
-- Original shell removed entirely; the v2 shell renders on every path
+1. Original shell removed entirely; the v2 shell renders on every path
 
 ### Post-phase polish batches
 
-- Color picker popover (saturation/value square, hue slider, hex field) committing one undo step per gesture
-- Dark-mode shell borders from a single mode-aware border value
-- Phosphor CaretDown dropdown icons in the preview and in exported themes, via a stable icon wrapper; the export view notes the @phosphor-icons/react requirement
-- Shell insulation: the builder chrome uses a fully fixed theme (own baseline palette per mode, 8px spacing, Inter, radius 6); token edits, color included, apply only inside preview cards
-- Phosphor icons for Alert severities and close, and for the Chip delete icon
-- Backdrop, Dialog, and Snackbar stage buttons render white in dark mode
-- Autocomplete dropdown paper matched to the Select menu (border, radius, shadow) in the baseline, so preview and export agree
-- Resize edge restyled to a 1px line that highlights on hover, focus, and drag; the earlier notch was removed, and a sizing bug that rendered the line at 10px was fixed with a regression test
-- Fresh-project spacing agreement fixed (Nov 26, 2026): the default project now stores its spacing base, so panel, preview, and export agree; the characterization test that pinned the omission now asserts the stored value
-- Nov 26, 2026 decisions implemented: density presets redefined (Compact 4px, Comfortable 8px default, Spacious 12px); shadows re-based to global none with per-component elevations (Button 2, Card 1, Input 0, Menu 8, new); preset Default renamed Black and a true MUI Default preset added (values checked against a createTheme oracle); new projects start on Black
-- Preset identity is session state only: saved and imported projects store values, not which preset they came from, and both presets share the builder's component baseline by design
-- Adapter defaultProps fix (task 1.2, Nov 26, 2026): the button and text-field adapters now omit defaultProps when the settings carry none, matching the select adapter, so a style-only Button or TextField setting no longer erases the baseline, foundation, and external-label defaultProps in the deep merge; pinned by new adapter tests at the adapter level and in the merged theme options
-- Preview section counts and docs links (tasks 3.1 and 3.2, Nov 26, 2026): each category header in the preview carries a badge with the number of cards it currently shows (the count follows the search filter), and each registry card header carries a Docs link to the component's MUI documentation page (the registry stores the URL per entry; Radio Group's points at the Radio buttons page); Templates stubs have no link. The count badge was restyled later on Nov 26, 2026 to Karl's screenshot of an MUI notification badge (fully rounded pill, shell palette colors: muted secondary surface, primary text, so it reads light grey with dark text in light mode and muted with light text in dark mode); Karl then corrected the placement the same day, so the pill sits inline immediately after the category name, where the original 3.1 pill sat, not anchored over the title's corner
-- Color palette browser with official MUI color tokens (task 3.3, Nov 26, 2026): every Color panel field's picker popover gains an "MUI palette" toggle that opens a searchable browser of the official @mui/material/colors tokens, built from the installed package itself (19 families, shades 50 to 900 plus the A100/A200/A400/A700 accents, and common black and white normalized to six-digit hex; 268 swatches), grouped by family with each swatch showing its token name (family plus shade, e.g. blue 500) and hex. Search follows the panel's substring idiom across name, shade, and hex, with spaces and the leading # optional ("blue 500", "blue500", "500", and "2196f3" all find blue 500; the compact form must start the token name or hex, so "blue500" does not surface light blue 500). Picking a swatch commits through the row's usual reducer action as one undoable step, pinning a semantic variant exactly like a typed hex, and closes the picker; coverage is pinned against the installed package in tests, not a hand-copied list
-- Other tab for breakpoints, transitions, and z-index (task 3.5, Nov 26, 2026): the three groups join the project model (foundations.breakpoints, foundations.transitions with duration and easing, foundations.zIndex) with MUI's defaults stored by both presets and filled into older projects by migration per key; the theme mapping emits all three groups so panel, preview, and export agree, and the exporter snapshots gained exactly those blocks at the MUI defaults; the new Other tab after Shadows edits them with typed numeric fields (breakpoints, durations, z-index; clamped, non-numeric entries ignored) and text fields for the easing curves, every edit one undoable reducer action
-- Grey and Action sections complete the Color panel palette (task 3.6, Nov 26, 2026): palette.grey (shades 50 to 900) and palette.action (six colors and five opacities, the full MUI group) join the project model per scheme, with MUI's defaults stored by both presets and filled into older projects by migration per scheme and per key; the defaults are MUI's of necessity, because the shadcn baseline carries neither group, so every project already resolved to exactly those values and storing them makes the implicit explicit with no resolved change (the exporter snapshots gained exactly the grey and action blocks at those values; the grey ramp is mode-independent, the action group is stored per scheme because MUI's differs by mode). The Color panel gains a Grey section whose rows go through the shared color picker, palette browser included, and an Action section whose colors are text fields rather than the hex picker (MUI's action defaults are alpha-bearing rgba strings, which the hex-only picker cannot represent, and converting them would restyle the theme) and whose opacities are decimal fields clamped to 0 to 1 with invalid entries reverted, the Other tab's numeric pattern; every edit is one undoable reducer action
+1. Color picker popover (saturation/value square, hue slider, hex field) committing one undo step per gesture
+2. Dark-mode shell borders from a single mode-aware border value
+3. Phosphor CaretDown dropdown icons in the preview and in exported themes, via a stable icon wrapper; the export view notes the @phosphor-icons/react requirement
+4. Shell insulation: the builder chrome uses a fully fixed theme (own baseline palette per mode, 8px spacing, Inter, radius 6); token edits, color included, apply only inside preview cards
+5. Phosphor icons for Alert severities and close, and for the Chip delete icon
+6. Backdrop, Dialog, and Snackbar stage buttons render white in dark mode
+7. Autocomplete dropdown paper matched to the Select menu (border, radius, shadow) in the baseline, so preview and export agree
+8. Resize edge restyled to a 1px line that highlights on hover, focus, and drag; the earlier notch was removed, and a sizing bug that rendered the line at 10px was fixed with a regression test
+9. Fresh-project spacing agreement fixed (Nov 26, 2026): the default project now stores its spacing base, so panel, preview, and export agree; the characterization test that pinned the omission now asserts the stored value
+10. Nov 26, 2026 decisions implemented: density presets redefined (Compact 4px, Comfortable 8px default, Spacious 12px); shadows re-based to global none with per-component elevations (Button 2, Card 1, Input 0, Menu 8, new); preset Default renamed Black and a true MUI Default preset added (values checked against a createTheme oracle); new projects start on Black
+11. Preset identity is session state only: saved and imported projects store values, not which preset they came from, and both presets share the builder's component baseline by design
+12. Adapter defaultProps fix (task 1.2, Nov 26, 2026): the button and text-field adapters now omit defaultProps when the settings carry none, matching the select adapter, so a style-only Button or TextField setting no longer erases the baseline, foundation, and external-label defaultProps in the deep merge; pinned by new adapter tests at the adapter level and in the merged theme options
+13. Preview section counts and docs links (tasks 3.1 and 3.2, Nov 26, 2026): each category header in the preview carries a badge with the number of cards it currently shows (the count follows the search filter), and each registry card header carries a Docs link to the component's MUI documentation page (the registry stores the URL per entry; Radio Group's points at the Radio buttons page); Templates stubs have no link. The count badge was restyled later on Nov 26, 2026 to Karl's screenshot of an MUI notification badge (fully rounded pill, shell palette colors: muted secondary surface, primary text, so it reads light grey with dark text in light mode and muted with light text in dark mode); Karl then corrected the placement the same day, so the pill sits inline immediately after the category name, where the original 3.1 pill sat, not anchored over the title's corner
+14. Color palette browser with official MUI color tokens (task 3.3, Nov 26, 2026): every Color panel field's picker popover gains an "MUI palette" toggle that opens a searchable browser of the official @mui/material/colors tokens, built from the installed package itself (19 families, shades 50 to 900 plus the A100/A200/A400/A700 accents, and common black and white normalized to six-digit hex; 268 swatches), grouped by family with each swatch showing its token name (family plus shade, e.g. blue 500) and hex. Search follows the panel's substring idiom across name, shade, and hex, with spaces and the leading # optional ("blue 500", "blue500", "500", and "2196f3" all find blue 500; the compact form must start the token name or hex, so "blue500" does not surface light blue 500). Picking a swatch commits through the row's usual reducer action as one undoable step, pinning a semantic variant exactly like a typed hex, and closes the picker; coverage is pinned against the installed package in tests, not a hand-copied list
+15. Other tab for breakpoints, transitions, and z-index (task 3.5, Nov 26, 2026): the three groups join the project model (foundations.breakpoints, foundations.transitions with duration and easing, foundations.zIndex) with MUI's defaults stored by both presets and filled into older projects by migration per key; the theme mapping emits all three groups so panel, preview, and export agree, and the exporter snapshots gained exactly those blocks at the MUI defaults; the new Other tab after Shadows edits them with typed numeric fields (breakpoints, durations, z-index; clamped, non-numeric entries ignored) and text fields for the easing curves, every edit one undoable reducer action
+16. Grey and Action sections complete the Color panel palette (task 3.6, Nov 26, 2026): palette.grey (shades 50 to 900) and palette.action (six colors and five opacities, the full MUI group) join the project model per scheme, with MUI's defaults stored by both presets and filled into older projects by migration per scheme and per key; the defaults are MUI's of necessity, because the shadcn baseline carries neither group, so every project already resolved to exactly those values and storing them makes the implicit explicit with no resolved change (the exporter snapshots gained exactly the grey and action blocks at those values; the grey ramp is mode-independent, the action group is stored per scheme because MUI's differs by mode). The Color panel gains a Grey section whose rows go through the shared color picker, palette browser included, and an Action section whose colors are text fields rather than the hex picker (MUI's action defaults are alpha-bearing rgba strings, which the hex-only picker cannot represent, and converting them would restyle the theme) and whose opacities are decimal fields clamped to 0 to 1 with invalid entries reverted, the Other tab's numeric pattern; every edit is one undoable reducer action
 
 ## Open tasks
 
