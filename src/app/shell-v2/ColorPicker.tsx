@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { PaletteIcon } from '@phosphor-icons/react/dist/csr/Palette';
 import { Box, ClickAwayListener, InputBase, Paper, Popper, Typography } from '@mui/material';
 
 import type { PreviewMode } from '../../state/editor-state.types';
 import { HEX_COLOR, hexToHsv, hsvToHex } from './color-utils';
 import type { HsvColor } from './color-utils';
+import { PaletteBrowser } from './PaletteBrowser';
 import { shellBorderForMode } from './shell-border';
 
 // Color picker popover for the Color tab's rows, following Karl's
@@ -23,6 +25,12 @@ import { shellBorderForMode } from './shell-border';
 // popover (Esc or clicking away) discards any uncommitted hex text.
 // The parent renders this only while its row is the open one, so the
 // draft initializes from the row's current color on every open.
+//
+// Under the HEX field, the "MUI palette" toggle opens the palette
+// browser (task 3.3, PaletteBrowser.tsx): the official
+// @mui/material/colors tokens, searchable by name, shade, and hex.
+// Picking a swatch commits through the same path as a finished drag,
+// one undo step, and closes the popover.
 
 interface ColorPickerProps {
   anchorEl: HTMLElement;
@@ -51,6 +59,7 @@ const thumbSx = {
 export function ColorPicker({ anchorEl, label, mode, onClose, onCommit, value }: ColorPickerProps) {
   const [hsv, setHsv] = useState<HsvColor>(() => hexToHsv(value));
   const [hexText, setHexText] = useState(value);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const hsvRef = useRef(hsv);
   const lastCommittedRef = useRef(value);
   const dragTargetRef = useRef<'hue' | 'square' | null>(null);
@@ -178,6 +187,18 @@ export function ColorPicker({ anchorEl, label, mode, onClose, onCommit, value }:
     commitHexText();
   };
 
+  // A palette pick is a finished gesture like a drag end: it moves the
+  // draft to the picked token, commits it as the gesture's one undo
+  // step, and closes the popover on the committed color.
+  const handlePalettePick = (hex: string) => {
+    const next = hexToHsv(hex);
+    hsvRef.current = next;
+    setHsv(next);
+    setHexText(hex);
+    commitHex(hex);
+    onClose();
+  };
+
   const handleClickAway = (event: Event) => {
     // The anchor hex box toggles the picker through its own click, so
     // presses on it are not click-aways.
@@ -194,7 +215,7 @@ export function ColorPicker({ anchorEl, label, mode, onClose, onCommit, value }:
       sx={{ zIndex: 1300 }}
     >
       <ClickAwayListener onClickAway={handleClickAway}>
-        <Paper elevation={8} sx={{ borderRadius: '8px', p: 1.5, width: 264 }}>
+        <Paper elevation={8} sx={{ borderRadius: '8px', p: 1.5, width: paletteOpen ? 288 : 264 }}>
           <Box
             data-testid="color-picker-square"
             onPointerCancel={() => {
@@ -305,6 +326,29 @@ export function ColorPicker({ anchorEl, label, mode, onClose, onCommit, value }:
           >
             HEX
           </Typography>
+          <Box
+            aria-expanded={paletteOpen}
+            aria-label={`Browse MUI palette for ${label}`}
+            onClick={() => setPaletteOpen((previous) => !previous)}
+            role="button"
+            sx={{
+              alignItems: 'center',
+              border: shellBorderForMode(mode),
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              height: 36,
+              justifyContent: 'center',
+              mt: 1.5,
+              px: 1,
+            }}
+          >
+            <PaletteIcon size={16} />
+            <Typography sx={{ fontSize: 14, lineHeight: '20px', ml: 1 }}>MUI palette</Typography>
+          </Box>
+          {paletteOpen && (
+            <PaletteBrowser label={label} mode={mode} onPick={handlePalettePick} />
+          )}
         </Paper>
       </ClickAwayListener>
     </Popper>

@@ -2,7 +2,7 @@
 
 **Last updated:** Nov 26, 2026
 
-**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 270 tests passing
+**Snapshot:** Live at https://karls.design/mui-theme-builder/ · Repo: karlyitianli/mui-theme-builder · 287 tests passing
 
 ## Maintenance rule
 
@@ -78,6 +78,7 @@ This file is the plan of record for the project. Read it before starting work on
 - Preset identity is session state only: saved and imported projects store values, not which preset they came from, and both presets share the builder's component baseline by design
 - Adapter defaultProps fix (task 1.2, Nov 26, 2026): the button and text-field adapters now omit defaultProps when the settings carry none, matching the select adapter, so a style-only Button or TextField setting no longer erases the baseline, foundation, and external-label defaultProps in the deep merge; pinned by new adapter tests at the adapter level and in the merged theme options
 - Preview section counts and docs links (tasks 3.1 and 3.2, Nov 26, 2026): each category header in the preview carries a badge with the number of cards it currently shows (the count follows the search filter), and each registry card header carries a Docs link to the component's MUI documentation page (the registry stores the URL per entry; Radio Group's points at the Radio buttons page); Templates stubs have no link. The count badge was restyled later on Nov 26, 2026 to Karl's screenshot of an MUI notification badge (fully rounded pill, shell palette colors: muted secondary surface, primary text, so it reads light grey with dark text in light mode and muted with light text in dark mode); Karl then corrected the placement the same day, so the pill sits inline immediately after the category name, where the original 3.1 pill sat, not anchored over the title's corner
+- Color palette browser with official MUI color tokens (task 3.3, Nov 26, 2026): every Color panel field's picker popover gains an "MUI palette" toggle that opens a searchable browser of the official @mui/material/colors tokens, built from the installed package itself (19 families, shades 50 to 900 plus the A100/A200/A400/A700 accents, and common black and white normalized to six-digit hex; 268 swatches), grouped by family with each swatch showing its token name (family plus shade, e.g. blue 500) and hex. Search follows the panel's substring idiom across name, shade, and hex, with spaces and the leading # optional ("blue 500", "blue500", "500", and "2196f3" all find blue 500; the compact form must start the token name or hex, so "blue500" does not surface light blue 500). Picking a swatch commits through the row's usual reducer action as one undoable step, pinning a semantic variant exactly like a typed hex, and closes the picker; coverage is pinned against the installed package in tests, not a hand-copied list
 - Other tab for breakpoints, transitions, and z-index (task 3.5, Nov 26, 2026): the three groups join the project model (foundations.breakpoints, foundations.transitions with duration and easing, foundations.zIndex) with MUI's defaults stored by both presets and filled into older projects by migration per key; the theme mapping emits all three groups so panel, preview, and export agree, and the exporter snapshots gained exactly those blocks at the MUI defaults; the new Other tab after Shadows edits them with typed numeric fields (breakpoints, durations, z-index; clamped, non-numeric entries ignored) and text fields for the easing curves, every edit one undoable reducer action
 
 ## Open tasks
@@ -98,7 +99,6 @@ Effort estimates are rough. Small means a single small change, Medium means a fo
 
 ### Preview experience
 
-- [ ] 3.3 Color palette browser with official MUI color tokens (Effort: Medium). Karl clarified on Nov 26, 2026 with a tweakcn screenshot: next to each color field, a button opens a searchable palette browser of officially supported MUI color tokens and their names (the @mui/material/colors palette: families such as red, blue, grey with their numbered shades), the way tweakcn's button opens the official Tailwind v4 tokens. Picking a named swatch sets the field's color value.
 - [ ] 3.4 Make it mobile responsive a la tweakcn (Effort: Large).
 - [ ] 3.6 Complete the Color panel palette: grey ramp and action colors (Effort: Medium). Added Nov 26, 2026: add a Grey section (50 to 900) and an Action section (active, hover, selected, disabled and their opacities) per scheme, wired like the existing palette groups.
 
